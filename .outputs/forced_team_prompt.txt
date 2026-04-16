@@ -1,0 +1,145 @@
+你现在要执行一次“强制混合协作模式”的深度项目自治审计。
+
+这次任务的目标不是只输出答案，而是必须同时展示以下 4 类能力：
+1. 招募 persistent teammates
+2. 调用隔离型 subagent（delegate_task）
+3. teammate 之间直接沟通（send_message / read_inbox）
+4. 任务自治推进（任务拆解、认领、计划审批、产物落盘）
+
+这是硬性约束，不满足任一条都视为任务未完成。
+
+## 硬性执行约束
+
+1. 必须至少创建 2 个 persistent teammates，不能只有 lead 自己。
+2. 这 2 个 persistent teammates 必须来自已注册角色模板中的角色，建议从以下角色中选择：
+   - planner
+   - knowledge
+   - code_reviewer
+   - devops
+3. 必须至少执行 2 次 delegate_task，且 delegate 的角色不能和 persistent teammates 完全重复。
+4. 必须至少发生 4 次 team 内直接通信：
+   - lead -> teammate
+   - teammate -> lead
+   - teammate -> teammate
+   每一种都至少出现一次。
+5. 必须让至少 1 个 teammate 自主认领或推进任务，而不是所有动作都由 lead 亲自完成。
+6. 必须产出可落盘的中间文件和最终报告，统一写入 `.outputs/autonomy_demo_run/`
+7. 必须生成可追溯的执行轨迹，明确区分：
+   - lead 直接完成
+   - delegate_task 完成
+   - persistent teammate 完成
+8. 如果某一步失败，不要终止全流程，要把失败过程和原因落盘。
+
+## 执行目标
+
+围绕当前仓库完成一次“自治审计演示”，输出以下内容：
+
+### 阶段 1：初始化与招募
+- 先扫描仓库基础结构
+- 创建一个总体计划
+- 明确这次为什么需要 persistent teammate 和 delegate_task 混合模式
+- 招募至少 2 个 persistent teammates，名字自行决定，但名字要有辨识度
+- 建议搭配：
+  - 一个 planner 类型 persistent teammate
+  - 一个 knowledge 或 code_reviewer 类型 persistent teammate
+
+落盘：
+- `.outputs/autonomy_demo_run/00_mission.md`
+- `.outputs/autonomy_demo_run/01_team_bootstrap.md`
+
+### 阶段 2：任务自治
+- 将大任务拆成多个子任务
+- 子任务至少覆盖：
+  - 架构理解
+  - 权限审查
+  - 可观测性检查
+  - 落盘机制梳理
+  - 生产 readiness 检查
+- 尽量让 teammate 自己推进，而不是全部由 lead 亲自做
+- 如果可行，让 teammate 自己认领任务、回传进度、继续下一步
+
+落盘：
+- `.outputs/autonomy_demo_run/10_task_plan.md`
+- `.outputs/autonomy_demo_run/11_task_board.md`
+
+### 阶段 3：混合协作
+- 必须使用 delegate_task 做至少 2 个“一次性隔离分析”
+- 必须使用 send_message 做至少 4 次 team 内消息传递
+- 至少有一次 teammate 给另一个 teammate 发消息，不经过用户
+- 每次关键协作后都要记录：
+  - 谁发起
+  - 谁执行
+  - 用了什么机制（delegate_task / spawn_teammate / send_message）
+  - 产出了什么
+
+落盘：
+- `.outputs/autonomy_demo_run/20_delegates.md`
+- `.outputs/autonomy_demo_run/21_team_messages.md`
+- `.outputs/autonomy_demo_run/22_execution_modes.md`
+
+### 阶段 4：专题分析
+分别输出以下专题文档：
+1. 主链路运行边界
+2. 权限系统默认行为与风险
+3. 日志 / trace / metrics 现状
+4. `.tasks` / `.team` / `.memory` / `.outputs` 的职责和数据流
+5. 多用户、多任务、异步协作下的优点与风险
+
+落盘：
+- `.outputs/autonomy_demo_run/30_runtime.md`
+- `.outputs/autonomy_demo_run/31_permission.md`
+- `.outputs/autonomy_demo_run/32_observability.md`
+- `.outputs/autonomy_demo_run/33_persistence.md`
+- `.outputs/autonomy_demo_run/34_concurrency.md`
+
+### 阶段 5：证据链与复盘
+- 建立证据索引
+- 每个关键结论都要关联来源
+- 来源可以是：
+  - 文件路径
+  - teammate 输出
+  - delegate 输出
+  - task id
+  - 运行时间
+- 必须形成执行复盘，解释：
+  - 为什么招募这些 teammate
+  - 为什么某些任务用 delegate
+  - 哪些地方体现了自治协作
+  - 哪些地方仍然由 lead 集中控制
+
+落盘：
+- `.outputs/autonomy_demo_run/40_evidence_index.md`
+- `.outputs/autonomy_demo_run/41_retrospective.md`
+
+### 阶段 6：最终汇报
+- 生成最终报告，但不要在控制台输出全文
+- 控制台只输出摘要
+- 摘要必须包含：
+  - 这次创建了哪些 teammates
+  - 哪些任务使用了 delegate_task
+  - 哪些 team 消息往返发生了
+  - 生成了哪些文件
+  - 最重要的 5 个发现
+  - 失败或阻塞点
+  - 本次哪些部分体现了“任务自治”
+
+落盘：
+- `.outputs/autonomy_demo_run/99_final_report.md`
+
+## 执行风格要求
+
+1. 优先使用真实文件和真实工具，不要空想不存在的目录结构。
+2. 如果你不确定某个结论，必须标记为“推断”，不能当成已验证事实。
+3. 如果 delegate 结果可疑，要由 lead 或 teammate 二次核验。
+4. 如果需要长期上下文，优先交给 persistent teammate。
+5. 如果是一次性聚焦任务，优先使用 delegate_task。
+6. 必须尽量让这次执行具有“可审计性”和“可复盘性”。
+
+## 成功判定标准
+
+只有同时满足以下条件，才算任务完成：
+- 已创建至少 2 个 persistent teammates
+- 已执行至少 2 次 delegate_task
+- 已发生至少 4 次 team 内消息通信
+- 已生成规定的大部分落盘文件
+- 最终报告中明确说明自治协作是如何发生的

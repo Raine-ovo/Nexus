@@ -1,0 +1,18 @@
+{
+  "id": 1,
+  "title": "分析Nexus项目整体目录结构",
+  "description": "扫描Nexus项目的目录结构，识别主要模块和子目录，包括internal/、team/、core/、gateway/、permission/等关键目录，建立项目的基本框架认知。",
+  "status": "completed",
+  "blocked_by": null,
+  "blocks": [
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "claimed_at": "2026-04-16T07:50:32.108479Z",
+  "claim_source": "manual",
+  "created_at": "2026-04-16T07:50:30.718119Z",
+  "updated_at": "2026-04-16T07:50:32.110088Z"
+}

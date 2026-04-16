@@ -1,0 +1,20 @@
+{
+  "id": 7,
+  "title": "绘制模块依赖关系图",
+  "description": "基于前面的分析，绘制Nexus项目各模块间的依赖关系图，清晰展示数据流向和控制流。",
+  "status": "completed",
+  "blocked_by": [
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "blocks": [
+    8
+  ],
+  "claimed_at": "2026-04-16T07:50:59.641104Z",
+  "claim_source": "manual",
+  "created_at": "2026-04-16T07:50:30.732736Z",
+  "updated_at": "2026-04-16T07:51:01.398101Z"
+}

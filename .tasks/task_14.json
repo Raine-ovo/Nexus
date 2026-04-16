@@ -1,0 +1,11 @@
+{
+  "id": 14,
+  "title": "分析permission/权限管道",
+  "description": "深入分析permission/目录下的权限管道设计，研究认证、授权和权限控制的实现机制",
+  "status": "completed",
+  "blocked_by": null,
+  "blocks": null,
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-16T07:51:10.856199Z",
+  "updated_at": "2026-04-16T07:52:39.356292Z"
+}

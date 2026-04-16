@@ -1,0 +1,14 @@
+{
+  "id": 15,
+  "title": "architecture_audit: 架构理解与边界分析",
+  "description": "全面分析 Nexus 五层架构的真实运行边界，识别各层职责边界、依赖方向、模块间耦合点。重点评估 Team 层（L2）与 Core 层（L3）的交互模式，以及 orchestrator 遗留代码与新 team 层的替代关系。",
+  "status": "pending",
+  "blocked_by": null,
+  "blocks": [21],
+  "claim_role": "planner",
+  "claimed_by": null,
+  "claim_source": "",
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T00:00:00Z",
+  "updated_at": "2026-04-17T00:00:00Z"
+}

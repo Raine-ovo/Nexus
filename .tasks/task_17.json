@@ -1,0 +1,14 @@
+{
+  "id": 17,
+  "title": "dispatch_audit: 调度与 team 机制评估",
+  "description": "评估 dispatch_profile 驱动的 teammate/subagent 分流机制，分析三种 dispatch 路径（直接处理/delegate_task/send_message）的优缺点。评估 JSONL 邮箱总线的可靠性、自治调度引擎的 idle→work 状态机、以及 Lead embedding Teammate 的设计取舍。",
+  "status": "pending",
+  "blocked_by": null,
+  "blocks": [21],
+  "claim_role": "devops",
+  "claimed_by": null,
+  "claim_source": "",
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T00:00:02Z",
+  "updated_at": "2026-04-17T00:00:02Z"
+}

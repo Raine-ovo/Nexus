@@ -1,0 +1,14 @@
+{
+  "id": 16,
+  "title": "permission_audit: 权限与安全审查",
+  "description": "审查权限管道的默认行为、路径沙箱实现、危险命令拦截、semi_auto 模式下的白名单策略。评估生产环境风险，包括 MCP 远端工具的命名空间冲突、权限 ask 闭环缺失等。",
+  "status": "pending",
+  "blocked_by": null,
+  "blocks": [21],
+  "claim_role": "code_reviewer",
+  "claimed_by": null,
+  "claim_source": "",
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T00:00:01Z",
+  "updated_at": "2026-04-17T00:00:01Z"
+}

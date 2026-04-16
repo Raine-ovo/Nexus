@@ -1,0 +1,14 @@
+{
+  "id": 18,
+  "title": "persistence_audit: 运行态落盘与记忆机制评估",
+  "description": "评估 .tasks / .team / .memory / .outputs 的职责划分与数据流。分析任务 JSON 持久化、名册 config.json、语义记忆 YAML、JSONL 收件箱的可靠性。评估进程重启 rehydrate 的完整性、at-most-once 消息投递的语义保证、以及文件级持久化在高并发下的竞态风险。",
+  "status": "pending",
+  "blocked_by": null,
+  "blocks": [21],
+  "claim_role": "code_reviewer",
+  "claimed_by": null,
+  "claim_source": "",
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T00:00:03Z",
+  "updated_at": "2026-04-17T00:00:03Z"
+}

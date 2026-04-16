@@ -1,0 +1,25 @@
+{
+  "team_name": "default",
+  "members": [
+    {
+      "name": "lead",
+      "role": "lead",
+      "status": "working"
+    },
+    {
+      "name": "Atlas",
+      "role": "planner",
+      "status": "working"
+    },
+    {
+      "name": "Sentinel",
+      "role": "code_reviewer",
+      "status": "working"
+    },
+    {
+      "name": "Scout",
+      "role": "devops",
+      "status": "shutdown"
+    }
+  ]
+}

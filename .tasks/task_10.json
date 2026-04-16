@@ -1,0 +1,12 @@
+{
+  "id": 10,
+  "title": "分析internal/目录核心模块结构",
+  "description": "深入分析internal/目录下的模块层次结构、关键组件职责及依赖关系，识别核心架构模式",
+  "status": "completed",
+  "blocked_by": null,
+  "blocks": null,
+  "claimed_at": "2026-04-16T07:51:12.512287Z",
+  "claim_source": "manual",
+  "created_at": "2026-04-16T07:51:10.850641Z",
+  "updated_at": "2026-04-16T07:51:34.069795Z"
+}

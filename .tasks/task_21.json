@@ -1,0 +1,14 @@
+{
+  "id": 21,
+  "title": "governance_report: 治理报告生成",
+  "description": "汇总所有审计结果，生成最终治理报告。包含证据索引、执行轨迹、团队协作摘要、任务板快照。此任务依赖 remediation_plan 的完成。",
+  "status": "blocked",
+  "blocked_by": [20],
+  "blocks": null,
+  "claim_role": "lead",
+  "claimed_by": null,
+  "claim_source": "",
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T00:00:06Z",
+  "updated_at": "2026-04-17T00:00:06Z"
+}

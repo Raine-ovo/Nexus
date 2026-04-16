@@ -1,0 +1,16 @@
+{
+  "id": 2,
+  "title": "分析core/引擎层架构设计",
+  "description": "深入分析core/目录下的引擎层实现，理解核心组件的职责划分、交互方式和设计模式，评估引擎层的架构设计。",
+  "status": "completed",
+  "blocked_by": [
+    1
+  ],
+  "blocks": [
+    7
+  ],
+  "claimed_at": "2026-04-16T07:50:34.132952Z",
+  "claim_source": "manual",
+  "created_at": "2026-04-16T07:50:30.719478Z",
+  "updated_at": "2026-04-16T07:50:34.133584Z"
+}

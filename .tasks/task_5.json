@@ -1,0 +1,16 @@
+{
+  "id": 5,
+  "title": "分析gateway/网关层设计",
+  "description": "分析gateway/目录下的网关层设计，理解请求路由、负载均衡、协议转换等网关功能的实现。",
+  "status": "completed",
+  "blocked_by": [
+    1
+  ],
+  "blocks": [
+    7
+  ],
+  "claimed_at": "2026-04-16T07:50:53.420324Z",
+  "claim_source": "manual",
+  "created_at": "2026-04-16T07:50:30.726592Z",
+  "updated_at": "2026-04-16T07:50:57.096182Z"
+}

@@ -1,0 +1,163 @@
+你现在要执行一次“自治式仓库治理演练”。
+
+目标不是快速回答，而是尽量发挥当前系统的以下能力：
+- lead 自主调度
+- dispatch_profile 驱动的 teammate / subagent 分流
+- persistent teammate 的创建、复用与 team 内通信
+- delegate_task 的一次性隔离分析
+- .tasks / .team / .outputs / .memory 的真实落盘
+- 计划审查与风险约束
+- 中间产物、证据链与最终报告
+
+你的任务是：围绕当前仓库完成一次“技术治理演练”，输出一个可审计、可追溯、可复盘的治理结果集。
+
+## 总体要求
+
+1. 不要只给最终答案，要显式展示多阶段执行过程。
+2. 优先使用真实文件、真实搜索、真实任务板，不要虚构不存在的模块和目录。
+3. 必须尽量复用已有 persistent teammate；如果没有合适 worker，再创建新的 persistent teammate。
+4. 对一次性专项分析优先使用 delegate_task。
+5. 对持续推进的任务优先使用 send_message / spawn_teammate。
+6. 至少生成 10 个以上的落盘文件，统一放到 `.runs/governance/.outputs/governance_run/`。
+7. 每一个重要结论都要附证据来源，证据必须来自真实文件路径、真实任务 ID、真实 teammate 返回、或真实搜索结果。
+8. 如果某一步失败，不要整体中止，要记录失败原因并继续推进剩余任务。
+9. 最终控制台只输出摘要，不要把全部文档内容原样重复。
+
+## 这次演练必须覆盖的能力
+
+### A. 调度与协作
+- 必须触发 lead 的调度决策
+- 必须尽量复用已有 teammate
+- 如果当前 roster 不够，才创建新的 teammate
+- 必须至少有 1 次 delegate_task
+- 必须至少有 3 次 send_message
+- 必须至少有 1 次 teammate 自主 claim task
+- 必须形成 team 内部状态变化，并在产物中说明
+
+### B. 任务板与执行
+- 必须把主要工作拆成任务并落到任务系统
+- 至少拆成以下几类任务：
+  - 架构理解
+  - 权限与安全审查
+  - 调度与 team 机制评估
+  - 运行态落盘与记忆机制评估
+  - 部署与生产 readiness 评估
+  - 风险与修复建议
+- 至少有 1 个任务被 persistent teammate claim 并推进
+- 至少有 1 个任务保留为待处理，用于体现任务板状态不是瞬间全部清空
+
+### C. 落盘与可追溯
+- 所有核心中间产物都要落盘到 `.runs/governance/.outputs/governance_run/`
+- 必须生成证据索引
+- 必须生成执行轨迹
+- 必须生成 team 协作摘要
+- 必须生成任务板快照说明
+- 如果有大段结果，优先按结构化文档落盘，不要只塞进控制台输出
+
+## 执行阶段
+
+### 阶段 1：启动与分工
+先做仓库扫描，并生成：
+- 治理目标
+- 当前可用团队成员
+- 当前建议分工
+- 哪些任务适合 persistent teammate
+- 哪些任务适合 delegate_task
+
+落盘：
+- `.runs/governance/.outputs/governance_run/00_mission.md`
+- `.runs/governance/.outputs/governance_run/01_dispatch_plan.md`
+- `.runs/governance/.outputs/governance_run/02_team_state.md`
+
+### 阶段 2：任务板建立
+把治理任务拆成任务板，至少包含：
+- architecture_audit
+- permission_audit
+- dispatch_audit
+- persistence_audit
+- production_readiness
+- remediation_plan
+
+落盘：
+- `.runs/governance/.outputs/governance_run/10_task_board.md`
+- `.runs/governance/.outputs/governance_run/11_task_mapping.md`
+
+### 阶段 3：混合协作执行
+执行时必须体现：
+- persistent teammate 的持续上下文推进
+- delegate_task 的隔离专项分析
+- team 内消息通信
+- 任务认领与状态推进
+
+并分别生成：
+- `.runs/governance/.outputs/governance_run/20_delegate_results.md`
+- `.runs/governance/.outputs/governance_run/21_team_messages.md`
+- `.runs/governance/.outputs/governance_run/22_claim_and_progress.md`
+
+### 阶段 4：专题治理文档
+分别输出以下专题：
+1. 当前主链路的真实运行边界
+2. dispatch_profile 与 team 调度机制的优点、局限与改进方向
+3. 权限系统默认行为和生产风险
+4. `.tasks` / `.team` / `.memory` / `.outputs` 的职责划分与数据流
+5. 当前生产部署能力、日志与可观测性缺口
+6. 多智能体自治中真实存在的失稳点（例如 provider 限流、残留状态、上下文污染）
+
+落盘：
+- `.runs/governance/.outputs/governance_run/30_runtime_boundary.md`
+- `.runs/governance/.outputs/governance_run/31_dispatch_mechanism.md`
+- `.runs/governance/.outputs/governance_run/32_permission_risks.md`
+- `.runs/governance/.outputs/governance_run/33_state_and_persistence.md`
+- `.runs/governance/.outputs/governance_run/34_production_gaps.md`
+- `.runs/governance/.outputs/governance_run/35_instability_points.md`
+
+### 阶段 5：治理建议与路线图
+生成：
+- 短期修复建议
+- 中期架构优化建议
+- 长期自治能力路线图
+- 风险分级
+- 优先级排序
+- 建议负责角色
+
+落盘：
+- `.runs/governance/.outputs/governance_run/40_recommendations.md`
+- `.runs/governance/.outputs/governance_run/41_priority_matrix.md`
+- `.runs/governance/.outputs/governance_run/42_roadmap.md`
+
+### 阶段 6：证据与最终报告
+必须生成：
+- 证据索引
+- 执行轨迹
+- 最终治理报告
+
+要求：
+- 每个关键结论至少关联一个真实来源
+- 区分“已验证事实”“基于代码推断”“待验证假设”
+- 明确说明哪些部分是 lead 做的、哪些是 teammate 做的、哪些是 delegate_task 做的
+
+落盘：
+- `.runs/governance/.outputs/governance_run/50_evidence_index.md`
+- `.runs/governance/.outputs/governance_run/51_execution_trace.md`
+- `.runs/governance/.outputs/governance_run/99_final_report.md`
+
+## 强约束
+
+1. 不要为了满足数量而虚构文件或目录。
+2. 如果某个 teammate 或 delegate 结果可疑，必须二次核验。
+3. 如果系统已有 persistent teammate，优先复用，不要重复创建。
+4. 如果遇到模型限流、任务失败、权限拒绝或路径不存在，必须把这些失败记录进产物。
+5. 如果某些能力没有被触发，也要明确写进最终报告，不允许假装成功。
+6. 如果最终没有形成完整治理结果，也要输出“未完成版报告”，并清楚说明卡在哪一步。
+
+## 控制台最终输出格式
+
+最后只输出简洁摘要，包含：
+- 本次实际生成的文件列表
+- 使用了哪些 persistent teammates
+- 使用了哪些 delegate_task
+- 哪些任务被 claim
+- 哪些能力被真实触发
+- 最大的 5 个发现
+- 最大的 3 个阻塞点
+- 最值得下次继续推进的方向

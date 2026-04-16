@@ -1,0 +1,16 @@
+{
+  "id": 6,
+  "title": "分析permission/权限管道实现",
+  "description": "研究permission/目录下的权限管道实现，理解权限验证、授权控制和安全策略的设计。",
+  "status": "completed",
+  "blocked_by": [
+    1
+  ],
+  "blocks": [
+    7
+  ],
+  "claimed_at": "2026-04-16T07:50:54.324185Z",
+  "claim_source": "manual",
+  "created_at": "2026-04-16T07:50:30.730718Z",
+  "updated_at": "2026-04-16T07:50:58.60877Z"
+}

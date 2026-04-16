@@ -1,0 +1,14 @@
+{
+  "id": 20,
+  "title": "remediation_plan: 风险与修复建议",
+  "description": "基于前 5 个审计任务的发现，生成短期修复建议、中期架构优化建议、长期自治能力路线图。包含风险分级、优先级排序和建议负责角色。此任务依赖前 5 个任务的完成。",
+  "status": "blocked",
+  "blocked_by": [15, 16, 17, 18, 19],
+  "blocks": null,
+  "claim_role": "planner",
+  "claimed_by": null,
+  "claim_source": "",
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T00:00:05Z",
+  "updated_at": "2026-04-17T00:00:05Z"
+}

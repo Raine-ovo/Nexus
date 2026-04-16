@@ -1,0 +1,11 @@
+{
+  "id": 12,
+  "title": "分析core/引擎层实现",
+  "description": "解析core/目录下的引擎层实现，包括任务调度、执行控制和核心业务逻辑",
+  "status": "completed",
+  "blocked_by": null,
+  "blocks": null,
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-16T07:51:10.853615Z",
+  "updated_at": "2026-04-16T07:52:05.888734Z"
+}
