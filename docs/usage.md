@@ -7,8 +7,10 @@
 - 主程序可编译：`go build ./cmd/nexus`
 - 服务可启动：HTTP `:8080`，WebSocket `:8081`
 - 核心 API 可用：`/api/health`、`/api/sessions`、`/api/chat`、`/api/ws`
-- 已接入 OpenAI 兼容模型接口，可直接使用智谱 `glm-4.7`
+- 已接入 OpenAI 兼容模型接口，可直接使用智谱 `glm-5.1`
 - `semi_auto` 模式下已默认放行安全只读工具，真实 smoke test 已验证 `read_file` 工具链路可用
+- 已接入进程级 LLM 节流器，支持 `model.max_concurrency` 与 `model.min_request_interval_ms`
+- 已提供 run 级调试入口：`/debug/dashboard`、`/api/debug/*` 与 `.runs/<run_id>/latest-traces.json`
 
 这不等于“所有扩展能力都零配置可用”。以下部分仍然是按需接入：
 
@@ -29,6 +31,10 @@
 
 - [dispatch_highlight.md](file:///Users/bytedance/rainea/nexus/docs/dispatch_highlight.md)
 
+如果你想理解为什么这次 memory / reflection 修复是“主链路激活”而不只是“模块存在”，见：
+
+- [memory_reflection_highlight.md](file:///Users/bytedance/rainea/nexus/docs/memory_reflection_highlight.md)
+
 ## 前置要求
 
 - Go `1.22+`
@@ -40,7 +46,7 @@
 ```bash
 export NEXUS_API_KEY="your-zhipu-api-key"
 export NEXUS_BASE_URL="https://open.bigmodel.cn/api/paas/v4/"
-export NEXUS_MODEL="glm-4.7"
+export NEXUS_MODEL="glm-5.1"
 ```
 
 ## 配置方式
@@ -52,9 +58,13 @@ export NEXUS_MODEL="glm-4.7"
 ```yaml
 model:
   provider: "openai"
-  model_name: "glm-4.7"
+  model_name: "glm-5.1"
   api_key: "${NEXUS_API_KEY}"
   base_url: "https://open.bigmodel.cn/api/paas/v4/"
+  max_concurrency: 1
+  min_request_interval_ms: 2500
+```
+  min_request_interval_ms: 2500
 ```
 
 启动前只需要导出环境变量：
@@ -76,6 +86,8 @@ cp configs/default.yaml configs/local.yaml
 - `server.ws_addr`
 - `model.api_key`
 - `model.base_url`
+- `model.max_concurrency`
+- `model.min_request_interval_ms`
 - `permission.mode`
 
 ## 构建与启动
@@ -106,6 +118,8 @@ curl http://127.0.0.1:8080/api/health
 ```json
 {"status":"ok"}
 ```
+
+`/api/health` 属于公共调试入口，即使开启了 `gateway.auth` 也不会要求 `X-API-Key`。
 
 ### 2. 创建 session
 
@@ -153,6 +167,10 @@ curl -X POST http://127.0.0.1:8080/api/chat \
 {"status":"ok"}
 ```
 
+备注：
+
+- 与 `/debug/dashboard`、`/api/debug/*` 一样，`/api/health` 默认不受 auth 保护。
+
 ### `POST /api/sessions`
 
 请求体：
@@ -189,6 +207,12 @@ curl -X POST http://127.0.0.1:8080/api/chat \
 - `session_id`: 必填，来自 `/api/sessions`
 - `input`: 必填，用户输入
 - `lane`: 可选，默认 `main`，可选值通常有 `main`、`cron`、`background`
+
+如果你在配置里启用了 `gateway.auth.api_keys` 或 `gateway.auth.jwt_secret`，则该接口需要携带：
+
+```bash
+-H "X-API-Key: <your-gateway-key>"
+```
 
 返回体：
 
@@ -242,6 +266,48 @@ curl -X POST http://127.0.0.1:8080/api/chat \
   "output": "..."
 }
 ```
+
+### `GET /debug/dashboard`
+
+用途：
+
+- 本地治理页面，展示 run 级 traces、metrics、trace tree、错误高亮和耗时分组
+
+示例：
+
+```bash
+open 'http://127.0.0.1:8080/debug/dashboard?run=demo'
+```
+
+### `GET /api/debug/metrics`
+
+用途：
+
+- 查看全局或指定 run 的 metrics 快照
+
+示例：
+
+```bash
+curl 'http://127.0.0.1:8080/api/debug/metrics?run=demo'
+```
+
+### `GET /api/debug/traces`
+
+用途：
+
+- 查看指定 run 的 trace 摘要列表
+
+示例：
+
+```bash
+curl 'http://127.0.0.1:8080/api/debug/traces?run=demo'
+```
+
+### `GET /api/debug/traces/{id}`
+
+用途：
+
+- 查看单条 trace 的 spans、树结构、错误与耗时聚合
 
 ### `GET /api/ws`
 
@@ -399,8 +465,10 @@ server:
 ```yaml
 model:
   provider: "openai"
-  model_name: "glm-4.7"
+  model_name: "glm-5.1"
   base_url: "https://open.bigmodel.cn/api/paas/v4/"
+  max_concurrency: 1
+  min_request_interval_ms: 2500
 ```
 
 ## 建议的本地开发流程
@@ -409,7 +477,7 @@ model:
 cd nexus
 export NEXUS_API_KEY="your-zhipu-api-key"
 export NEXUS_BASE_URL="https://open.bigmodel.cn/api/paas/v4/"
-export NEXUS_MODEL="glm-4.7"
+export NEXUS_MODEL="glm-5.1"
 go build -o nexus-server ./cmd/nexus
 ./nexus-server -config configs/default.yaml
 ```

@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/rainea/nexus/configs"
 	"github.com/rainea/nexus/internal/core"
+	"github.com/rainea/nexus/internal/memory"
 	"github.com/rainea/nexus/internal/observability"
 	"github.com/rainea/nexus/internal/planning"
 	"github.com/rainea/nexus/pkg/types"
@@ -594,6 +596,80 @@ func TestTeammate_InboxWakesFromIdle(t *testing.T) {
 	}
 }
 
+func TestTeammate_RuntimePersistsSemanticMemory(t *testing.T) {
+	dir := tmpDir(t)
+	roster, _ := NewRoster(dir)
+	bus, _ := NewMessageBus(filepath.Join(dir, "inbox"))
+	tracker, _ := NewRequestTracker(filepath.Join(dir, "requests"))
+	_ = roster.Add("worker", "coder", StatusIdle)
+
+	model := &stubModel{
+		responses: []core.ChatModelResponse{
+			{Content: "I completed the work.", FinishReason: "stop"},
+			{Content: `{"score":0.95,"correctness":0.95,"completeness":0.95,"safety":1.0,"coherence":0.95,"reason":"good"}`, FinishReason: "stop"},
+			{Content: `{"entries":[{"category":"project","key":"worker_status","value":"worker completed the assigned work"}]}`, FinishReason: "stop"},
+		},
+	}
+
+	memManager, err := memory.NewManager(configs.MemoryConfig{
+		ConversationWindow: 20,
+		MaxSemanticEntries: 20,
+		SemanticFile:       filepath.Join(dir, "semantic.yaml"),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	deps := &core.AgentDependencies{
+		MemManager:         memManager,
+		AgentConfig:        configs.AgentConfig{TokenThreshold: 80000},
+		ConversationWindow: 20,
+	}
+	rt, err := NewRuntime(deps, model, nil, "demo-run", dir, configs.ReflectionConfig{
+		Enabled:       true,
+		Threshold:     0.7,
+		MaxAttempts:   2,
+		MaxMemEntries: 20,
+		MemoryFile:    filepath.Join(dir, "reflections.yaml"),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := TeammateConfig{
+		Name:         "worker",
+		Role:         "coder",
+		Model:        model,
+		Deps:         deps,
+		Tools:        nil,
+		SystemPrompt: "test",
+		Bus:          bus,
+		Roster:       roster,
+		Tracker:      tracker,
+		Runtime:      rt,
+		PollInterval: 50 * time.Millisecond,
+		MaxIdlePolls: 3,
+	}
+
+	mate := NewTeammate(cfg)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	mate.Start(ctx, "Do some work")
+
+	select {
+	case <-mate.Done():
+	case <-time.After(3 * time.Second):
+		t.Fatal("teammate did not shut down after idle timeout")
+	}
+
+	semanticData, err := os.ReadFile(filepath.Join(dir, "semantic.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(semanticData), "worker_status") {
+		t.Fatalf("expected semantic memory entry, got %s", string(semanticData))
+	}
+}
+
 func TestTeammate_ShutdownViaProtocol(t *testing.T) {
 	dir := tmpDir(t)
 	roster, _ := NewRoster(dir)
@@ -940,6 +1016,53 @@ func TestRuntime_WritesLatestTraceSnapshot(t *testing.T) {
 	}
 	if _, ok := counters["callbacks_on_llm_start"]; !ok {
 		t.Fatalf("expected llm counter in snapshot metrics, got: %+v", counters)
+	}
+}
+
+func TestRuntime_RunWithReflectionStoresSuccessfulAttempt(t *testing.T) {
+	dir := tmpDir(t)
+	reflectionFile := filepath.Join(dir, "reflections.yaml")
+	model := &stubModel{
+		responses: []core.ChatModelResponse{
+			{Content: `{"score":0.92,"correctness":0.9,"completeness":0.92,"safety":1.0,"coherence":0.9,"reason":"good"}`, FinishReason: "stop"},
+		},
+	}
+
+	rt, err := NewRuntime(nil, model, nil, "demo", dir, configs.ReflectionConfig{
+		Enabled:       true,
+		Threshold:     0.7,
+		MaxAttempts:   2,
+		MaxMemEntries: 20,
+		MemoryFile:    reflectionFile,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	output, err := rt.RunWithReflection(
+		context.Background(),
+		"worker",
+		"test worker",
+		"system",
+		nil,
+		"verify reflection persistence",
+		func(ctx context.Context, input string) (string, error) {
+			return "done", nil
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if output != "done" {
+		t.Fatalf("unexpected output: %s", output)
+	}
+
+	data, err := os.ReadFile(reflectionFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), "successful_completion") {
+		t.Fatalf("expected successful reflection to be persisted, got %s", string(data))
 	}
 }
 

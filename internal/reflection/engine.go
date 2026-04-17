@@ -121,20 +121,13 @@ func (e *Engine) RunWithReflection(ctx context.Context, agent core.Agent, input 
 		}
 
 		if evalResult.Pass {
-			// On success after retries, store a positive macro insight.
-			if attempt > 0 && e.memory != nil && e.reflector != nil {
-				successRef := Reflection{
-					ID:           fmt.Sprintf("success-%d-%d", time.Now().UnixMilli(), attempt),
-					Level:        LevelMacro,
-					TaskType:     "general",
-					ErrorPattern: "recovery_success",
-					Insight:      fmt.Sprintf("Solved after %d attempts; final score %.2f", attempt+1, evalResult.Score),
-					Suggestion:   fmt.Sprintf("The fix that worked: addressed '%s'", evalResult.Reason),
-					Attempt:      attempt,
-					Score:        evalResult.Score,
-					CreatedAt:    time.Now().UTC(),
+			if e.memory != nil {
+				successRef := e.buildSuccessReflection(evalResult, attempt)
+				if err := e.memory.Store(successRef); err == nil && e.obs != nil {
+					e.obs.Info("reflection/engine: success reflection stored",
+						"level", successRef.Level, "pattern", successRef.ErrorPattern,
+						"attempt", attempt+1)
 				}
-				_ = e.memory.Store(successRef)
 			}
 			return output, nil
 		}
@@ -236,4 +229,34 @@ func truncate(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen] + "..."
+}
+
+func (e *Engine) buildSuccessReflection(eval EvalResult, attempt int) Reflection {
+	level := LevelMeso
+	pattern := "successful_completion"
+	insight := fmt.Sprintf("The task passed evaluation on attempt %d with score %.2f.", attempt+1, eval.Score)
+	suggestion := "Reuse the same execution pattern for similar tasks and keep validating key constraints before finalizing."
+	if reason := strings.TrimSpace(eval.Reason); reason != "" {
+		if strings.EqualFold(reason, "good") {
+			insight = fmt.Sprintf("%s The evaluator reported no significant issues.", insight)
+		} else {
+			insight = fmt.Sprintf("%s Evaluator note: %s", insight, reason)
+			suggestion = fmt.Sprintf("Preserve the steps that satisfied the evaluator while double-checking this concern: %s", reason)
+		}
+	}
+	if attempt > 0 {
+		level = LevelMacro
+		pattern = "recovery_success"
+	}
+	return Reflection{
+		ID:           fmt.Sprintf("success-%d-%d", time.Now().UnixMilli(), attempt),
+		Level:        level,
+		TaskType:     "general",
+		ErrorPattern: pattern,
+		Insight:      insight,
+		Suggestion:   suggestion,
+		Attempt:      attempt,
+		Score:        eval.Score,
+		CreatedAt:    time.Now().UTC(),
+	}
 }

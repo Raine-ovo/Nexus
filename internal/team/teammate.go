@@ -156,6 +156,7 @@ func (t *Teammate) run(ctx context.Context, initialPrompt string) {
 		Content:   initialPrompt,
 		CreatedAt: time.Now(),
 	})
+	workInput := initialPrompt
 
 	for {
 		select {
@@ -164,23 +165,51 @@ func (t *Teammate) run(ctx context.Context, initialPrompt string) {
 		default:
 		}
 
-		t.workPhase(ctx)
+		t.runWorkUnit(ctx, workInput)
 
-		resume := t.idlePhase(ctx)
+		resume, nextInput := t.idlePhase(ctx)
 		if !resume {
 			return
 		}
+		workInput = nextInput
 	}
 }
 
-// workPhase runs the model/tool loop until the model produces final text or limits are hit.
-func (t *Teammate) workPhase(ctx context.Context) {
+func (t *Teammate) runWorkUnit(ctx context.Context, input string) {
+	if strings.TrimSpace(input) == "" {
+		input = "Continue the current teammate work."
+	}
+	if t.runtime != nil {
+		output, err := t.runtime.RunWithReflection(
+			ctx,
+			t.name,
+			fmt.Sprintf("%s teammate", t.role),
+			t.systemPrompt,
+			t.tools,
+			input,
+			t.executeWorkPhase,
+		)
+		if err != nil {
+			t.logWarn("work unit failed", "err", err)
+			return
+		}
+		t.runtime.RecordTurn(ctx, input, output)
+		return
+	}
+	if _, err := t.executeWorkPhase(ctx, input); err != nil {
+		t.logWarn("work unit failed", "err", err)
+	}
+}
+
+// executeWorkPhase runs the model/tool loop until the model produces final text or limits are hit.
+func (t *Teammate) executeWorkPhase(ctx context.Context, input string) (string, error) {
 	_ = t.roster.UpdateStatus(t.name, StatusWorking)
+	_ = input
 
 	for iter := 0; iter < maxTeammateIterations; iter++ {
 		select {
 		case <-ctx.Done():
-			return
+			return "", ctx.Err()
 		default:
 		}
 
@@ -198,16 +227,16 @@ func (t *Teammate) workPhase(ctx context.Context) {
 		})
 		t.endLLMSpan(llmTrace, err)
 		if err != nil {
-			t.logWarn("model generate error", "err", err)
-			return
+			return "", fmt.Errorf("teammate: model generate: %w", err)
 		}
 		if resp == nil {
-			return
+			return "", fmt.Errorf("teammate: nil model response")
 		}
 
 		if !hasToolCalls(resp) {
-			t.appendAssistant(resp.Content)
-			return
+			text := strings.TrimSpace(resp.Content)
+			t.appendAssistant(text)
+			return text, nil
 		}
 
 		// Append assistant message with tool calls.
@@ -220,40 +249,43 @@ func (t *Teammate) workPhase(ctx context.Context) {
 			t.appendToolResult(call, result)
 		}
 	}
-	t.logWarn("work phase hit max iterations")
+	return "", fmt.Errorf("teammate: exceeded max iterations (%d)", maxTeammateIterations)
 }
 
 // idlePhase checks inbox then task board; returns true to resume work.
-func (t *Teammate) idlePhase(ctx context.Context) bool {
+func (t *Teammate) idlePhase(ctx context.Context) (bool, string) {
 	_ = t.roster.UpdateStatus(t.name, StatusIdle)
 
 	for poll := 0; poll < t.maxIdlePolls; poll++ {
 		select {
 		case <-ctx.Done():
-			return false
+			return false, ""
 		case reqID := <-t.shutdownSignal:
 			t.handleShutdownRequest(reqID)
-			return false
+			return false, ""
 		default:
 		}
 
 		// Priority 1: inbox messages.
 		msgs, _ := t.bus.ReadInbox(t.name)
 		if len(msgs) > 0 {
+			var resumedInput []string
 			for _, env := range msgs {
 				if env.Type == MsgTypeShutdownRequest && env.RequestID != "" {
 					t.handleShutdownRequest(env.RequestID)
-					return false
+					return false, ""
 				}
+				payload := formatEnvelope(env)
 				t.messages = append(t.messages, types.Message{
 					ID:        uuid.NewString(),
 					Role:      types.RoleUser,
-					Content:   formatEnvelope(env),
+					Content:   payload,
 					CreatedAt: time.Now(),
 				})
+				resumedInput = append(resumedInput, payload)
 			}
 			t.ensureIdentity()
-			return true
+			return true, strings.Join(resumedInput, "\n")
 		}
 
 		// Priority 2: claimable tasks.
@@ -268,14 +300,15 @@ func (t *Teammate) idlePhase(ctx context.Context) bool {
 					}
 					t.log("auto-claimed task", "task_id", claimed.ID, "title", claimed.Title)
 					t.ensureIdentity()
+					taskPrompt := fmt.Sprintf("<auto-claimed>Task #%d: %s\n%s</auto-claimed>", claimed.ID, claimed.Title, claimed.Description)
 					t.messages = append(t.messages, types.Message{
 						ID:        uuid.NewString(),
 						Role:      types.RoleUser,
-						Content:   fmt.Sprintf("<auto-claimed>Task #%d: %s\n%s</auto-claimed>", claimed.ID, claimed.Title, claimed.Description),
+						Content:   taskPrompt,
 						CreatedAt: time.Now(),
 					})
 					t.appendAssistant(fmt.Sprintf("Claimed task #%d. Working on it.", claimed.ID))
-					return true
+					return true, taskPrompt
 				}
 				// Claim race lost -- continue polling.
 			}
@@ -283,16 +316,16 @@ func (t *Teammate) idlePhase(ctx context.Context) bool {
 
 		select {
 		case <-ctx.Done():
-			return false
+			return false, ""
 		case reqID := <-t.shutdownSignal:
 			t.handleShutdownRequest(reqID)
-			return false
+			return false, ""
 		case <-time.After(t.pollInterval):
 		}
 	}
 
 	t.log("idle timeout, auto-shutting down")
-	return false
+	return false, ""
 }
 
 func (t *Teammate) handleShutdownRequest(requestID string) {
