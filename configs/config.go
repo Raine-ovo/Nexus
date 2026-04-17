@@ -19,6 +19,7 @@ type Config struct {
 	Team          TeamConfig          `yaml:"team"`
 	Run           RunConfig           `yaml:"run"`
 	Gateway       GatewayConfig       `yaml:"gateway"`
+	MCP           MCPConfig           `yaml:"mcp"`
 	Permission    PermissionConfig    `yaml:"permission"`
 	Observability ObservabilityConfig `yaml:"observability"`
 	Reflection    ReflectionConfig    `yaml:"reflection"`
@@ -38,14 +39,20 @@ type ModelConfig struct {
 	BaseURL     string  `yaml:"base_url"`
 	MaxTokens   int     `yaml:"max_tokens"`
 	Temperature float64 `yaml:"temperature"`
+	// MaxConcurrency limits concurrent LLM requests process-wide for this configured model.
+	// 0 disables throttling.
+	MaxConcurrency int `yaml:"max_concurrency"`
+	// MinRequestIntervalMS enforces a minimum spacing between process-wide LLM requests.
+	// 0 disables interval throttling.
+	MinRequestIntervalMS int `yaml:"min_request_interval_ms"`
 }
 
 type AgentConfig struct {
-	MaxIterations     int     `yaml:"max_iterations"`
-	TokenThreshold    int     `yaml:"token_threshold"`
+	MaxIterations      int     `yaml:"max_iterations"`
+	TokenThreshold     int     `yaml:"token_threshold"`
 	CompactTargetRatio float64 `yaml:"compact_target_ratio"`
-	MicroCompactSize  int     `yaml:"micro_compact_size"`
-	OutputPersistDir  string  `yaml:"output_persist_dir"`
+	MicroCompactSize   int     `yaml:"micro_compact_size"`
+	OutputPersistDir   string  `yaml:"output_persist_dir"`
 }
 
 type RAGConfig struct {
@@ -107,6 +114,10 @@ type PlanningConfig struct {
 
 type TeamConfig struct {
 	Dir string `yaml:"dir"`
+	// PollInterval controls how often persistent teammates poll inbox/tasks while idle.
+	PollInterval time.Duration `yaml:"poll_interval"`
+	// IdleTimeout controls how long a persistent teammate may stay idle before shutdown.
+	IdleTimeout time.Duration `yaml:"idle_timeout"`
 }
 
 type RunConfig struct {
@@ -114,11 +125,40 @@ type RunConfig struct {
 }
 
 type GatewayConfig struct {
-	Lanes map[string]LaneConfig `yaml:"lanes"`
+	Lanes     map[string]LaneConfig `yaml:"lanes"`
+	Auth      GatewayAuthConfig     `yaml:"auth"`
+	RateLimit RateLimitConfig       `yaml:"rate_limit"`
 }
 
 type LaneConfig struct {
 	MaxConcurrency int `yaml:"max_concurrency"`
+}
+
+type GatewayAuthConfig struct {
+	APIKeys   []string `yaml:"api_keys"`
+	JWTSecret string   `yaml:"jwt_secret"`
+}
+
+type RateLimitConfig struct {
+	Enabled bool    `yaml:"enabled"`
+	RPS     float64 `yaml:"rps"`
+	Burst   int     `yaml:"burst"`
+}
+
+type MCPConfig struct {
+	ServerEnabled bool              `yaml:"server_enabled"`
+	RPCPath       string            `yaml:"rpc_path"`
+	SSEPath       string            `yaml:"sse_path"`
+	Clients       []MCPClientConfig `yaml:"clients"`
+}
+
+type MCPClientConfig struct {
+	Name       string `yaml:"name"`
+	Enabled    bool   `yaml:"enabled"`
+	BaseURL    string `yaml:"base_url"`
+	RPCPath    string `yaml:"rpc_path"`
+	SSEPath    string `yaml:"sse_path"`
+	ConnectSSE bool   `yaml:"connect_sse"`
 }
 
 type PermissionConfig struct {
@@ -308,12 +348,34 @@ func applyDefaults(cfg *Config) {
 	if cfg.Team.Dir == "" {
 		cfg.Team.Dir = ".team"
 	}
+	if cfg.Team.PollInterval == 0 {
+		cfg.Team.PollInterval = 3 * time.Second
+	}
+	if cfg.Team.IdleTimeout == 0 {
+		cfg.Team.IdleTimeout = 20 * time.Minute
+	}
 	if cfg.Gateway.Lanes == nil {
 		cfg.Gateway.Lanes = map[string]LaneConfig{
 			"main":       {MaxConcurrency: 1},
 			"cron":       {MaxConcurrency: 1},
 			"background": {MaxConcurrency: 3},
 		}
+	}
+	if !cfg.Gateway.RateLimit.Enabled {
+		cfg.Gateway.RateLimit.RPS = 0
+		cfg.Gateway.RateLimit.Burst = 0
+	}
+	if cfg.MCP.RPCPath == "" {
+		cfg.MCP.RPCPath = "/mcp/rpc"
+	}
+	if cfg.MCP.SSEPath == "" {
+		cfg.MCP.SSEPath = "/mcp/sse"
+	}
+	if cfg.Model.MaxConcurrency < 0 {
+		cfg.Model.MaxConcurrency = 0
+	}
+	if cfg.Model.MinRequestIntervalMS < 0 {
+		cfg.Model.MinRequestIntervalMS = 0
 	}
 	if cfg.Permission.Mode == "" {
 		cfg.Permission.Mode = "semi_auto"

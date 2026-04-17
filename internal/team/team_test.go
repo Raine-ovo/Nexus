@@ -9,7 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rainea/nexus/configs"
 	"github.com/rainea/nexus/internal/core"
+	"github.com/rainea/nexus/internal/observability"
 	"github.com/rainea/nexus/internal/planning"
 	"github.com/rainea/nexus/pkg/types"
 )
@@ -643,6 +645,69 @@ func TestTeammate_ShutdownViaProtocol(t *testing.T) {
 	}
 }
 
+func TestTeammate_ShutdownReleasesClaimedTasks(t *testing.T) {
+	dir := tmpDir(t)
+	taskDir := filepath.Join(dir, "tasks")
+	tm, err := planning.NewTaskManager(taskDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := tm.Create("audit permission flow", "verify permission pipeline", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tm.Claim(task.ID, "worker", "manual"); err != nil {
+		t.Fatal(err)
+	}
+
+	roster, _ := NewRoster(dir)
+	bus, _ := NewMessageBus(filepath.Join(dir, "inbox"))
+	tracker, _ := NewRequestTracker(filepath.Join(dir, "requests"))
+	_ = roster.Add("worker", "coder", StatusIdle)
+
+	model := &stubModel{
+		responses: []core.ChatModelResponse{
+			{Content: "working...", FinishReason: "stop"},
+		},
+	}
+
+	cfg := TeammateConfig{
+		Name:         "worker",
+		Role:         "coder",
+		Model:        model,
+		SystemPrompt: "test",
+		Bus:          bus,
+		Roster:       roster,
+		Tracker:      tracker,
+		TaskManager:  tm,
+		PollInterval: 50 * time.Millisecond,
+		MaxIdlePolls: 2,
+	}
+
+	mate := NewTeammate(cfg)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	mate.Start(ctx, "Finish your work")
+
+	select {
+	case <-mate.Done():
+	case <-time.After(3 * time.Second):
+		t.Fatal("teammate did not shut down after idle timeout")
+	}
+
+	tasks := tm.List(nil)
+	if len(tasks) != 1 {
+		t.Fatalf("expected 1 task, got %d", len(tasks))
+	}
+	got := tasks[0]
+	if got.Status != planning.TaskPending {
+		t.Fatalf("expected claimed task to be re-queued as pending, got %s", got.Status)
+	}
+	if got.ClaimedBy != "" {
+		t.Fatalf("expected claim owner to be cleared, got %q", got.ClaimedBy)
+	}
+}
+
 // --- Manager Tests ---
 
 func TestManager_HandleRequest(t *testing.T) {
@@ -822,6 +887,59 @@ func TestIdentityBlock(t *testing.T) {
 	ack := identityAck("alice")
 	if ack != "I am alice. Continuing." {
 		t.Fatalf("unexpected ack: %s", ack)
+	}
+}
+
+func TestRuntime_WritesLatestTraceSnapshot(t *testing.T) {
+	dir := tmpDir(t)
+	sandbox := filepath.Join(dir, ".runs", "demo")
+	obs := observability.New(configs.ObservabilityConfig{
+		TraceEnabled:   true,
+		MetricsEnabled: true,
+		LogLevel:       "error",
+	})
+	rt := &Runtime{
+		obs:        obs,
+		fullObs:    obs,
+		runLabel:   "demo",
+		sandboxDir: sandbox,
+	}
+
+	reqTrace, reqCtx := rt.startSpan(context.Background(), "lead", "request:user_turn", "on_start")
+	llmTrace, _ := rt.startSpan(reqCtx, "lead", "llm_call", "on_llm_start")
+	time.Sleep(5 * time.Millisecond)
+	rt.endSpan(llmTrace, nil, "on_llm_end")
+	toolTrace, _ := rt.startSpan(reqCtx, "lead", "tool:read_file", "on_tool_start")
+	time.Sleep(5 * time.Millisecond)
+	rt.endSpan(toolTrace, nil, "on_tool_end")
+	time.Sleep(5 * time.Millisecond)
+	rt.endSpan(reqTrace, nil, "on_end")
+
+	data, err := os.ReadFile(filepath.Join(sandbox, "latest-traces.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var payload map[string]interface{}
+	if err := json.Unmarshal(data, &payload); err != nil {
+		t.Fatal(err)
+	}
+	if payload["run"] != "demo" {
+		t.Fatalf("unexpected run in snapshot: %+v", payload)
+	}
+	traces, ok := payload["traces"].([]interface{})
+	if !ok || len(traces) == 0 {
+		t.Fatalf("expected traces in snapshot, got: %+v", payload["traces"])
+	}
+	metrics, ok := payload["metrics"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected metrics map in snapshot, got: %+v", payload["metrics"])
+	}
+	counters, ok := metrics["counters"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected counters in snapshot metrics, got: %+v", metrics)
+	}
+	if _, ok := counters["callbacks_on_llm_start"]; !ok {
+		t.Fatalf("expected llm counter in snapshot metrics, got: %+v", counters)
 	}
 }
 
@@ -1055,6 +1173,87 @@ func TestValidateLeadRoutingCall_PersistencePrefersReuse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected send_message to reusable teammate to be allowed: %v", err)
 	}
+}
+
+func TestValidateLeadRoutingCall_AllowsShutdownTargetForRevive(t *testing.T) {
+	roster, _ := NewRoster(tmpDir(t))
+	_ = roster.Add("Atlas", "planner", StatusShutdown)
+
+	profile := &dispatchProfile{
+		NeedsPersistence: true,
+		ExpectedFollowUp: true,
+		SpecialistRole:   "planner",
+	}
+
+	err := validateLeadRoutingCall(profile, roster, types.ToolCall{
+		Name:      "send_message",
+		Arguments: map[string]interface{}{"to": "Atlas", "content": "continue the task"},
+	})
+	if err != nil {
+		t.Fatalf("expected shutdown teammate to be revivable via send_message: %v", err)
+	}
+}
+
+func TestLeadSendMessage_RevivesShutdownTeammate(t *testing.T) {
+	dir := tmpDir(t)
+	taskDir := filepath.Join(dir, "tasks")
+	tm, err := planning.NewTaskManager(taskDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	roster, err := NewRoster(filepath.Join(dir, ".team"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := roster.Add("Atlas", "planner", StatusShutdown); err != nil {
+		t.Fatal(err)
+	}
+
+	model := &stubModel{
+		responses: []core.ChatModelResponse{
+			{Content: "lead ready", FinishReason: "stop"},
+			{Content: "atlas resumed", FinishReason: "stop"},
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	mgr, err := NewManager(ctx, ManagerConfig{
+		TeamDir:          filepath.Join(dir, ".team"),
+		Model:            model,
+		Deps:             &core.AgentDependencies{},
+		TaskManager:      tm,
+		LeadSystemPrompt: "Lead.",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mgr.Shutdown(ctx)
+
+	sendTool := toolSendMessage(leadName, mgr.bus, mgr)
+	result, err := sendTool.Handler(ctx, map[string]interface{}{
+		"to":      "Atlas",
+		"content": "please continue the task",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.IsError {
+		t.Fatalf("expected send_message to revive teammate, got error: %s", result.Content)
+	}
+
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		member, ok := mgr.Roster().Get("Atlas")
+		if ok && member.Status == StatusWorking {
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	member, _ := mgr.Roster().Get("Atlas")
+	t.Fatalf("expected Atlas to be revived as working, got status %s", member.Status)
 }
 
 // contextCapturingModel lets tests inspect the messages passed to Generate.

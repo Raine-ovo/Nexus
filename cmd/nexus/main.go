@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -51,6 +52,7 @@ func main() {
 		cfg = configs.LoadFromEnv()
 	}
 	applyRunSandbox(cfg)
+	runLabel := runLabelFromSandbox(cfg.Run.SandboxDir)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -114,33 +116,53 @@ func main() {
 		log.Printf("WARN: failed to register skill tools: %v", err)
 	}
 
+	baseChatModel := core.NewOpenAICompatibleChatModel(cfg.Model)
+	chatModel := core.NewThrottledChatModel(
+		baseChatModel,
+		cfg.Model.MaxConcurrency,
+		time.Duration(cfg.Model.MinRequestIntervalMS)*time.Millisecond,
+	)
+	core.DefaultChatModel = chatModel
+	obs.Info("chat model initialized",
+		"provider", cfg.Model.Provider,
+		"model", cfg.Model.ModelName,
+		"max_concurrency", cfg.Model.MaxConcurrency,
+		"min_request_interval_ms", cfg.Model.MinRequestIntervalMS,
+	)
+
 	agentDeps := &core.AgentDependencies{
-		ToolRegistry:    toolRegistry,
-		PermPipeline:    permPipeline,
-		MemManager:      memManager,
-		TaskManager:     taskManager,
-		PromptAssembler: promptAssembler,
-		SkillManager:    skillManager,
-		Observer:        obs,
-		AgentConfig:     cfg.Agent,
-		ModelConfig:     cfg.Model,
+		ToolRegistry:       toolRegistry,
+		PermPipeline:       permPipeline,
+		MemManager:         memManager,
+		TaskManager:        taskManager,
+		PromptAssembler:    promptAssembler,
+		SkillManager:       skillManager,
+		Observer:           obs,
+		AgentConfig:        cfg.Agent,
+		ModelConfig:        cfg.Model,
+		WorkspaceRoot:      cfg.Permission.WorkspaceRoot,
+		ConversationWindow: cfg.Memory.ConversationWindow,
+		Summarize: func(ctx context.Context, text string) (string, error) {
+			resp, err := chatModel.Generate(ctx,
+				"Summarize the following context into concise engineering notes. Respond with plain text only.",
+				[]types.Message{{Role: types.RoleUser, Content: text}},
+				nil,
+			)
+			if err != nil {
+				return "", err
+			}
+			if resp == nil {
+				return "", fmt.Errorf("nil summarize response")
+			}
+			return strings.TrimSpace(resp.Content), nil
+		},
 	}
 
-	chatModel := core.NewOpenAICompatibleChatModel(cfg.Model)
-	core.DefaultChatModel = chatModel
-
-	// Build agent templates from existing role-specialized agents.
-	// These serve as role definitions: system prompt + tool set.
-	crAgent := codereviewer.New(agentDeps)
-	kbAgent := knowledge.New(agentDeps, ragEngine)
-	dopsAgent := devops.New(agentDeps)
-	planAgent := planner.New(agentDeps, taskManager, bgManager)
-
-	// Collect base tools the lead should have (file ops, grep, etc. from the registry).
-	leadBaseTools := collectRegistryTools(toolRegistry,
-		"read_file", "write_file", "edit_file", "grep_search", "glob_search",
-		"list_dir", "bash", "load_skill", "list_skills",
-	)
+	teamRuntime, err := team.NewRuntime(agentDeps, chatModel, obs, runLabel, cfg.Run.SandboxDir, cfg.Reflection)
+	if err != nil {
+		log.Fatalf("failed to initialize team runtime: %v", err)
+	}
+	obs.Info("team runtime initialized", "reflection_enabled", cfg.Reflection.Enabled, "run_label", runLabel)
 
 	leadSystemPrompt := `You are the lead of a multi-agent team. Your job is to:
 1. Understand the user's request and decide how to accomplish it.
@@ -164,13 +186,34 @@ Available roles for delegate_task and spawn_teammate:
 - devops: Handles CI/CD, infrastructure, and deployment tasks.
 - planner: Creates task DAGs and manages work breakdown.`
 
+	if err := bootstrapMCPClients(ctx, cfg.MCP, toolRegistry, mcpManager, obs); err != nil {
+		obs.Warn("mcp client bootstrap completed with warnings", "error", err)
+	}
+
+	// Build agent templates from existing role-specialized agents.
+	// These serve as role definitions: system prompt + tool set.
+	crAgent := codereviewer.New(agentDeps)
+	kbAgent := knowledge.New(agentDeps, ragEngine)
+	dopsAgent := devops.New(agentDeps)
+	planAgent := planner.New(agentDeps, taskManager, bgManager)
+
+	// Collect base tools the lead should have (file ops, grep, etc. from the registry).
+	leadBaseTools := collectRegistryTools(toolRegistry,
+		"read_file", "write_file", "edit_file", "grep_search", "glob_search",
+		"list_dir", "bash", "load_skill", "list_skills",
+	)
+	leadBaseTools = appendDistinctTools(leadBaseTools, toolRegistry.FilterBySource("mcp")...)
+
 	// Create the team manager (replaces the old Supervisor).
 	teamMgr, err := team.NewManager(ctx, team.ManagerConfig{
 		TeamDir:          cfg.Team.Dir,
+		PollInterval:     cfg.Team.PollInterval,
+		IdleTimeout:      cfg.Team.IdleTimeout,
 		Model:            chatModel,
 		Deps:             agentDeps,
 		TaskManager:      taskManager,
 		Observer:         obs,
+		Runtime:          teamRuntime,
 		LeadSystemPrompt: leadSystemPrompt,
 		LeadBaseTools:    leadBaseTools,
 	})
@@ -250,6 +293,17 @@ Available roles for delegate_task and spawn_teammate:
 	})
 
 	gw := gateway.New(cfg.Gateway, cfg.Server, teamMgr, obs)
+	if cfg.MCP.ServerEnabled {
+		mcpServer := mcp.NewServer(
+			toolRegistry,
+			mcp.WithPaths(cfg.MCP.RPCPath, cfg.MCP.SSEPath),
+		)
+		gw.SetMCPHandler(mcpServer.Handler())
+		obs.Info("mcp server mounted", "rpc_path", mcpServer.RPCPath(), "sse_path", mcpServer.SSEPath())
+	}
+	if err := writeRunDashboardREADME(cfg); err != nil {
+		obs.Warn("run dashboard readme write failed", "error", err)
+	}
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
@@ -298,6 +352,26 @@ func collectRegistryTools(reg *tool.Registry, names ...string) []*types.ToolMeta
 	return out
 }
 
+func appendDistinctTools(base []*types.ToolMeta, extras ...*types.ToolMeta) []*types.ToolMeta {
+	seen := make(map[string]struct{}, len(base))
+	for _, item := range base {
+		if item != nil {
+			seen[item.Definition.Name] = struct{}{}
+		}
+	}
+	for _, item := range extras {
+		if item == nil || item.Definition.Name == "" {
+			continue
+		}
+		if _, ok := seen[item.Definition.Name]; ok {
+			continue
+		}
+		seen[item.Definition.Name] = struct{}{}
+		base = append(base, item)
+	}
+	return base
+}
+
 func applyRunSandbox(cfg *configs.Config) {
 	if cfg == nil {
 		return
@@ -317,6 +391,128 @@ func resolveRunSandboxPath(sandboxDir, path string) string {
 		return path
 	}
 	return filepath.Join(sandboxDir, path)
+}
+
+func runLabelFromSandbox(sandboxDir string) string {
+	sandboxDir = strings.TrimSpace(sandboxDir)
+	if sandboxDir == "" {
+		return "default"
+	}
+	clean := filepath.Clean(sandboxDir)
+	base := filepath.Base(clean)
+	if base == "." || base == string(filepath.Separator) || strings.TrimSpace(base) == "" {
+		return "default"
+	}
+	return base
+}
+
+func localHTTPBaseURL(addr string) string {
+	addr = strings.TrimSpace(addr)
+	if addr == "" {
+		return "http://127.0.0.1:8080"
+	}
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		if strings.HasPrefix(addr, ":") {
+			return "http://127.0.0.1" + addr
+		}
+		return "http://" + addr
+	}
+	host = strings.TrimSpace(host)
+	switch host {
+	case "", "0.0.0.0", "::", "[::]":
+		host = "127.0.0.1"
+	}
+	return "http://" + net.JoinHostPort(host, port)
+}
+
+func bootstrapMCPClients(
+	ctx context.Context,
+	cfg configs.MCPConfig,
+	reg *tool.Registry,
+	manager *mcp.Manager,
+	obs *observability.Observer,
+) error {
+	var errs []string
+	for _, clientCfg := range cfg.Clients {
+		if !clientCfg.Enabled || strings.TrimSpace(clientCfg.BaseURL) == "" {
+			continue
+		}
+		transport := mcp.NewSSETransport(clientCfg.BaseURL, clientCfg.RPCPath)
+		if clientCfg.ConnectSSE {
+			connectCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			if err := transport.ConnectSSE(connectCtx, clientCfg.SSEPath); err != nil {
+				errs = append(errs, fmt.Sprintf("%s: connect sse: %v", coalesce(clientCfg.Name, clientCfg.BaseURL), err))
+				cancel()
+				_ = transport.Close()
+				continue
+			}
+			cancel()
+		}
+		client := mcp.NewClient(transport)
+		initCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		if _, err := client.Initialize(initCtx); err != nil {
+			errs = append(errs, fmt.Sprintf("%s: initialize: %v", coalesce(clientCfg.Name, clientCfg.BaseURL), err))
+			cancel()
+			_ = transport.Close()
+			continue
+		}
+		if err := client.SendInitializedNotification(initCtx); err != nil {
+			obs.Warn("mcp client initialized notification failed", "client", coalesce(clientCfg.Name, clientCfg.BaseURL), "error", err)
+		}
+		if err := client.AutoRegisterTools(initCtx, reg); err != nil {
+			errs = append(errs, fmt.Sprintf("%s: register tools: %v", coalesce(clientCfg.Name, clientCfg.BaseURL), err))
+			cancel()
+			_ = transport.Close()
+			continue
+		}
+		cancel()
+		manager.Add(transport)
+		obs.Info("mcp client registered", "client", coalesce(clientCfg.Name, clientCfg.BaseURL), "base_url", clientCfg.BaseURL)
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf(strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+func coalesce(a, b string) string {
+	if strings.TrimSpace(a) != "" {
+		return a
+	}
+	return b
+}
+
+func writeRunDashboardREADME(cfg *configs.Config) error {
+	if cfg == nil {
+		return nil
+	}
+	sandbox := strings.TrimSpace(cfg.Run.SandboxDir)
+	if sandbox == "" {
+		return nil
+	}
+	baseURL := localHTTPBaseURL(cfg.Server.HTTPAddr)
+	runLabel := runLabelFromSandbox(sandbox)
+	readmePath := filepath.Join(sandbox, "README.md")
+	var b strings.Builder
+	b.WriteString("# Run Dashboard\n\n")
+	b.WriteString("This sandbox contains runtime artifacts for the current Nexus run.\n\n")
+	b.WriteString("## Links\n\n")
+	b.WriteString("- Dashboard: " + baseURL + "/debug/dashboard?run=" + runLabel + "\n")
+	b.WriteString("- Trace List: " + baseURL + "/api/debug/traces?run=" + runLabel + "\n")
+	b.WriteString("- Metrics: " + baseURL + "/api/debug/metrics?run=" + runLabel + "\n")
+	b.WriteString("- Health: " + baseURL + "/api/health\n\n")
+	b.WriteString("## Paths\n\n")
+	b.WriteString("- Sandbox Dir: `" + sandbox + "`\n")
+	b.WriteString("- Latest Trace Snapshot: `" + filepath.Join(sandbox, "latest-traces.json") + "`\n")
+	b.WriteString("- Task Dir: `" + cfg.Planning.TaskDir + "`\n")
+	b.WriteString("- Semantic Memory: `" + cfg.Memory.SemanticFile + "`\n")
+	b.WriteString("- Reflection Memory: `" + cfg.Reflection.MemoryFile + "`\n")
+	b.WriteString("- Output Dir: `" + cfg.Agent.OutputPersistDir + "`\n")
+	if err := os.MkdirAll(filepath.Dir(readmePath), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(readmePath, []byte(b.String()), 0o644)
 }
 
 const scheduledCronSkillName = "cron-team-dispatch"

@@ -11,9 +11,9 @@ import (
 )
 
 // BuildTeammateTools returns the set of team-specific tools that every teammate gets.
-func BuildTeammateTools(name string, bus *MessageBus, roster *Roster, tracker *RequestTracker, tm *planning.TaskManager, claimLogger *ClaimLogger) []*types.ToolMeta {
+func BuildTeammateTools(name string, bus *MessageBus, roster *Roster, tracker *RequestTracker, tm *planning.TaskManager, claimLogger *ClaimLogger, mgr *Manager) []*types.ToolMeta {
 	return []*types.ToolMeta{
-		toolSendMessage(name, bus),
+		toolSendMessage(name, bus, mgr),
 		toolReadInbox(name, bus),
 		toolListTeammates(roster),
 		toolClaimTask(name, tm, claimLogger),
@@ -33,7 +33,7 @@ func BuildLeadTools(mgr *Manager, bus *MessageBus, roster *Roster, tracker *Requ
 	}
 }
 
-func toolSendMessage(sender string, bus *MessageBus) *types.ToolMeta {
+func toolSendMessage(sender string, bus *MessageBus, mgr *Manager) *types.ToolMeta {
 	return &types.ToolMeta{
 		Definition: types.ToolDefinition{
 			Name:        "send_message",
@@ -54,6 +54,12 @@ func toolSendMessage(sender string, bus *MessageBus) *types.ToolMeta {
 			content := utils.GetString(args, "content")
 			if to == "" || content == "" {
 				return &types.ToolResult{Content: "Error: to and content required", IsError: true}, nil
+			}
+			if mgr != nil {
+				if err := mgr.SendMessage(ctx, sender, to, content); err != nil {
+					return &types.ToolResult{Content: fmt.Sprintf("Error: %v", err), IsError: true}, nil
+				}
+				return &types.ToolResult{Content: fmt.Sprintf("Sent message to %s", to)}, nil
 			}
 			if err := bus.Send(sender, to, content, MsgTypeMessage, nil); err != nil {
 				return &types.ToolResult{Content: fmt.Sprintf("Error: %v", err), IsError: true}, nil

@@ -184,8 +184,8 @@ func validateLeadRoutingCall(profile *dispatchProfile, roster *Roster, call type
 			if !ok {
 				return fmt.Errorf("teammate %q does not exist; spawn a persistent teammate first", target)
 			}
-			if member.Name == leadName || member.Status == StatusShutdown {
-				return fmt.Errorf("teammate %q is not an active persistent worker", target)
+			if member.Name == leadName {
+				return fmt.Errorf("send_message target %q must be a persistent teammate, not the lead", target)
 			}
 			if profile.SpecialistRole != "" && member.Role != profile.SpecialistRole {
 				return fmt.Errorf("send_message target %q has role %q, expected specialist_role=%q", target, member.Role, profile.SpecialistRole)

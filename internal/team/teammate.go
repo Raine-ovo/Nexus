@@ -30,6 +30,7 @@ type TeammateConfig struct {
 	TaskManager  *planning.TaskManager
 	ClaimLogger  *ClaimLogger
 	Observer     core.Observer
+	Runtime      *Runtime
 	// PollInterval controls idle-phase polling frequency.
 	PollInterval time.Duration
 	// MaxIdlePolls controls how many idle polls before auto-shutdown.
@@ -50,6 +51,7 @@ type Teammate struct {
 	taskManager  *planning.TaskManager
 	claimLogger  *ClaimLogger
 	observer     core.Observer
+	runtime      *Runtime
 
 	pollInterval time.Duration
 	maxIdlePolls int
@@ -85,6 +87,7 @@ func NewTeammate(cfg TeammateConfig) *Teammate {
 		taskManager:    cfg.TaskManager,
 		claimLogger:    cfg.ClaimLogger,
 		observer:       cfg.Observer,
+		runtime:        cfg.Runtime,
 		pollInterval:   pi,
 		maxIdlePolls:   mp,
 		done:           make(chan struct{}),
@@ -133,6 +136,14 @@ func (t *Teammate) logWarn(msg string, kv ...interface{}) {
 func (t *Teammate) run(ctx context.Context, initialPrompt string) {
 	defer close(t.done)
 	defer func() {
+		if t.taskManager != nil {
+			released, err := t.taskManager.ReleaseClaimsByOwner(t.name)
+			if err != nil {
+				t.logWarn("failed to release claimed tasks during shutdown", "err", err)
+			} else if len(released) > 0 {
+				t.log("released claimed tasks during shutdown", "task_ids", released)
+			}
+		}
 		_ = t.roster.UpdateStatus(t.name, StatusShutdown)
 		t.log("shutdown complete")
 	}()
@@ -175,9 +186,17 @@ func (t *Teammate) workPhase(ctx context.Context) {
 
 		// Drain inbox before each model call so in-flight messages are seen promptly.
 		t.drainInbox()
+		t.compactTranscript(ctx)
 
 		toolDefs := toolDefinitions(t.tools)
-		resp, err := t.model.Generate(ctx, t.buildSystem(), t.messages, toolDefs)
+		llmTrace, llmCtx := t.startLLMSpan(ctx)
+		var resp *core.ChatModelResponse
+		err := t.callWithRecovery(llmCtx, func(callCtx context.Context) error {
+			var genErr error
+			resp, genErr = t.model.Generate(callCtx, t.buildSystem(), t.messages, toolDefs)
+			return genErr
+		})
+		t.endLLMSpan(llmTrace, err)
 		if err != nil {
 			t.logWarn("model generate error", "err", err)
 			return
@@ -195,7 +214,9 @@ func (t *Teammate) workPhase(ctx context.Context) {
 		t.appendAssistantWithCalls(resp)
 
 		for _, call := range resp.ToolCalls {
-			result := t.executeTool(ctx, call)
+			toolTrace, toolCtx := t.startToolSpan(ctx, call.Name)
+			result := t.executeTool(toolCtx, call)
+			t.endToolSpan(toolTrace, toolResultErr(result))
 			t.appendToolResult(call, result)
 		}
 	}
@@ -328,6 +349,9 @@ func (t *Teammate) buildSystem() string {
 			"Use read_inbox to check for messages. Use claim_task to pick up work.",
 		t.name, t.role,
 	)
+	if t.runtime != nil {
+		return t.runtime.BuildSystemPrompt(base, nil, strings.TrimSpace(teamCtx))
+	}
 	return base + teamCtx
 }
 
@@ -352,9 +376,9 @@ func (t *Teammate) appendAssistantWithCalls(resp *core.ChatModelResponse) {
 
 func (t *Teammate) appendToolResult(call types.ToolCall, result *types.ToolResult) {
 	t.messages = append(t.messages, types.Message{
-		ID:     uuid.NewString(),
-		Role:   types.RoleTool,
-		ToolID: call.ID,
+		ID:      uuid.NewString(),
+		Role:    types.RoleTool,
+		ToolID:  call.ID,
 		Content: result.Content,
 		Metadata: map[string]interface{}{
 			"tool_name": call.Name,
@@ -474,4 +498,53 @@ func coalesce(a, b string) string {
 		return a
 	}
 	return b
+}
+
+func toolResultErr(result *types.ToolResult) error {
+	if result == nil || !result.IsError {
+		return nil
+	}
+	return fmt.Errorf(strings.TrimSpace(result.Content))
+}
+
+func (t *Teammate) startLLMSpan(ctx context.Context) (*runtimeTrace, context.Context) {
+	if t.runtime == nil {
+		return nil, ctx
+	}
+	return t.runtime.StartLLMSpan(ctx, t.name)
+}
+
+func (t *Teammate) endLLMSpan(trace *runtimeTrace, err error) {
+	if t.runtime == nil {
+		return
+	}
+	t.runtime.EndLLMSpan(trace, err)
+}
+
+func (t *Teammate) startToolSpan(ctx context.Context, toolName string) (*runtimeTrace, context.Context) {
+	if t.runtime == nil {
+		return nil, ctx
+	}
+	return t.runtime.StartToolSpan(ctx, t.name, toolName)
+}
+
+func (t *Teammate) endToolSpan(trace *runtimeTrace, err error) {
+	if t.runtime == nil {
+		return
+	}
+	t.runtime.EndToolSpan(trace, err)
+}
+
+func (t *Teammate) callWithRecovery(ctx context.Context, fn func(context.Context) error) error {
+	if t.runtime == nil {
+		return fn(ctx)
+	}
+	return t.runtime.CallWithRecovery(ctx, func() error { return fn(ctx) })
+}
+
+func (t *Teammate) compactTranscript(ctx context.Context) {
+	if t.runtime == nil {
+		return
+	}
+	t.messages = t.runtime.SummarizeTranscriptMessages(ctx, t.messages)
 }

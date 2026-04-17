@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/rainea/nexus/internal/core"
 	"github.com/rainea/nexus/internal/planning"
@@ -20,11 +21,14 @@ type AgentTemplate struct {
 
 // ManagerConfig holds configuration for the TeammateManager.
 type ManagerConfig struct {
-	TeamDir     string
-	Model       core.ChatModel
-	Deps        *core.AgentDependencies
-	TaskManager *planning.TaskManager
-	Observer    core.Observer
+	TeamDir      string
+	PollInterval time.Duration
+	IdleTimeout  time.Duration
+	Model        core.ChatModel
+	Deps         *core.AgentDependencies
+	TaskManager  *planning.TaskManager
+	Observer     core.Observer
+	Runtime      *Runtime
 	// LeadSystemPrompt is the base system prompt for the lead teammate.
 	LeadSystemPrompt string
 	// LeadBaseTools are non-team tools the lead should have (e.g. file/bash from registry).
@@ -39,6 +43,10 @@ type Manager struct {
 	deps        *core.AgentDependencies
 	taskManager *planning.TaskManager
 	observer    core.Observer
+	runtime     *Runtime
+
+	pollInterval time.Duration
+	idleTimeout  time.Duration
 
 	roster      *Roster
 	bus         *MessageBus
@@ -82,23 +90,26 @@ func NewManager(ctx context.Context, cfg ManagerConfig) (*Manager, error) {
 	claimLogger := NewClaimLogger(taskDir)
 
 	m := &Manager{
-		teamDir:     teamDir,
-		model:       cfg.Model,
-		deps:        cfg.Deps,
-		taskManager: cfg.TaskManager,
-		observer:    cfg.Observer,
-		roster:      roster,
-		bus:         bus,
-		tracker:     tracker,
-		claimLogger: claimLogger,
-		templates:   make(map[string]AgentTemplate),
-		teammates:   make(map[string]*Teammate),
+		teamDir:      teamDir,
+		model:        cfg.Model,
+		deps:         cfg.Deps,
+		taskManager:  cfg.TaskManager,
+		observer:     cfg.Observer,
+		runtime:      cfg.Runtime,
+		pollInterval: normalizePollInterval(cfg.PollInterval),
+		idleTimeout:  normalizeIdleTimeout(cfg.IdleTimeout),
+		roster:       roster,
+		bus:          bus,
+		tracker:      tracker,
+		claimLogger:  claimLogger,
+		templates:    make(map[string]AgentTemplate),
+		teammates:    make(map[string]*Teammate),
 	}
 
 	// Build lead tools: base tools + team tools + lead-only tools.
 	leadTools := make([]*types.ToolMeta, 0, len(cfg.LeadBaseTools)+16)
 	leadTools = append(leadTools, cfg.LeadBaseTools...)
-	leadTools = append(leadTools, BuildTeammateTools(leadName, bus, roster, tracker, cfg.TaskManager, claimLogger)...)
+	leadTools = append(leadTools, BuildTeammateTools(leadName, bus, roster, tracker, cfg.TaskManager, claimLogger, m)...)
 	leadTools = append(leadTools, BuildLeadTools(m, bus, roster, tracker)...)
 
 	lead := newLead(m, cfg.Model, cfg.Deps, leadTools, cfg.LeadSystemPrompt)
@@ -171,7 +182,7 @@ func (m *Manager) Spawn(ctx context.Context, name, role, prompt string) error {
 		sysPrompt = fmt.Sprintf("You are a helpful agent specialized in %s tasks.", role)
 	}
 
-	teamTools := BuildTeammateTools(name, m.bus, m.roster, m.tracker, m.taskManager, m.claimLogger)
+	teamTools := BuildTeammateTools(name, m.bus, m.roster, m.tracker, m.taskManager, m.claimLogger, nil)
 	allTools := make([]*types.ToolMeta, 0, len(baseTools)+len(teamTools))
 	allTools = append(allTools, baseTools...)
 	allTools = append(allTools, teamTools...)
@@ -189,6 +200,9 @@ func (m *Manager) Spawn(ctx context.Context, name, role, prompt string) error {
 		TaskManager:  m.taskManager,
 		ClaimLogger:  m.claimLogger,
 		Observer:     m.observer,
+		Runtime:      m.runtime,
+		PollInterval: m.pollInterval,
+		MaxIdlePolls: maxIdlePollsFor(m.pollInterval, m.idleTimeout),
 	}
 
 	teammate := NewTeammate(cfg)
@@ -207,6 +221,67 @@ func (m *Manager) Spawn(ctx context.Context, name, role, prompt string) error {
 		m.observer.Info("teammate spawned", "name", name, "role", role)
 	}
 	return nil
+}
+
+func normalizePollInterval(v time.Duration) time.Duration {
+	if v <= 0 {
+		return defaultPollInterval
+	}
+	return v
+}
+
+func normalizeIdleTimeout(v time.Duration) time.Duration {
+	if v <= 0 {
+		return 20 * time.Minute
+	}
+	return v
+}
+
+func maxIdlePollsFor(pollInterval, idleTimeout time.Duration) int {
+	if pollInterval <= 0 {
+		pollInterval = defaultPollInterval
+	}
+	if idleTimeout <= 0 {
+		idleTimeout = 20 * time.Minute
+	}
+	polls := int((idleTimeout + pollInterval - 1) / pollInterval)
+	if polls < 1 {
+		return 1
+	}
+	return polls
+}
+
+func resumePromptFor(member TeamMember) string {
+	return fmt.Sprintf(
+		"You are resuming work after being reactivated. Your role is %s. Check your inbox immediately for follow-up instructions, then continue any unfinished work.",
+		member.Role,
+	)
+}
+
+func (m *Manager) SendMessage(ctx context.Context, sender, target, content string) error {
+	if target == "" {
+		return fmt.Errorf("team: target required")
+	}
+	if content == "" {
+		return fmt.Errorf("team: content required")
+	}
+	if target == leadName {
+		return m.bus.Send(sender, target, content, MsgTypeMessage, nil)
+	}
+
+	member, ok := m.roster.Get(target)
+	if !ok {
+		return fmt.Errorf("team: teammate %q does not exist", target)
+	}
+	if member.Status == StatusShutdown {
+		if err := m.Spawn(ctx, member.Name, member.Role, resumePromptFor(member)); err != nil {
+			return fmt.Errorf("team: revive teammate %q: %w", target, err)
+		}
+		if m.observer != nil {
+			m.observer.Info("teammate revived for send_message", "name", member.Name, "role", member.Role)
+		}
+	}
+	return m.bus.Send(sender, target, content, MsgTypeMessage, nil)
 }
 
 // ShutdownTeammate requests graceful shutdown of a teammate.

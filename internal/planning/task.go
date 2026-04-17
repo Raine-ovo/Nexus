@@ -281,6 +281,50 @@ func (m *TaskManager) Update(id int, status string) error {
 	return nil
 }
 
+// ReleaseClaimsByOwner clears claims held by owner and re-queues any in-progress work.
+// In-progress tasks are moved back to pending when prerequisites are satisfied, or blocked otherwise.
+func (m *TaskManager) ReleaseClaimsByOwner(owner string) ([]int, error) {
+	if strings.TrimSpace(owner) == "" {
+		return nil, nil
+	}
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	now := time.Now().UTC()
+	released := make([]int, 0)
+	for _, t := range m.tasks {
+		if t == nil || t.ClaimedBy != owner {
+			continue
+		}
+		changed := false
+		if t.Status == TaskInProgress {
+			if m.allPrereqsCompletedLocked(t) {
+				t.Status = TaskPending
+			} else {
+				t.Status = TaskBlocked
+			}
+			released = append(released, t.ID)
+			changed = true
+		}
+		if t.ClaimedBy != "" || !t.ClaimedAt.IsZero() || t.ClaimSource != "" {
+			t.ClaimedBy = ""
+			t.ClaimedAt = time.Time{}
+			t.ClaimSource = ""
+			changed = true
+		}
+		if !changed {
+			continue
+		}
+		t.UpdatedAt = now
+		if err := m.persistTaskLocked(t); err != nil {
+			return nil, err
+		}
+	}
+	sort.Ints(released)
+	return released, nil
+}
+
 // ResolveDownstream unblocks tasks that were waiting on completedID (same as completion side-effect).
 func (m *TaskManager) ResolveDownstream(taskID int) {
 	m.mu.Lock()
