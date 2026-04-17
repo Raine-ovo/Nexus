@@ -391,7 +391,7 @@ rag:
 
 ### 5.5 传输：stdio / SSE
 
-`transport.go` 抽象 `Transport`；支持子进程 stdio 与基于 HTTP 的 SSE/流式场景（具体以仓库实现为准）。**Manager**（`manager.go`）可管理多连接生命周期，`main` 中在关闭时 `CloseAll`。
+`transport.go` 抽象 `Transport`；支持子进程 stdio 与基于 HTTP 的 SSE/流式场景。当前运行时主链默认挂载 `/mcp/rpc`、`/mcp/sse`，并通过 `mcp.clients` 做远端 HTTP/SSE 工具注册；stdio 仍保留在传输抽象层。**Manager**（`manager.go`）可管理多连接生命周期，`main` 中在关闭时 `CloseAll`。
 
 ---
 
@@ -634,7 +634,7 @@ reflection:
 
 ### 9.1 多通道归一化
 
-`Gateway`（`internal/gateway/server.go`）将 **HTTP**（健康检查、建会话、Chat）与 **WebSocket** 统一为对 `Supervisor.HandleRequest` 的调用；会话由 `SessionManager` 持有 channel/user 元数据，便于审计与绑定。
+`Gateway`（`internal/gateway/server.go`）将 **HTTP**（健康检查、建会话、Chat、debug、MCP）与 **WebSocket** 统一为对 `Supervisor.HandleRequest` 的调用；会话由 `SessionManager` 持有 channel/user 元数据，便于审计与绑定。
 
 ### 9.2 五档绑定特异性（BindingRouter）
 
@@ -657,7 +657,7 @@ reflection:
 
 ### 9.4 中间件栈
 
-当前 `Start` 中用 `middleware.NewTrace().Wrap(mux)` 包装路由；架构上可扩展 **auth**（校验 Token / 内网 mTLS）、**ratelimit**（按 user/channel 令牌桶）、**trace**（注入 LogID / TraceID）。`internal/gateway/middleware/` 下已有 `auth.go`、`ratelimit.go`、`trace.go` 等骨架或实现，便于横向演进。
+当前 `Start` 中已接入 **RateLimit → Trace → Auth(业务接口)** 的链路；`/api/health`、`/debug/dashboard`、`/api/debug/*` 默认免鉴权，业务接口走 API Key / JWT 校验。`internal/gateway/middleware/` 下的 `auth.go`、`ratelimit.go`、`trace.go` 已是主链实现，而不只是扩展骨架。
 
 ---
 

@@ -1,0 +1,15 @@
+{
+  "team_name": "default",
+  "members": [
+    {
+      "name": "lead",
+      "role": "lead",
+      "status": "idle"
+    },
+    {
+      "name": "Meridian",
+      "role": "planner",
+      "status": "shutdown"
+    }
+  ]
+}

@@ -19,8 +19,10 @@
 - 支持 `POST /api/sessions`
 - 支持 `POST /api/chat`
 - 支持 `GET /api/ws`
-- 支持 OpenAI 兼容模型接入，可直接对接智谱 `glm-4.7`
+- 支持 OpenAI 兼容模型接入，可直接对接智谱 `glm-5.1`
 - 支持 `semi_auto` 模式下的默认只读工具放行
+- 支持进程级 LLM 节流：`model.max_concurrency` + `model.min_request_interval_ms`
+- 支持本地治理入口：`/debug/dashboard`、`/api/debug/*`、run 目录下的 `latest-traces.json`
 - 支持优雅退出：响应 `SIGINT` / `SIGTERM`，停止 cron、团队管理器、后台任务，并 flush 内存
 
 当前仓库尚未内置以下生产配套物：
@@ -92,11 +94,13 @@ server:
 
 model:
   provider: "openai"
-  model_name: "glm-4.7"
+  model_name: "glm-5.1"
   api_key: "${NEXUS_API_KEY}"
   base_url: "https://open.bigmodel.cn/api/paas/v4/"
   max_tokens: 8192
   temperature: 0.3
+  max_concurrency: 1
+  min_request_interval_ms: 2500
 
 agent:
   max_iterations: 20
@@ -151,7 +155,14 @@ observability:
 - `temperature` 建议低一点，先用 `0.2 - 0.3`
 - `permission.mode` 默认保持 `semi_auto`
 - `background.max_concurrency` 不建议一开始开太大
+- 智谱这类并发敏感模型建议 `model.max_concurrency: 1`
+- 对复杂多 Agent 任务建议加 `model.min_request_interval_ms: 2500-5000`
 - 不要把 API key 写死到 YAML，始终通过环境变量注入
+
+注意区分两层限流：
+
+- `gateway.rate_limit`：控制 HTTP 请求入口的每 IP 令牌桶
+- `model.max_concurrency` / `model.min_request_interval_ms`：控制进程内所有 LLM 调用的并发和节拍
 
 如果需要做实验运行隔离或定时审计回放，建议额外配置：
 
@@ -193,7 +204,7 @@ cp configs/default.yaml /opt/nexus/config/production.yaml
 ```bash
 NEXUS_API_KEY=your-zhipu-api-key
 NEXUS_BASE_URL=https://open.bigmodel.cn/api/paas/v4/
-NEXUS_MODEL=glm-4.7
+NEXUS_MODEL=glm-5.1
 NEXUS_HTTP_ADDR=:8080
 NEXUS_LOG_LEVEL=info
 ```
@@ -257,6 +268,18 @@ sudo journalctl -u nexus -f
 ## 日志配置
 
 ### 当前日志能力
+
+## 鉴权与调试入口
+
+当前默认边界如下：
+
+- `/api/chat`、`/api/chat/jobs`、`/api/sessions`、`/api/ws`、`/mcp/*`：是否鉴权取决于 `gateway.auth`
+- `/api/health`、`/debug/dashboard`、`/api/debug/*`：默认免鉴权，便于浏览器直接查看调试页和 run 级观测
+
+生产建议：
+
+- 若需要暴露到公网，建议通过反向代理或内网访问控制限制 `/debug/*` 与 `/api/debug/*`
+- 对外 API 和内部治理入口不要使用同一套暴露策略
 
 当前程序日志由 `internal/observability` 输出到标准输出，格式近似：
 
@@ -488,8 +511,10 @@ sudo journalctl -u nexus -n 200 --no-pager
 ```yaml
 model:
   provider: "openai"
-  model_name: "glm-4.7"
+  model_name: "glm-5.1"
   base_url: "https://open.bigmodel.cn/api/paas/v4/"
+  max_concurrency: 1
+  min_request_interval_ms: 2500
 ```
 
 ### 3. `/api/chat` 返回权限拒绝

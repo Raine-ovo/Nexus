@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/rainea/nexus/configs"
@@ -44,6 +45,16 @@ type ToolRegistry interface {
 // Implemented by intelligence.SkillManager without core importing that package.
 type SkillIndex interface {
 	GetIndexPrompt() string
+}
+
+// PromptBuilder assembles bootstrap text, skill index, and memory into a system preamble.
+type PromptBuilder interface {
+	Build(memorySection string) (string, error)
+}
+
+// MemoryPromptBuilder formats dynamic memory for system prompt injection.
+type MemoryPromptBuilder interface {
+	BuildPromptSection() string
 }
 
 // AgentDependencies holds shared infrastructure injected from cmd/nexus/main.go:
@@ -277,15 +288,7 @@ func (b *BaseAgent) listTools() []*types.ToolMeta {
 }
 
 func (b *BaseAgent) getSystem() string {
-	base := b.GetSystemPrompt()
-	if b.skillIndex == nil {
-		return base
-	}
-	idx := b.skillIndex.GetIndexPrompt()
-	if idx == "" {
-		return base
-	}
-	return base + "\n\n" + idx + "\nUse list_skills / load_skill tools to access full skill content when needed."
+	return BuildSystemPrompt(b.GetSystemPrompt(), b.deps, b.skillIndex, "", "")
 }
 
 // RegisterTools adds multiple tools; the first error stops the batch (earlier tools remain registered).
@@ -319,4 +322,53 @@ func ShallowCopyDependencies(d *AgentDependencies) *AgentDependencies {
 	}
 	cp := *d
 	return &cp
+}
+
+// BuildSystemPrompt composes the final system prompt from prompt assembler output,
+// injected memory, the role-specific base prompt, and optional suffix instructions.
+func BuildSystemPrompt(base string, deps *AgentDependencies, skillIndex SkillIndex, extraMemorySection, extraSuffix string) string {
+	base = strings.TrimSpace(base)
+	extraMemorySection = strings.TrimSpace(extraMemorySection)
+	extraSuffix = strings.TrimSpace(extraSuffix)
+
+	memorySection := ""
+	if deps != nil && deps.MemManager != nil {
+		if mp, ok := deps.MemManager.(MemoryPromptBuilder); ok {
+			memorySection = strings.TrimSpace(mp.BuildPromptSection())
+		}
+	}
+	if extraMemorySection != "" {
+		if memorySection != "" {
+			memorySection += "\n\n" + extraMemorySection
+		} else {
+			memorySection = extraMemorySection
+		}
+	}
+
+	var preamble string
+	if deps != nil && deps.PromptAssembler != nil {
+		if pb, ok := deps.PromptAssembler.(PromptBuilder); ok {
+			if built, err := pb.Build(memorySection); err == nil {
+				preamble = strings.TrimSpace(built)
+			}
+		}
+	}
+	if preamble == "" && skillIndex != nil {
+		idx := strings.TrimSpace(skillIndex.GetIndexPrompt())
+		if idx != "" {
+			preamble = idx + "\nUse list_skills / load_skill tools to access full skill content when needed."
+		}
+	}
+
+	parts := make([]string, 0, 3)
+	if preamble != "" {
+		parts = append(parts, preamble)
+	}
+	if base != "" {
+		parts = append(parts, base)
+	}
+	if extraSuffix != "" {
+		parts = append(parts, extraSuffix)
+	}
+	return strings.Join(parts, "\n\n")
 }

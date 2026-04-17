@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/rainea/nexus/configs"
 	"github.com/rainea/nexus/internal/gateway/middleware"
+	"github.com/rainea/nexus/internal/observability"
 )
 
 // Gateway is the multi-channel entry point.
@@ -24,6 +25,7 @@ type Gateway struct {
 	router     *BindingRouter
 	observer   Observer
 	runCtx     context.Context
+	mcpHandler http.Handler
 }
 
 // Supervisor is the interface that the orchestrator must implement.
@@ -35,6 +37,13 @@ type Supervisor interface {
 type Observer interface {
 	Info(msg string, keysAndValues ...interface{})
 	Error(msg string, keysAndValues ...interface{})
+}
+
+type debugObserver interface {
+	MetricsSnapshot() map[string]interface{}
+	MetricsSnapshotForRun(runLabel string) map[string]interface{}
+	ListTraces(limit int) []observability.TraceSummary
+	Trace(traceID string) []*observability.Span
 }
 
 type noopObserver struct{}
@@ -76,20 +85,18 @@ func (g *Gateway) Lanes() *LaneManager { return g.lanes }
 // Router exposes the binding router.
 func (g *Gateway) Router() *BindingRouter { return g.router }
 
+// SetMCPHandler mounts optional MCP HTTP endpoints into the primary server mux.
+func (g *Gateway) SetMCPHandler(h http.Handler) {
+	g.mcpHandler = h
+}
+
 // Start runs the HTTP server until ctx is cancelled, then shuts down gracefully.
 func (g *Gateway) Start(ctx context.Context) error {
 	g.lanes.Start(ctx)
 	g.runCtx = ctx
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /api/health", g.handleHealth)
-	mux.HandleFunc("POST /api/sessions", g.handleCreateSession)
-	mux.HandleFunc("POST /api/chat", g.handleChat)
-	mux.HandleFunc("POST /api/chat/jobs", g.handleCreateChatJob)
-	mux.HandleFunc("GET /api/chat/jobs/{id}", g.handleGetChatJob)
-	mux.HandleFunc("GET /api/ws", g.handleWebSocket)
-
-	handler := middleware.NewTrace().Wrap(mux)
+	mux := g.newPrimaryMux()
+	handler := g.wrapPrimaryHandler(mux)
 
 	srv := &http.Server{
 		Addr:         g.serverCfg.HTTPAddr,
@@ -97,8 +104,9 @@ func (g *Gateway) Start(ctx context.Context) error {
 		ReadTimeout:  g.serverCfg.ReadTimeout,
 		WriteTimeout: g.serverCfg.WriteTimeout,
 	}
+	wsSrv := g.newWebSocketServer()
 
-	errCh := make(chan error, 1)
+	errCh := make(chan error, 2)
 	go func() {
 		g.observer.Info("gateway listening", "addr", g.serverCfg.HTTPAddr)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -107,6 +115,16 @@ func (g *Gateway) Start(ctx context.Context) error {
 		}
 		errCh <- nil
 	}()
+	if wsSrv != nil {
+		go func() {
+			g.observer.Info("gateway websocket listening", "addr", wsSrv.Addr)
+			if err := wsSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				errCh <- err
+				return
+			}
+			errCh <- nil
+		}()
+	}
 
 	select {
 	case <-ctx.Done():
@@ -115,11 +133,90 @@ func (g *Gateway) Start(ctx context.Context) error {
 		if err := srv.Shutdown(shutdownCtx); err != nil {
 			g.observer.Error("gateway shutdown error", "err", err)
 		}
+		if wsSrv != nil {
+			if err := wsSrv.Shutdown(shutdownCtx); err != nil {
+				g.observer.Error("gateway websocket shutdown error", "err", err)
+			}
+		}
 		g.lanes.Stop()
 		return ctx.Err()
 	case err := <-errCh:
+		if wsSrv != nil {
+			_ = wsSrv.Close()
+		}
+		_ = srv.Close()
 		g.lanes.Stop()
 		return err
+	}
+}
+
+func (g *Gateway) newPrimaryMux() *http.ServeMux {
+	mux := http.NewServeMux()
+	if g.mcpHandler != nil {
+		mux.Handle("/mcp/", g.mcpHandler)
+	}
+	mux.HandleFunc("GET /api/health", g.handleHealth)
+	mux.HandleFunc("POST /api/sessions", g.handleCreateSession)
+	mux.HandleFunc("POST /api/chat", g.handleChat)
+	mux.HandleFunc("POST /api/chat/jobs", g.handleCreateChatJob)
+	mux.HandleFunc("GET /api/chat/jobs/{id}", g.handleGetChatJob)
+	mux.HandleFunc("GET /api/debug/metrics", g.handleDebugMetrics)
+	mux.HandleFunc("GET /api/debug/traces", g.handleDebugTraces)
+	mux.HandleFunc("GET /api/debug/traces/{id}", g.handleDebugTrace)
+	mux.HandleFunc("GET /debug/dashboard", g.handleDebugDashboard)
+	mux.HandleFunc("GET /api/ws", g.handleWebSocket)
+	return mux
+}
+
+func (g *Gateway) wrapPrimaryHandler(mux http.Handler) http.Handler {
+	private := middleware.NewAuthWithJWT(g.cfg.Auth.APIKeys, g.cfg.Auth.JWTSecret).Wrap(mux)
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if isPublicDebugOrHealthRoute(r) {
+			mux.ServeHTTP(w, r)
+			return
+		}
+		private.ServeHTTP(w, r)
+	})
+	handler = middleware.NewTrace().Wrap(handler)
+	rps := g.cfg.RateLimit.RPS
+	burst := g.cfg.RateLimit.Burst
+	if !g.cfg.RateLimit.Enabled {
+		rps = 0
+		burst = 0
+	}
+	handler = middleware.NewRateLimiter(rps, burst).Wrap(handler)
+	return handler
+}
+
+func isPublicDebugOrHealthRoute(r *http.Request) bool {
+	if r == nil {
+		return false
+	}
+	path := r.URL.Path
+	switch {
+	case path == "/api/health":
+		return true
+	case path == "/debug/dashboard":
+		return true
+	case strings.HasPrefix(path, "/api/debug/"):
+		return true
+	default:
+		return false
+	}
+}
+
+func (g *Gateway) newWebSocketServer() *http.Server {
+	addr := strings.TrimSpace(g.serverCfg.WSAddr)
+	if addr == "" || addr == strings.TrimSpace(g.serverCfg.HTTPAddr) {
+		return nil
+	}
+	wsMux := http.NewServeMux()
+	wsMux.HandleFunc("GET /api/ws", g.handleWebSocket)
+	return &http.Server{
+		Addr:         addr,
+		Handler:      g.wrapPrimaryHandler(wsMux),
+		ReadTimeout:  g.serverCfg.ReadTimeout,
+		WriteTimeout: g.serverCfg.WriteTimeout,
 	}
 }
 

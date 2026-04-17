@@ -57,8 +57,10 @@ flowchart TD
     CREATE_TEAM --> REG_TMPL[注册角色模板到 Manager<br/>code_reviewer / knowledge / devops / planner]
     REG_TMPL --> REHYDRATE[Roster 恢复：rehydrate 已有 Teammate]
     REHYDRATE --> CREATE_GW[创建 Gateway<br/>Manager 实现 Supervisor 接口]
+    CREATE_GW --> MOUNT_MCP[挂载 MCP Server<br/>/mcp/rpc + /mcp/sse]
+    MOUNT_MCP --> BOOT_MCP_CLIENTS[按 mcp.clients 启动 MCP Client<br/>并注册远端工具]
 
-    CREATE_GW --> START_GW[启动 HTTP Server goroutine]
+    BOOT_MCP_CLIENTS --> START_GW[启动 HTTP Server goroutine]
     START_GW --> START_CRON[启动 CronScheduler]
     START_CRON --> READY([系统就绪, 等待信号])
 
@@ -172,12 +174,18 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    REQ([客户端请求]) --> TRACE_MW[Trace 中间件<br/>注入 X-Request-ID]
-
-    TRACE_MW --> ROUTE{路由分发}
+    REQ([客户端请求]) --> RL_MW[RateLimit 中间件]
+    RL_MW --> TRACE_MW[Trace 中间件<br/>注入 X-Request-ID]
+    TRACE_MW --> AUTH_SPLIT{Public Debug/Health?}
+    AUTH_SPLIT -->|是| ROUTE
+    AUTH_SPLIT -->|否| AUTH_MW[Auth 中间件]
+    AUTH_MW --> ROUTE{路由分发}
     ROUTE -->|GET /api/health| HEALTH[返回 status:ok]
     ROUTE -->|POST /api/sessions| CREATE_SESS[创建 Session<br/>BindingRouter 绑定默认 Agent]
     ROUTE -->|POST /api/chat| CHAT[Chat 处理]
+    ROUTE -->|GET /debug/dashboard| DASH[返回 Debug Dashboard HTML]
+    ROUTE -->|GET /api/debug/*| DEBUG_API[返回 Metrics / Traces JSON]
+    ROUTE -->|POST /mcp/rpc or GET /mcp/sse| MCP[MCP Server 入口]
     ROUTE -->|GET /api/ws| WS[WebSocket 升级]
 
     CHAT --> VALIDATE{校验 session_id + input}
@@ -913,6 +921,12 @@ sequenceDiagram
     Loop->>Hooks: PostTool(state, result, err)
     Hooks->>OBS: Tracer.EndSpan + Metrics.IncCounter
 ```
+
+### 12.4 调试入口与实验保活
+
+- `/api/health`、`/debug/dashboard`、`/api/debug/*` 默认免鉴权，便于浏览器直接查看 run 级观测
+- 每个 run 目录会自动落盘 `README.md` 与 `latest-traces.json`
+- `experiments/all-features/orchestrate_experiment.py --keep-nexus-alive` 可在实验结束后继续保活 Nexus，方便持续查看 dashboard 与 traces
 
 ---
 

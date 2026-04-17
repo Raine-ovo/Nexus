@@ -62,6 +62,7 @@
 - **Layer 1（工具）：** `WrapToolError` 将 `error` 格式化为可读文本，`IsError: true`，仍作为 tool 消息进入下一轮，模型可改参数重试。
 - **Layer 2（Context）：** `IsContextOverflowError` 对常见 provider 报错字符串做匹配；命中时 `ContextGuard.ForceManualCompact`，避免死循环在「超长上下文」上。
 - **Layer 3（Transport）：** `RecoveryManager.CallWithRetry` 包装 `model.Generate`：可重试错误（超时、连接重置、429、502/503/504 等）按 `InitialDelay` 倍增至 `MaxDelay`，`JitterFraction` 防抖，`MaxRetryBudget` 限制总睡眠；进入重试时可将 `LoopState` 标为 `PhaseRecovering`。
+- **主动节流补强：** 当前运行时还支持 `model.max_concurrency` 与 `model.min_request_interval_ms` 两个全局配置，从源头限制 Lead / Teammate / Reflection / Delegate 的 LLM 出口，避免复杂多 Agent 任务把供应商 429 放大。
 - **设计取舍：** 不把「所有错误」都重试；取消类错误立即失败，避免无意义占用资源。
 - **与产品体验：** Layer 1 让用户感知为「模型在自我纠错」而非裸 HTTP 500；Layer 3 让运维窗口内的抖动对用户近似透明。
 
@@ -301,6 +302,7 @@
 - **组件：** `SessionManager`（TTL 如 24h）、`BindingRouter`、`LaneManager`、中间件（认证、限流、trace）。
 - **价值：** 无 Gateway 时 Agent 只能嵌入 CLI 或单测；有 Gateway 后可多客户端接入、统一鉴权与背压。
 - **与 Team Manager：** `Gateway` 依赖 `Supervisor` 接口（`HandleRequest(ctx, sessionID, input)`），`team.Manager` 实现该接口——请求由 Lead 接收并自主决定直接处理、delegate 或 send_message 给 Teammate，编排逻辑与传输层分离。
+- **当前调试边界：** `/api/health`、`/debug/dashboard`、`/api/debug/*` 默认免鉴权，便于浏览器直接查看治理页；业务接口仍走 API Key / JWT。
 
 ---
 
@@ -367,6 +369,7 @@
 **Detail：**
 
 - **Transport 抽象：** stdio 或 HTTP/SSE，与具体部署方式解耦。
+- **运行时主链：** 当前产品化 wiring 默认挂载 `/mcp/rpc`、`/mcp/sse`，并可按 `mcp.clients` 启动期自动连接远端 MCP 服务、把远端工具注册进本地 Registry；stdio 保留为传输抽象能力。
 - **握手：** `Initialize` 解析 `InitializeResult` 缓存协议能力；再发 `SendInitializedNotification` 符合部分服务端预期。
 - **发现：** `tools/list` 返回 `ToolDescriptor` 列表；本地将其转为 `types.ToolDefinition` + 代理 `Handler`（内部 `CallTool`）。
 - **调用：** `tools/call` 解析文本内容块组装 `ToolResult`。
@@ -620,6 +623,66 @@
 **Core：** 会。持久 Teammate 跨多次请求累积对话历史，token 数会持续增长。控制手段有三层：① `ContextGuard` 的 Micro/Auto/Manual 三级压缩在每次 workPhase 内自动触发；② `ensureIdentity()` 在长期空闲后重新注入 system prompt 防上下文漂移；③ Delegate 模式天然隔离——一次性任务不污染 Teammate 对话历史。
 
 **Detail：** 若 Teammate 对话历史过长且压缩后仍超阈值，可通过 `ShutdownTeammate` + 重新 `Spawn` 实现「软重启」，Roster 记录保证角色和工具集不变。
+
+### E11：为什么既要 `gateway.rate_limit`，又要 `model.max_concurrency` / `model.min_request_interval_ms`？
+
+**Core：** 两者控制的不是同一层。`gateway.rate_limit` 防的是**入口流量**，`model.max_concurrency` / `model.min_request_interval_ms` 防的是**进程内部 LLM 出口**，尤其是 Lead、Teammate、Reflection、Delegate 叠加后的 provider 429。
+
+**Detail：** 同一个用户请求进入后，内部可能触发多轮 ReAct、多个 Teammate goroutine、反思重试和 delegate 子任务，即使 HTTP 入口只有一个请求，也可能在模型侧形成 burst。网关限流看的是 per-IP 入口请求数；模型节流看的是「整个进程同一时刻最多几个 LLM 调用在飞、两次调用之间至少间隔多久」。面试时可总结为：**入口背压 + 内部节拍控制**。
+
+### E12：为什么 `debug/dashboard` 和 `/api/debug/*` 默认免鉴权？这不是有安全风险吗？
+
+**Core：** 这是一个**开发效率优先**的默认值，而不是公网暴露建议。浏览器访问 dashboard 时，页内还会发多个 `fetch('/api/debug/...')`，若默认要求自定义 header，会显著增加本地排障复杂度。
+
+**Detail：** 当前策略是：`/api/health`、`/debug/dashboard`、`/api/debug/*` 作为公共调试入口，便于直接打开 run 级治理页；真正的业务接口如 `/api/chat`、`/api/chat/jobs`、`/api/ws`、`/mcp/*` 仍走 API Key / JWT。若上线公网，可在反向代理层限制 debug 路由只允许内网或 VPN 访问。面试时可表达为：**把认证复杂度从调试页面转移到边界网络层**。
+
+### E13：`claim_source=auto` 和 `claim_source=manual` 有什么业务意义？
+
+**Core：** 它们的区别不是「是否成功认领」，而是**谁触发了认领动作**。`auto` 表示 Teammate 在 idle 轮询里自动捡任务，`manual` 表示 agent 显式调用 `claim_task` 工具认领。
+
+**Detail：** 这两个来源标记有审计价值：如果大量任务是 `auto`，说明 autonomous teammate 机制真在工作；如果大量任务是 `manual`，说明更多是显式编排驱动。它们最终都调用同一个 `TaskManager.Claim()`，只是一个从 runtime 代码路径进入，一个从工具调用路径进入。对运维和实验回放来说，这能区分「系统自治」和「Agent 明确决策」。
+
+### E14：为什么 `send_message` 给已 shutdown 的 Teammate 时要自动 revive？
+
+**Core：** 因为持久 Teammate 的价值在于**角色与上下文身份可复用**。如果消息目标已经在名册里但 goroutine 已关闭，直接报错会让长期协作链路断裂；自动 revive 能把“角色存在但当前不活跃”恢复成可工作状态。
+
+**Detail：** 当前做法是：`Manager.SendMessage()` 先查 Roster；若目标成员状态是 `shutdown`，则按原名和原角色重新 `Spawn`，并注入一段 resume prompt，要求它先查 inbox 再继续未完成工作。这样比重新 spawn 一个全新随机名字的 teammate 更利于审计和协作连续性。面试时可类比为：**按需唤醒的 worker，而不是一次性线程**。
+
+### E15：为什么要把 `TeamConfig.PollInterval` 和 `IdleTimeout` 做成配置？
+
+**Core：** 因为 persistent teammate 的自治成本高度依赖业务场景。过于频繁轮询会增加空转和模型抖动，过于稀疏又会拉长消息响应和任务认领延迟，所以需要按场景调优。
+
+**Detail：** `PollInterval` 决定 idle 状态下多久看一次 inbox / task board，影响自治灵敏度；`IdleTimeout` 决定一个 teammate 空闲多久后自动退出，影响资源占用和上下文保温。对实验环境可以设置短一点，方便观察自动关闭和 revive；对长期协作环境可以更长，减少频繁重建。面试时可以说这是**自治 agent 的“调度心跳”与“生命周期 TTL”**。
+
+### E16：为什么 run 目录里要落 `latest-traces.json`，而不是只靠在线 dashboard？
+
+**Core：** 因为 dashboard 适合**在线排障**，而 `latest-traces.json` 适合**离线留档和复盘**。很多复杂实验并不是在服务存活期间完成分析，尤其是 provider 429 或实验结束后，仍需要静态证据。
+
+**Detail：** `latest-traces.json` 会在请求结束后按 run 刷新，里面包含 run 级 metrics、trace_count 和最近 trace 详情。它的优势是可被脚本、CI、diff、归档系统直接消费，不依赖浏览器环境或正在运行的进程。面试里可把它说成：**把 observability 从纯在线页面扩展成可版本化的运行证据**。
+
+### E17：为什么 `ws_addr` 要独立出来，而不是永远复用 HTTP 端口？
+
+**Core：** 因为 WebSocket 在部署和调试上常常有不同的网络边界与代理策略。把 `ws_addr` 独立成真实监听地址，能支持分端口暴露、独立探针和更清晰的链路验证。
+
+**Detail：** 早期很多项目只是把 `ws_addr` 当配置摆设，实际仍复用 HTTP 监听，容易误导运维；现在若 `ws_addr` 与 `http_addr` 不同，会额外启动独立 WS server。这样可以更明确地区分：HTTP 调试入口、业务 API、实时会话通道三种接入面。面试时可归纳为：**配置语义必须和运行时行为一致**。
+
+### E18：如果面试官追问“为什么实验脚本一结束服务也结束”，怎么回答？
+
+**Core：** 因为实验编排器本质上是一个**生命周期控制器**，不是单纯的请求脚本。它负责拉起 mock 依赖、启动 Nexus、提交实验、收集证据、最后统一清理进程，这样实验环境是可重复的。
+
+**Detail：** 这类设计对自动化回归最稳，但会牺牲“跑完后继续手动看 dashboard”的体验，所以后续又补了 `--keep-nexus-alive` 开关。这个追问的本质其实是：**自动化可重复性 vs 调试可交互性** 的权衡。面试时答这一题能体现你不只是写功能，还会思考实验基础设施和开发者体验。
+
+### E19：如何解释 `full-activation-throttled` 这类实验的价值？
+
+**Core：** 它的价值不在“做一个 demo prompt”，而在于构造一个**覆盖多模块交互的系统级验收任务**，把 Agent、MCP、RAG、任务板、治理面板、记忆、反思等能力一次性拉进同一条证据链。
+
+**Detail：** 这种实验设计可以验证三类问题：一是“能力是否接入主链”；二是“能力在一起工作时会不会互相干扰”，例如 429、权限、路由冲突；三是“有没有可观测证据沉淀”。如果只靠单元测试，很难覆盖这种多角色、多轮调用、多持久化子系统联动的问题。
+
+### E20：如果问“为什么这个项目适合讲成工业级，而不是 demo 级”，你怎么总结？
+
+**Core：** 因为它不只是“会调 LLM 和几个工具”，而是把**运行时、调度、恢复、权限、可观测、实验验证、持久化证据**都做成了闭环。
+
+**Detail：** 可从 5 个关键词概括：**有状态团队、可恢复、可观测、可约束、可验证**。有状态团队体现在 persistent teammate 和 rehydrate；可恢复体现在三层恢复与反思；可观测体现在 trace/metrics/dashboard/latest-traces；可约束体现在 permission pipeline、rate limit、LLM throttling；可验证体现在 full-feature experiment 与 run 目录留痕。这个回答很适合作为项目收束题的总答法。
 
 ---
 

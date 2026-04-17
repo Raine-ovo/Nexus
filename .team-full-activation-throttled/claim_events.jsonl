@@ -1,0 +1,10 @@
+{"event":"task.claimed","task_id":6,"owner":"planner-001","role":"","source":"manual","ts":1776449646.405}
+{"event":"task.claimed","task_id":4,"owner":"planner-001","role":"","source":"manual","ts":1776449646.405}
+{"event":"task.claimed","task_id":1,"owner":"planner-001","role":"planner","source":"auto","ts":1776449771.759}
+{"event":"task.claimed","task_id":2,"owner":"planner-001","role":"","source":"manual","ts":1776449815.771}
+{"event":"task.claimed","task_id":3,"owner":"planner-001","role":"","source":"manual","ts":1776449815.772}
+{"event":"task.claimed","task_id":1,"owner":"planner-002","role":"","source":"manual","ts":1776451368.232}
+{"event":"task.claimed","task_id":2,"owner":"devops-001","role":"devops","source":"auto","ts":1776451432.128}
+{"event":"task.claimed","task_id":3,"owner":"planner-002","role":"planner","source":"auto","ts":1776451516.906}
+{"event":"task.claimed","task_id":4,"owner":"devops-001","role":"devops","source":"auto","ts":1776451690.389}
+{"event":"task.claimed","task_id":5,"owner":"planner-002","role":"","source":"manual","ts":1776451890.82}

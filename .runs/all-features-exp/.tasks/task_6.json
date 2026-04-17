@@ -1,0 +1,16 @@
+{
+  "id": 6,
+  "title": "Run full experiment and verify",
+  "description": "Execute the full feature activation experiment end-to-end. Confirm all agents participated (check roster/roster persistence), all 5 architecture layers were exercised, all 4 permission stages triggered, observability signals were emitted throughout, and state was persisted. Cross-reference results from Tasks 1–4. Acceptance: a consolidated experiment report with per-mechanism pass/fail and agent participation matrix. Size: L.",
+  "status": "blocked",
+  "blocked_by": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "blocks": null,
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T17:37:19.269303Z",
+  "updated_at": "2026-04-17T17:37:19.269303Z"
+}

@@ -7,7 +7,7 @@
 对应地，当前系统新增了两类关键能力：
 
 - **调度画像门禁**：`lead` 在使用 `delegate_task`、`spawn_teammate`、`send_message` 之前，必须先输出结构化 `dispatch_profile`
-- **稳定性增强**：OpenAI 兼容模型 client 增加 `429/5xx` 退避重试，缓解复杂多智能体任务中最常见的 provider 速率限制问题
+- **稳定性增强**：OpenAI 兼容模型 client 增加 `429/5xx` 退避重试，并新增进程级节流（`model.max_concurrency` + `model.min_request_interval_ms`），缓解复杂多智能体任务中最常见的 provider 速率限制问题
 
 这两点组合起来，使调度第一次具备了：
 
@@ -53,7 +53,7 @@
 - teammate 能自动认领 `.tasks/` 中的任务
 - 但一旦模型 provider 限流，整条链路会被 `429` 打断
 
-这次补上的 `429/5xx` 退避重试，解决的是“多 agent 一起工作时，provider 瞬时抖动直接把自治链路打断”的问题。
+这次补上的 `429/5xx` 退避重试 + 主动节流，解决的是“多 agent 一起工作时，provider 瞬时抖动或速率限制直接把自治链路打断”的问题。
 
 ## 实现概览
 
@@ -113,6 +113,13 @@ OpenAI 兼容模型 client 现在支持：
 - 可重试 transport error
 
 的指数退避重试。
+
+同时，当前运行时还支持：
+
+- `model.max_concurrency`
+- `model.min_request_interval_ms`
+
+作为**进程级主动节流**，从源头降低 Lead / Teammate / Reflection / Delegate 同时打模型导致的 429。
 
 默认策略：
 

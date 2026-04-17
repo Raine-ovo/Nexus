@@ -1,0 +1,10 @@
+dial ws: websocket: bad handshake
+exit status 1
+Traceback (most recent call last):
+  File "/Users/bytedance/rainea/nexus/experiments/all-features/run_experiment.py", line 158, in <module>
+    main()
+  File "/Users/bytedance/rainea/nexus/experiments/all-features/run_experiment.py", line 93, in main
+    subprocess.run(
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['go', 'run', './experiments/all-features/ws_probe.go', '--url', 'ws://127.0.0.1:18195/api/ws', '--session', '41e7374e-7b0d-488e-99d4-171844699efa', '--input', '请仅用简短摘要说明这次实验实际触发了哪些 agent、哪些文件被写出，以及是否出现 mcp_repo_probe、delegate_task、spawn_teammate、send_message、claim_task、reflection、memory 落盘。', '--out', '/Users/bytedance/rainea/nexus/.runs/all-features-exp/experiment/ws_followup.json']' returned non-zero exit status 1.

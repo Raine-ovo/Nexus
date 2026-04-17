@@ -1,0 +1,16 @@
+{
+  "id": 5,
+  "title": "Verify task persistence layer",
+  "description": "Confirm task state is durable: task creation, status transitions, dependency resolution, and recovery after interruption. Verify persistence backend is correctly configured. Deliverable: Task persistence report at .runs/full-activation-throttled/.outputs/full_activation_run/task_persistence_verification.md. Size: S.",
+  "status": "completed",
+  "blocked_by": [
+    1
+  ],
+  "blocks": [
+    6
+  ],
+  "claimed_at": "2026-04-17T18:51:30.819495Z",
+  "claim_source": "manual",
+  "created_at": "2026-04-17T18:42:12.905117Z",
+  "updated_at": "2026-04-17T18:51:53.665722Z"
+}

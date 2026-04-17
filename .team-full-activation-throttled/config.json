@@ -1,0 +1,25 @@
+{
+  "team_name": "default",
+  "members": [
+    {
+      "name": "lead",
+      "role": "lead",
+      "status": "idle"
+    },
+    {
+      "name": "planner-001",
+      "role": "planner",
+      "status": "shutdown"
+    },
+    {
+      "name": "devops-001",
+      "role": "devops",
+      "status": "shutdown"
+    },
+    {
+      "name": "planner-002",
+      "role": "planner",
+      "status": "shutdown"
+    }
+  ]
+}

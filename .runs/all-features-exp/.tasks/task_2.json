@@ -1,0 +1,15 @@
+{
+  "id": 2,
+  "title": "Validate 5-layer architecture",
+  "description": "Verify the 5-layer architecture described in docs/architecture.md is correctly implemented. Check each layer's boundaries, responsibilities, and inter-layer contracts. Acceptance: a report confirming each layer is present, correctly scoped, and communicating per spec, or a list of deviations. Depends on baseline checklist from Task 0. Size: M.",
+  "status": "blocked",
+  "blocked_by": [
+    1
+  ],
+  "blocks": [
+    6
+  ],
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T17:37:19.261461Z",
+  "updated_at": "2026-04-17T17:37:19.261461Z"
+}

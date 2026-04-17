@@ -64,6 +64,44 @@ func (o *Observer) Callback() *CallbackHandler {
 	return o.callback
 }
 
+// MetricsSnapshot exposes the current metrics snapshot for debug endpoints.
+func (o *Observer) MetricsSnapshot() map[string]interface{} {
+	if o == nil || !o.cfg.MetricsEnabled {
+		return nil
+	}
+	return o.metrics.Snapshot()
+}
+
+// MetricsSnapshotForRun exposes metrics aggregated for one sandbox run label.
+func (o *Observer) MetricsSnapshotForRun(runLabel string) map[string]interface{} {
+	if o == nil || !o.cfg.MetricsEnabled {
+		return nil
+	}
+	if strings.TrimSpace(runLabel) == "" {
+		return o.metrics.Snapshot()
+	}
+	if o.callback == nil {
+		return nil
+	}
+	return o.callback.SnapshotForRun(runLabel)
+}
+
+// Trace returns all spans for a trace identifier.
+func (o *Observer) Trace(traceID string) []*Span {
+	if o == nil || !o.cfg.TraceEnabled {
+		return nil
+	}
+	return o.tracer.GetTrace(traceID)
+}
+
+// ListTraces returns recent trace summaries.
+func (o *Observer) ListTraces(limit int) []TraceSummary {
+	if o == nil || !o.cfg.TraceEnabled {
+		return nil
+	}
+	return o.tracer.ListTraces(limit)
+}
+
 // Info logs at info level.
 func (o *Observer) Info(msg string, keysAndValues ...interface{}) {
 	o.logAt(1, "info", msg, keysAndValues...)

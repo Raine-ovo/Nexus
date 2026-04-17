@@ -1,0 +1,13 @@
+{
+  "id": 7,
+  "title": "Generate final experiment report",
+  "description": "Aggregate all verification and audit reports into a single final experiment report. Include pass/fail status per area, list of issues found, and overall experiment readiness assessment. Deliverable: .runs/full-activation-throttled/.outputs/full_activation_run/final_report.md. Size: S.",
+  "status": "blocked",
+  "blocked_by": [
+    6
+  ],
+  "blocks": null,
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T18:42:12.911772Z",
+  "updated_at": "2026-04-17T18:42:12.911772Z"
+}

@@ -1,0 +1,112 @@
+你现在要执行一次“全特性激活实验（full-activation-throttled）”。
+
+目标不是快速给结论，而是尽可能触发 Nexus 当前所有已接入的 agent 与关键能力，并把证据真实落盘。
+
+## 本次实验必须触发的 agent
+
+你必须让以下 4 类 agent 都真实参与：
+1. planner
+2. devops
+3. knowledge
+4. code_reviewer
+
+要求：
+- planner 与 devops 必须以 persistent teammate 形式参与
+- knowledge 与 code_reviewer 必须至少各执行 1 次 delegate_task
+- 如果你认为有必要，也可以再把 knowledge 或 code_reviewer 变成 persistent teammate，但不是硬性要求
+
+## 本次实验必须触发的机制
+
+你必须尽量触发以下能力：
+- lead 调度决策
+- dispatch_profile
+- spawn_teammate
+- send_message
+- read_inbox
+- claim_task
+- delegate_task
+- create_plan / list_tasks / update_task / execute_task / monitor_progress
+- knowledge agent 的 ingest_document + search_knowledge
+- code reviewer 的 analyze_diff 或 review_file / check_patterns
+- devops agent 的 check_health / parse_logs / run_diagnostic
+- reflection
+- semantic memory 持久化
+- trace / metrics / latest-traces.json
+- run sandbox 落盘
+- 如果存在 `mcp_repo_probe` 工具，必须调用它一次并记录结果
+
+## 输出目录
+
+统一把核心产物写到：
+- `.runs/full-activation-throttled/.outputs/full_activation_run/`
+
+至少生成这些文件：
+- `00_mission.md`
+- `01_dispatch.md`
+- `02_team_roster.md`
+- `10_task_plan.md`
+- `11_task_board.md`
+- `20_mcp_and_rag.md`
+- `21_delegate_results.md`
+- `22_team_messages.md`
+- `23_claim_progress.md`
+- `30_runtime_and_observability.md`
+- `31_permission_and_risk.md`
+- `32_state_persistence.md`
+- `40_evidence_index.md`
+- `99_final_report.md`
+
+## 强约束
+
+1. 必须至少创建 2 个 persistent teammates：
+   - 一个 planner
+   - 一个 devops
+2. 必须至少发生 5 次 team 内消息传递
+3. 必须至少有 1 个 teammate claim task
+4. 必须至少有 2 次 delegate_task
+5. knowledge delegate 必须先 ingest `docs/architecture.md` 或 `docs/features.md`，再做搜索回答
+6. code_reviewer delegate 必须对以下至少一个文件做专项检查：
+   - `internal/team/runtime.go`
+   - `internal/gateway/server.go`
+   - `cmd/nexus/main.go`
+7. devops persistent teammate 必须检查以下至少两个地址：
+   - `http://127.0.0.1:18214/api/health`
+   - `http://127.0.0.1:18214/debug/dashboard?run=full-activation-throttled`
+   - `http://127.0.0.1:18214/api/debug/metrics?run=full-activation-throttled`
+8. planner persistent teammate 必须创建任务板，并推进至少一个任务到执行或完成状态
+9. 如果任何步骤失败，必须把失败原因和证据写入产物，不允许假装成功
+
+## 执行阶段
+
+### 阶段 1：启动与调度
+- 扫描当前仓库
+- 说明为什么要用 planner / devops persistent teammate
+- 说明为什么 knowledge / code_reviewer 更适合 delegate
+
+### 阶段 2：任务板
+- 生成一组覆盖架构、权限、观测、持久化、实验验证的任务
+- 让至少 1 个 teammate claim task
+
+### 阶段 3：专项执行
+- planner teammate 推进任务板
+- devops teammate 做 runtime / dashboard / metrics 检查
+- knowledge delegate 做 RAG 专项
+- code_reviewer delegate 做代码专项
+- 如果可见 `mcp_repo_probe`，调用并记录
+
+### 阶段 4：归档
+- 把所有关键结论与来源建立索引
+- 明确区分：
+  - 已验证事实
+  - 基于代码推断
+  - 失败/阻塞
+
+## 控制台最终输出
+
+最后只输出摘要：
+- 创建了哪些 teammates
+- 哪些角色通过 delegate_task 运行
+- 是否成功调用了 MCP / RAG / 任务板 / dashboard / ws
+- 生成了哪些文件
+- 5 个最重要发现
+- 失败点

@@ -53,6 +53,7 @@ func newLead(mgr *Manager, model core.ChatModel, deps *core.AgentDependencies,
 		TaskManager:  mgr.taskManager,
 		ClaimLogger:  mgr.claimLogger,
 		Observer:     mgr.observer,
+		Runtime:      mgr.runtime,
 		PollInterval: 2 * time.Second,
 		MaxIdlePolls: 600, // Lead stays alive much longer (20 min idle)
 	}
@@ -128,7 +129,32 @@ func (l *Lead) leadLoop(ctx context.Context) {
 }
 
 // handleOneRequest runs a full work phase for one user input and returns the final text.
-func (l *Lead) handleOneRequest(ctx context.Context, input string) (string, error) {
+func (l *Lead) handleOneRequest(ctx context.Context, input string) (output string, err error) {
+	reqTrace, reqCtx := l.startRequestSpan(ctx, "user_turn")
+	defer func() { l.endRequestSpan(reqTrace, err) }()
+	runCtx := reqCtx
+	if runCtx == nil {
+		runCtx = ctx
+	}
+	if l.runtime != nil {
+		output, err = l.runtime.RunWithReflection(
+			runCtx,
+			l.name,
+			"team lead",
+			l.systemPrompt,
+			l.tools,
+			input,
+			l.executeRequest,
+		)
+		if err == nil {
+			l.runtime.RecordTurn(runCtx, input, output)
+		}
+		return output, err
+	}
+	return l.executeRequest(runCtx, input)
+}
+
+func (l *Lead) executeRequest(ctx context.Context, input string) (string, error) {
 	_ = l.roster.UpdateStatus(leadName, StatusWorking)
 	defer func() { _ = l.roster.UpdateStatus(leadName, StatusIdle) }()
 
@@ -153,9 +179,17 @@ func (l *Lead) handleOneRequest(ctx context.Context, input string) (string, erro
 		}
 
 		l.drainInbox()
+		l.compactTranscript(ctx)
 
 		toolDefs := toolDefinitions(l.tools)
-		resp, err := l.model.Generate(ctx, l.buildSystem(), l.messages, toolDefs)
+		llmTrace, llmCtx := l.startLLMSpan(ctx)
+		var resp *core.ChatModelResponse
+		err := l.callWithRecovery(llmCtx, func(callCtx context.Context) error {
+			var genErr error
+			resp, genErr = l.model.Generate(callCtx, l.buildSystem(), l.messages, toolDefs)
+			return genErr
+		})
+		l.endLLMSpan(llmTrace, err)
 		if err != nil {
 			return "", fmt.Errorf("lead: model generate: %w", err)
 		}
@@ -233,7 +267,9 @@ func (l *Lead) handleOneRequest(ctx context.Context, input string) (string, erro
 					)
 				}
 			}
-			result := l.executeTool(ctx, call)
+			toolTrace, toolCtx := l.startToolSpan(ctx, call.Name)
+			result := l.executeTool(toolCtx, call)
+			l.endToolSpan(toolTrace, toolResultErr(result))
 			l.appendToolResult(call, result)
 		}
 	}
@@ -272,7 +308,66 @@ func (l *Lead) buildSystem() string {
 			"Rules: simple=true means do not use routing tools. needs_isolation=true means use delegate_task. needs_persistence=true or expected_follow_up=true means use persistent teammates: reuse existing teammates with send_message when possible, otherwise spawn_teammate.",
 		strings.Join(l.roster.ActiveNames(), ", "),
 	)
+	if l.runtime != nil {
+		return l.runtime.BuildSystemPrompt(base, nil, strings.TrimSpace(teamCtx))
+	}
 	return base + teamCtx
+}
+
+func (l *Lead) startRequestSpan(ctx context.Context, phase string) (*runtimeTrace, context.Context) {
+	if l.runtime == nil {
+		return nil, ctx
+	}
+	return l.runtime.StartRequestSpan(ctx, l.name, phase)
+}
+
+func (l *Lead) endRequestSpan(trace *runtimeTrace, err error) {
+	if l.runtime == nil {
+		return
+	}
+	l.runtime.endSpan(trace, err, "on_end")
+}
+
+func (l *Lead) startLLMSpan(ctx context.Context) (*runtimeTrace, context.Context) {
+	if l.runtime == nil {
+		return nil, ctx
+	}
+	return l.runtime.StartLLMSpan(ctx, l.name)
+}
+
+func (l *Lead) endLLMSpan(trace *runtimeTrace, err error) {
+	if l.runtime == nil {
+		return
+	}
+	l.runtime.EndLLMSpan(trace, err)
+}
+
+func (l *Lead) startToolSpan(ctx context.Context, toolName string) (*runtimeTrace, context.Context) {
+	if l.runtime == nil {
+		return nil, ctx
+	}
+	return l.runtime.StartToolSpan(ctx, l.name, toolName)
+}
+
+func (l *Lead) endToolSpan(trace *runtimeTrace, err error) {
+	if l.runtime == nil {
+		return
+	}
+	l.runtime.EndToolSpan(trace, err)
+}
+
+func (l *Lead) callWithRecovery(ctx context.Context, fn func(context.Context) error) error {
+	if l.runtime == nil {
+		return fn(ctx)
+	}
+	return l.runtime.CallWithRecovery(ctx, func() error { return fn(ctx) })
+}
+
+func (l *Lead) compactTranscript(ctx context.Context) {
+	if l.runtime == nil {
+		return
+	}
+	l.messages = l.runtime.SummarizeTranscriptMessages(ctx, l.messages)
 }
 
 func hasLeadRoutingToolCalls(resp *core.ChatModelResponse) bool {

@@ -1,0 +1,17 @@
+{
+  "id": 2,
+  "title": "Audit permission pipeline and ReAct integration",
+  "description": "Check the permission pipeline implementation end-to-end: permission checks, policy enforcement, and how it integrates with the ReAct loop. Verify no bypass paths exist. Deliverable: Permission audit report at .runs/full-activation-throttled/.outputs/full_activation_run/permission_audit.md. Size: M.",
+  "status": "in_progress",
+  "blocked_by": [
+    1
+  ],
+  "blocks": [
+    6
+  ],
+  "claimed_by": "devops-001",
+  "claimed_at": "2026-04-17T18:43:52.127502Z",
+  "claim_source": "auto",
+  "created_at": "2026-04-17T18:42:12.897956Z",
+  "updated_at": "2026-04-17T18:43:52.127502Z"
+}

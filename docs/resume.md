@@ -30,7 +30,7 @@
 |------|--------|
 | 语言与框架 | Go、CloudWeGo **Eino**（Graph / ADK / Workflow） |
 | 团队协作 | **Lead-Teammate-Delegate** 三层模型、**JSONL 邮箱**、**自治调度** |
-| 协议与集成 | **MCP**（stdio / SSE）、HTTP、**WebSocket** |
+| 协议与集成 | **MCP**（运行时主链默认 HTTP/SSE，Transport 抽象兼容 stdio）、HTTP、**WebSocket** |
 | 数据与检索 | 向量索引（Memory / Milvus）、**RRF**、**BM25**、**Rerank** |
 | 并发与任务 | **DAG** 调度、Named Lane、后台 Cron、槽位执行、Auto-Claim |
 | 质量与可观测 | 结构化日志、指标、Trace；四级权限 + 工作区沙箱 |
@@ -57,8 +57,8 @@
 
 - 负责整体 **五层架构**设计与落地：**网关、团队协作调度、Agent 引擎、RAG/工具/任务/记忆等基础设施、权限与可观测横切能力**；代码按约 **13 个核心模块** 组织，边界清晰、可演进。
 - 设计**持久化团队协作系统**：Lead + Teammate + Delegate 三层模型，**JSONL 邮箱异步通信**，**名册持久化 + 进程重启 rehydrate**，空闲 Teammate **自动认领匹配角色的 DAG 任务**，`RequestTracker` 实现 shutdown/plan-approval 协议。
-- 实现 **MCP（Model Context Protocol）** 工具生态：**Server / Client**、stdio 与 SSE 传输、动态发现与注册外部工具，并与内置工具统一走 **ToolRegistry + 权限管道**。
-- 运用分布式与韧性常见模式：**JSONL 文件邮箱**（类 WAL append-only + drain 语义）、**指数退避重试**、**generation/fencing token** 防陈旧、**三层恢复洋葱**（工具自纠 / Context 压缩 / 传输退避）。
+- 实现 **MCP（Model Context Protocol）** 工具生态：**Server / Client**、运行时默认挂载 `/mcp/rpc` 与 `/mcp/sse`，支持外部工具动态发现与自动注册；底层 Transport 抽象兼容 stdio / HTTP/SSE，并与内置工具统一走 **ToolRegistry + 权限管道**。
+- 运用分布式与韧性常见模式：**JSONL 文件邮箱**（类 WAL append-only + drain 语义）、**指数退避重试**、**进程级 LLM 节流**（并发 + 最小请求间隔）、**generation/fencing token** 防陈旧、**三层恢复洋葱**（工具自纠 / Context 压缩 / 传输退避）。
 
 ---
 

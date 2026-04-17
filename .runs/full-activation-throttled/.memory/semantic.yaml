@@ -1,0 +1,25 @@
+entries:
+    - category: project
+      key: nexus_core_agents
+      value: 'Nexus has 4 core agent types: planner, devops, knowledge, code_reviewer. Planner and devops typically run as persistent teammates; knowledge and code_reviewer via delegate_task.'
+      created_at: 2026-04-17T19:07:04.027036Z
+    - category: feedback
+      key: code_reviewer_scope
+      value: Code reviewer agent can hit max iteration limits on broad tasks. Narrow scope (e.g., single file or specific check) is required for reliable completion.
+      created_at: 2026-04-17T19:07:04.027927Z
+    - category: project
+      key: runs_output_convention
+      value: Run outputs are stored under .runs/<experiment-name>/.outputs/<run-name>/ with numbered markdown files (00_mission.md, 01_dispatch.md, etc.).
+      created_at: 2026-04-17T19:07:04.028517Z
+    - category: project
+      key: agent_architecture
+      value: '4 agents: planner (persistent), devops (persistent), knowledge (delegate), code_reviewer (delegate)'
+      created_at: 2026-04-17T19:07:41.699659Z
+    - category: project
+      key: reflection_default_config
+      value: Reflection mechanism defaults to enabled=false
+      created_at: 2026-04-17T19:07:41.700433Z
+    - category: project
+      key: memory_persistence_known_issue
+      value: semantic.yaml.tmp may exist but teammate-side unavailable; latest-traces.json requires running server to generate
+      created_at: 2026-04-17T19:07:41.700945Z

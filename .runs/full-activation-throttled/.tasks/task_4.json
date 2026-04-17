@@ -1,0 +1,17 @@
+{
+  "id": 4,
+  "title": "Verify semantic and reflection memory",
+  "description": "Validate semantic memory store and reflection memory mechanisms: storage backends, retrieval accuracy, reflection triggers, and memory consolidation. Ensure memories persist across sessions. Deliverable: Memory verification report at .runs/full-activation-throttled/.outputs/full_activation_run/memory_verification.md. Size: M.",
+  "status": "in_progress",
+  "blocked_by": [
+    1
+  ],
+  "blocks": [
+    6
+  ],
+  "claimed_by": "devops-001",
+  "claimed_at": "2026-04-17T18:48:10.388794Z",
+  "claim_source": "auto",
+  "created_at": "2026-04-17T18:42:12.903076Z",
+  "updated_at": "2026-04-17T18:48:10.388794Z"
+}

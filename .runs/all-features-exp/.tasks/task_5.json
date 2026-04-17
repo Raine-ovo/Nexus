@@ -1,0 +1,15 @@
+{
+  "id": 5,
+  "title": "Validate state persistence",
+  "description": "Verify semantic memory, task DAG, and roster persistence. Write representative state to each subsystem, trigger a persistence cycle, and confirm state survives reload or is queryable. Acceptance: a report confirming each persistence target round-trips correctly. Depends on baseline checklist. Size: M.",
+  "status": "blocked",
+  "blocked_by": [
+    1
+  ],
+  "blocks": [
+    6
+  ],
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T17:37:19.268429Z",
+  "updated_at": "2026-04-17T17:37:19.268429Z"
+}

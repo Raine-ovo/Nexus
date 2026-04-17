@@ -1,0 +1,15 @@
+{
+  "id": 4,
+  "title": "Validate observability infrastructure",
+  "description": "Verify trace, metrics, and callback infrastructure is wired and emitting. Emit test signals and confirm they appear in the correct sinks (trace spans, metric counters, callback invocations). Acceptance: a report confirming trace propagation, metric emission, and callback delivery all function. Depends on baseline checklist. Size: M.",
+  "status": "blocked",
+  "blocked_by": [
+    1
+  ],
+  "blocks": [
+    6
+  ],
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T17:37:19.265057Z",
+  "updated_at": "2026-04-17T17:37:19.265057Z"
+}

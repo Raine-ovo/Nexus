@@ -1,0 +1,18 @@
+{
+  "id": 6,
+  "title": "Confirm experiment constraints are met",
+  "description": "Validate all experiment-level constraints for full-activation-throttled: throttling configuration, activation scope, rate limits, resource caps, and output directory structure at .runs/full-activation-throttled/.outputs/full_activation_run/. Cross-check findings from all verification tasks. Deliverable: Constraint validation report at .runs/full-activation-throttled/.outputs/full_activation_run/constraint_validation.md. Size: M.",
+  "status": "blocked",
+  "blocked_by": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "blocks": [
+    7
+  ],
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T18:42:12.906946Z",
+  "updated_at": "2026-04-17T18:42:12.906946Z"
+}

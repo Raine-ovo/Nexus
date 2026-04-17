@@ -4,17 +4,17 @@
     {
       "name": "lead",
       "role": "lead",
-      "status": "working"
+      "status": "idle"
     },
     {
       "name": "Atlas",
       "role": "planner",
-      "status": "working"
+      "status": "shutdown"
     },
     {
       "name": "Sentinel",
       "role": "code_reviewer",
-      "status": "working"
+      "status": "shutdown"
     },
     {
       "name": "Scout",

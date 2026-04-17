@@ -1,0 +1,2899 @@
+{
+  "metrics": {
+    "counters": {
+      "callbacks_on_end": 2,
+      "callbacks_on_llm_end": 63,
+      "callbacks_on_llm_start": 63,
+      "callbacks_on_tool_end": 86,
+      "callbacks_on_tool_start": 86,
+      "callbacks_user_turn": 2,
+      "llm_calls_active": 0,
+      "runs_active": 0,
+      "tools_active": 0
+    },
+    "histograms": {
+      "callback_duration_seconds": {
+        "Count": 2,
+        "Sum": 1661.284867249,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2
+        ]
+      },
+      "llm_duration_seconds": {
+        "Count": 63,
+        "Sum": 2136.3803371260005,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          12,
+          28,
+          22
+        ]
+      },
+      "tool_duration_seconds": {
+        "Count": 86,
+        "Sum": 692.7866494970001,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          46,
+          15,
+          16,
+          0,
+          4,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          3
+        ]
+      }
+    }
+  },
+  "run": "full-activation-throttled",
+  "trace_count": 23,
+  "traces": [
+    {
+      "spans": [
+        {
+          "TraceID": "46a81d66-7786-4d7f-8fd8-daea225e48a3",
+          "SpanID": "9cc3d400-58e9-4110-aa57-e0794a77e376",
+          "ParentID": "",
+          "Operation": "lead:request:user_turn",
+          "StartTime": "2026-04-17T19:07:07.092202Z",
+          "EndTime": "2026-04-17T19:07:41.701354Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "request:user_turn",
+            "request_id": "58a2c3ea-94e1-4224-9161-0a6d103f26c3",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "46a81d66-7786-4d7f-8fd8-daea225e48a3",
+          "SpanID": "59a217bd-cd1c-4307-be96-9f63e7116426",
+          "ParentID": "9cc3d400-58e9-4110-aa57-e0794a77e376",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T19:07:07.09465Z",
+          "EndTime": "2026-04-17T19:07:18.906517Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "8d3e5274-7c45-4ed2-975e-5a6861ec44d3",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "46a81d66-7786-4d7f-8fd8-daea225e48a3",
+        "root_span_id": "9cc3d400-58e9-4110-aa57-e0794a77e376",
+        "operation": "lead:request:user_turn",
+        "start_time": "2026-04-17T19:07:07.092202Z",
+        "end_time": "2026-04-17T19:07:41.701354Z",
+        "status": "ok",
+        "span_count": 2,
+        "request_id": "58a2c3ea-94e1-4224-9161-0a6d103f26c3",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "654629b7-6a3b-4418-ba40-ad67a370fc4e",
+          "SpanID": "538cf3b0-082d-4444-8b1c-3ebd9a8d8351",
+          "ParentID": "",
+          "Operation": "devops-001:llm_call",
+          "StartTime": "2026-04-17T18:49:53.13461Z",
+          "EndTime": "2026-04-17T18:51:36.008645Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "llm_call",
+            "request_id": "0a0f595f-e75f-4a98-8798-913e1e7ff7b1",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "654629b7-6a3b-4418-ba40-ad67a370fc4e",
+        "root_span_id": "538cf3b0-082d-4444-8b1c-3ebd9a8d8351",
+        "operation": "devops-001:llm_call",
+        "start_time": "2026-04-17T18:49:53.13461Z",
+        "end_time": "2026-04-17T18:51:36.008645Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "0a0f595f-e75f-4a98-8798-913e1e7ff7b1",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "7a4fbcf8-2787-41d7-a3b6-840bd02de886",
+          "SpanID": "accad0b7-a173-4e7e-ba12-0993c5b18b6b",
+          "ParentID": "",
+          "Operation": "devops-001:tool:send_message",
+          "StartTime": "2026-04-17T18:49:53.132059Z",
+          "EndTime": "2026-04-17T18:49:53.134082Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "tool:send_message",
+            "request_id": "38499112-ecae-41ba-b87d-484f57a87543",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "7a4fbcf8-2787-41d7-a3b6-840bd02de886",
+        "root_span_id": "accad0b7-a173-4e7e-ba12-0993c5b18b6b",
+        "operation": "devops-001:tool:send_message",
+        "start_time": "2026-04-17T18:49:53.132059Z",
+        "end_time": "2026-04-17T18:49:53.134082Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "38499112-ecae-41ba-b87d-484f57a87543",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "ad9ee71d-c047-4d06-92ab-6b039134372d",
+          "SpanID": "43296bb7-f707-495f-b733-7118543d326a",
+          "ParentID": "",
+          "Operation": "devops-001:llm_call",
+          "StartTime": "2026-04-17T18:48:54.934542Z",
+          "EndTime": "2026-04-17T18:49:53.13179Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "llm_call",
+            "request_id": "b246dd74-b9cf-42f8-afc2-69bc358cc9db",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "ad9ee71d-c047-4d06-92ab-6b039134372d",
+        "root_span_id": "43296bb7-f707-495f-b733-7118543d326a",
+        "operation": "devops-001:llm_call",
+        "start_time": "2026-04-17T18:48:54.934542Z",
+        "end_time": "2026-04-17T18:49:53.13179Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "b246dd74-b9cf-42f8-afc2-69bc358cc9db",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "d6f77810-bf18-4dc5-baf6-b863c7a89abe",
+          "SpanID": "27c5c548-39bc-440e-8e56-de835ec602f1",
+          "ParentID": "",
+          "Operation": "devops-001:tool:read_inbox",
+          "StartTime": "2026-04-17T18:48:54.933691Z",
+          "EndTime": "2026-04-17T18:48:54.93408Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "tool:read_inbox",
+            "request_id": "7e7dfacb-efc1-442d-a932-3ef4540f5f69",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "d6f77810-bf18-4dc5-baf6-b863c7a89abe",
+        "root_span_id": "27c5c548-39bc-440e-8e56-de835ec602f1",
+        "operation": "devops-001:tool:read_inbox",
+        "start_time": "2026-04-17T18:48:54.933691Z",
+        "end_time": "2026-04-17T18:48:54.93408Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "7e7dfacb-efc1-442d-a932-3ef4540f5f69",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "fcebef7b-96cf-4d4d-8fdc-9c79f045711f",
+          "SpanID": "755dbab0-da43-4588-9f42-7f689a74a73a",
+          "ParentID": "",
+          "Operation": "devops-001:llm_call",
+          "StartTime": "2026-04-17T18:48:10.390958Z",
+          "EndTime": "2026-04-17T18:48:54.933621Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "llm_call",
+            "request_id": "25063453-945e-4160-b32b-b6d6e620ed84",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "fcebef7b-96cf-4d4d-8fdc-9c79f045711f",
+        "root_span_id": "755dbab0-da43-4588-9f42-7f689a74a73a",
+        "operation": "devops-001:llm_call",
+        "start_time": "2026-04-17T18:48:10.390958Z",
+        "end_time": "2026-04-17T18:48:54.933621Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "25063453-945e-4160-b32b-b6d6e620ed84",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "238e1ddf-4332-453a-b2c2-d7b8b1fc1043",
+          "SpanID": "eba13dc5-13a6-4887-9234-ecc4407870be",
+          "ParentID": "",
+          "Operation": "devops-001:llm_call",
+          "StartTime": "2026-04-17T18:47:54.68006Z",
+          "EndTime": "2026-04-17T18:48:10.387191Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "llm_call",
+            "request_id": "eed68049-4d7d-4971-ae78-fc8e35d19ce5",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "238e1ddf-4332-453a-b2c2-d7b8b1fc1043",
+        "root_span_id": "eba13dc5-13a6-4887-9234-ecc4407870be",
+        "operation": "devops-001:llm_call",
+        "start_time": "2026-04-17T18:47:54.68006Z",
+        "end_time": "2026-04-17T18:48:10.387191Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "eed68049-4d7d-4971-ae78-fc8e35d19ce5",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "958c717d-6dd8-489e-98c3-0fb9f0d6a35d",
+          "SpanID": "d7d2caf3-61e8-4163-b95b-92939c989184",
+          "ParentID": "",
+          "Operation": "devops-001:tool:send_message",
+          "StartTime": "2026-04-17T18:47:54.675795Z",
+          "EndTime": "2026-04-17T18:47:54.679416Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "tool:send_message",
+            "request_id": "55e2f0df-bff2-4c45-98d4-79ae4a3cce78",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "958c717d-6dd8-489e-98c3-0fb9f0d6a35d",
+        "root_span_id": "d7d2caf3-61e8-4163-b95b-92939c989184",
+        "operation": "devops-001:tool:send_message",
+        "start_time": "2026-04-17T18:47:54.675795Z",
+        "end_time": "2026-04-17T18:47:54.679416Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "55e2f0df-bff2-4c45-98d4-79ae4a3cce78",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "455ebcdd-3397-4dcf-a916-56752f574a12",
+          "SpanID": "7ab7891e-45b3-4be5-be65-cadef0aed5fb",
+          "ParentID": "",
+          "Operation": "devops-001:llm_call",
+          "StartTime": "2026-04-17T18:44:55.96856Z",
+          "EndTime": "2026-04-17T18:47:54.675735Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "llm_call",
+            "request_id": "f497bbc4-1b94-4518-aaf2-e145e03dfd23",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "455ebcdd-3397-4dcf-a916-56752f574a12",
+        "root_span_id": "7ab7891e-45b3-4be5-be65-cadef0aed5fb",
+        "operation": "devops-001:llm_call",
+        "start_time": "2026-04-17T18:44:55.96856Z",
+        "end_time": "2026-04-17T18:47:54.675735Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "f497bbc4-1b94-4518-aaf2-e145e03dfd23",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "c95e79cc-ebd3-4c79-b1f2-2b54eb5fed3a",
+          "SpanID": "0dea7d08-7b1e-4ab5-bf3f-e7bccaec898e",
+          "ParentID": "",
+          "Operation": "devops-001:tool:submit_plan",
+          "StartTime": "2026-04-17T18:44:55.966669Z",
+          "EndTime": "2026-04-17T18:44:55.968285Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "tool:submit_plan",
+            "request_id": "e7226e82-184b-413e-a7f4-a654935f3f3f",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "c95e79cc-ebd3-4c79-b1f2-2b54eb5fed3a",
+        "root_span_id": "0dea7d08-7b1e-4ab5-bf3f-e7bccaec898e",
+        "operation": "devops-001:tool:submit_plan",
+        "start_time": "2026-04-17T18:44:55.966669Z",
+        "end_time": "2026-04-17T18:44:55.968285Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "e7226e82-184b-413e-a7f4-a654935f3f3f",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "462891dd-a227-428a-8b61-becaae91299e",
+          "SpanID": "58b75cba-a87e-45a7-b090-9671edbc5cb7",
+          "ParentID": "",
+          "Operation": "devops-001:llm_call",
+          "StartTime": "2026-04-17T18:44:14.40937Z",
+          "EndTime": "2026-04-17T18:44:55.966587Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "llm_call",
+            "request_id": "75bc5cd8-9b6b-485a-8543-8be5551224f5",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "462891dd-a227-428a-8b61-becaae91299e",
+        "root_span_id": "58b75cba-a87e-45a7-b090-9671edbc5cb7",
+        "operation": "devops-001:llm_call",
+        "start_time": "2026-04-17T18:44:14.40937Z",
+        "end_time": "2026-04-17T18:44:55.966587Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "75bc5cd8-9b6b-485a-8543-8be5551224f5",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "7792183d-a87b-4f4e-bac7-25840498334d",
+          "SpanID": "f65ff4d2-7e4e-4cab-93a4-60ca26519020",
+          "ParentID": "",
+          "Operation": "devops-001:tool:read_inbox",
+          "StartTime": "2026-04-17T18:44:14.407177Z",
+          "EndTime": "2026-04-17T18:44:14.408583Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "tool:read_inbox",
+            "request_id": "8b47bbe4-041f-412b-be4f-7cef5fd5b4a1",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "7792183d-a87b-4f4e-bac7-25840498334d",
+        "root_span_id": "f65ff4d2-7e4e-4cab-93a4-60ca26519020",
+        "operation": "devops-001:tool:read_inbox",
+        "start_time": "2026-04-17T18:44:14.407177Z",
+        "end_time": "2026-04-17T18:44:14.408583Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "8b47bbe4-041f-412b-be4f-7cef5fd5b4a1",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "6137dfe8-d6e5-4f8f-b10d-f1987e5fceb9",
+          "SpanID": "fa95fd5d-3394-4152-8025-b05719d9f010",
+          "ParentID": "",
+          "Operation": "devops-001:llm_call",
+          "StartTime": "2026-04-17T18:43:52.129778Z",
+          "EndTime": "2026-04-17T18:44:14.407124Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "llm_call",
+            "request_id": "d3c44fb6-c452-4eea-be79-6a003901b4e7",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "6137dfe8-d6e5-4f8f-b10d-f1987e5fceb9",
+        "root_span_id": "fa95fd5d-3394-4152-8025-b05719d9f010",
+        "operation": "devops-001:llm_call",
+        "start_time": "2026-04-17T18:43:52.129778Z",
+        "end_time": "2026-04-17T18:44:14.407124Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "d3c44fb6-c452-4eea-be79-6a003901b4e7",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "1fe0f3fd-4184-4c61-b66d-52b7bd3983ee",
+          "SpanID": "befc4139-abd2-4562-a23f-65905e648c37",
+          "ParentID": "",
+          "Operation": "devops-001:llm_call",
+          "StartTime": "2026-04-17T18:42:42.730475Z",
+          "EndTime": "2026-04-17T18:42:58.085735Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "llm_call",
+            "request_id": "aeee366c-3451-46ee-ac51-1010ef74ced7",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "1fe0f3fd-4184-4c61-b66d-52b7bd3983ee",
+        "root_span_id": "befc4139-abd2-4562-a23f-65905e648c37",
+        "operation": "devops-001:llm_call",
+        "start_time": "2026-04-17T18:42:42.730475Z",
+        "end_time": "2026-04-17T18:42:58.085735Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "aeee366c-3451-46ee-ac51-1010ef74ced7",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "49e6eb8b-2019-4496-9cec-7567f40fe50e",
+          "SpanID": "bf35bf17-e978-4d2c-93cb-d2a4908c62fb",
+          "ParentID": "",
+          "Operation": "devops-001:tool:send_message",
+          "StartTime": "2026-04-17T18:42:42.729774Z",
+          "EndTime": "2026-04-17T18:42:42.730171Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "tool:send_message",
+            "request_id": "506ad299-0898-43aa-b851-e6e1ddcd09e9",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "49e6eb8b-2019-4496-9cec-7567f40fe50e",
+        "root_span_id": "bf35bf17-e978-4d2c-93cb-d2a4908c62fb",
+        "operation": "devops-001:tool:send_message",
+        "start_time": "2026-04-17T18:42:42.729774Z",
+        "end_time": "2026-04-17T18:42:42.730171Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "506ad299-0898-43aa-b851-e6e1ddcd09e9",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "d09921fc-b790-483d-998f-0b44eebf9225",
+          "SpanID": "307ae3ab-8322-4862-b7dc-2d9f059b3348",
+          "ParentID": "",
+          "Operation": "devops-001:llm_call",
+          "StartTime": "2026-04-17T18:41:49.469365Z",
+          "EndTime": "2026-04-17T18:42:42.728964Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "llm_call",
+            "request_id": "2c3fd571-0591-4d36-894f-162b71b4b4c6",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "d09921fc-b790-483d-998f-0b44eebf9225",
+        "root_span_id": "307ae3ab-8322-4862-b7dc-2d9f059b3348",
+        "operation": "devops-001:llm_call",
+        "start_time": "2026-04-17T18:41:49.469365Z",
+        "end_time": "2026-04-17T18:42:42.728964Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "2c3fd571-0591-4d36-894f-162b71b4b4c6",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "39d226a1-213e-42d9-957e-0f7b89c1b4f4",
+          "SpanID": "8fa44de7-d6f8-46d5-92cd-b76b8ab4a807",
+          "ParentID": "",
+          "Operation": "devops-001:llm_call",
+          "StartTime": "2026-04-17T18:40:19.906712Z",
+          "EndTime": "2026-04-17T18:40:28.424345Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "llm_call",
+            "request_id": "b0e37193-f59b-4e6d-946f-2f96c090611e",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "39d226a1-213e-42d9-957e-0f7b89c1b4f4",
+        "root_span_id": "8fa44de7-d6f8-46d5-92cd-b76b8ab4a807",
+        "operation": "devops-001:llm_call",
+        "start_time": "2026-04-17T18:40:19.906712Z",
+        "end_time": "2026-04-17T18:40:28.424345Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "b0e37193-f59b-4e6d-946f-2f96c090611e",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "04278af1-864b-4279-a0b1-cd8367f16490",
+          "SpanID": "7173247b-eb3a-47bf-bf28-9ea311226334",
+          "ParentID": "",
+          "Operation": "devops-001:tool:send_message",
+          "StartTime": "2026-04-17T18:40:19.904891Z",
+          "EndTime": "2026-04-17T18:40:19.906138Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "tool:send_message",
+            "request_id": "4e7f1f54-3094-4742-86d4-a9a021a0a306",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "04278af1-864b-4279-a0b1-cd8367f16490",
+        "root_span_id": "7173247b-eb3a-47bf-bf28-9ea311226334",
+        "operation": "devops-001:tool:send_message",
+        "start_time": "2026-04-17T18:40:19.904891Z",
+        "end_time": "2026-04-17T18:40:19.906138Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "4e7f1f54-3094-4742-86d4-a9a021a0a306",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "b57d644e-d26d-4a67-a79d-e32462a4b70e",
+          "SpanID": "36c30d41-9b13-4a84-bf28-356439164b9a",
+          "ParentID": "",
+          "Operation": "devops-001:llm_call",
+          "StartTime": "2026-04-17T18:40:01.972366Z",
+          "EndTime": "2026-04-17T18:40:19.904815Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "llm_call",
+            "request_id": "8be8aedf-7278-4ae2-918b-6c691100ed71",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "b57d644e-d26d-4a67-a79d-e32462a4b70e",
+        "root_span_id": "36c30d41-9b13-4a84-bf28-356439164b9a",
+        "operation": "devops-001:llm_call",
+        "start_time": "2026-04-17T18:40:01.972366Z",
+        "end_time": "2026-04-17T18:40:19.904815Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "8be8aedf-7278-4ae2-918b-6c691100ed71",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "a92bbb68-002d-44a9-9d4e-4078b54067aa",
+          "SpanID": "09821778-cd77-4d80-9439-2d2aa4a198f4",
+          "ParentID": "",
+          "Operation": "devops-001:tool:list_teammates",
+          "StartTime": "2026-04-17T18:40:01.972062Z",
+          "EndTime": "2026-04-17T18:40:01.972079Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "tool:list_teammates",
+            "request_id": "b96b142b-90ff-4670-9a52-a3fda2d9110a",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "a92bbb68-002d-44a9-9d4e-4078b54067aa",
+        "root_span_id": "09821778-cd77-4d80-9439-2d2aa4a198f4",
+        "operation": "devops-001:tool:list_teammates",
+        "start_time": "2026-04-17T18:40:01.972062Z",
+        "end_time": "2026-04-17T18:40:01.972079Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "b96b142b-90ff-4670-9a52-a3fda2d9110a",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "0e6832ba-3036-4201-a2df-d63169f47c6e",
+          "SpanID": "5081d5df-1062-4b9a-8dd2-fa790ab6e4e8",
+          "ParentID": "",
+          "Operation": "devops-001:tool:read_inbox",
+          "StartTime": "2026-04-17T18:40:01.971626Z",
+          "EndTime": "2026-04-17T18:40:01.972046Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "tool:read_inbox",
+            "request_id": "788b34b8-8035-4f18-9f7e-ef086c98a43b",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "0e6832ba-3036-4201-a2df-d63169f47c6e",
+        "root_span_id": "5081d5df-1062-4b9a-8dd2-fa790ab6e4e8",
+        "operation": "devops-001:tool:read_inbox",
+        "start_time": "2026-04-17T18:40:01.971626Z",
+        "end_time": "2026-04-17T18:40:01.972046Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "788b34b8-8035-4f18-9f7e-ef086c98a43b",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "ParentID": "",
+          "Operation": "lead:request:user_turn",
+          "StartTime": "2026-04-17T18:39:57.284625Z",
+          "EndTime": "2026-04-17T19:07:04.028883Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "request:user_turn",
+            "request_id": "3110955d-0067-427b-a6b6-89168ea2c0e5",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "55a6b1fe-3c37-41bb-84a6-da4b2b7392f0",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:39:57.286784Z",
+          "EndTime": "2026-04-17T18:40:12.954582Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "3ba80903-0969-4472-b006-f290ee4e4819",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "228b77cc-44bc-436b-98b7-4dd5c215b725",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:40:12.954872Z",
+          "EndTime": "2026-04-17T18:40:12.955291Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "299367a9-785a-427c-bf8c-b74983653fba",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "8bb2cd21-3044-4056-ab3a-3cff9ff1e013",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:mcp_repo_probe",
+          "StartTime": "2026-04-17T18:40:12.955312Z",
+          "EndTime": "2026-04-17T18:40:12.95629Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:mcp_repo_probe",
+            "request_id": "2f938fbc-b7b0-4579-9bc4-8e20cf8a9681",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "30ea9b81-2c8b-4b5b-a6de-0bd7e5855208",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:glob_search",
+          "StartTime": "2026-04-17T18:40:12.956313Z",
+          "EndTime": "2026-04-17T18:40:12.973819Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:glob_search",
+            "request_id": "7c3b461a-cd17-4142-95c5-57f1814b9578",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "1889bbec-9907-4c6f-8267-b0e6062973a0",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:glob_search",
+          "StartTime": "2026-04-17T18:40:12.973855Z",
+          "EndTime": "2026-04-17T18:40:12.991615Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:glob_search",
+            "request_id": "f664b6b5-82c6-488e-9307-de81f12b6025",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "5e771bc1-a291-491c-9412-dbccce458e2a",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:glob_search",
+          "StartTime": "2026-04-17T18:40:12.99169Z",
+          "EndTime": "2026-04-17T18:40:13.018003Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:glob_search",
+            "request_id": "d309f13e-73fb-4e6e-a218-9fcc058d1891",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "8a7bddd3-4141-43f3-a03b-473fbbff5aec",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:40:13.018368Z",
+          "EndTime": "2026-04-17T18:40:23.514974Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "176769fd-038b-4ffc-ade7-f9df68950ada",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "24c4b11b-42b5-400b-a95c-268318c775f4",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:40:23.515049Z",
+          "EndTime": "2026-04-17T18:40:23.51556Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "557e821d-a70e-49dd-9395-60a9e53d39aa",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "64ddcab0-1da6-4a52-ad5a-ab1000c8a20b",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:40:23.515575Z",
+          "EndTime": "2026-04-17T18:40:23.515891Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "0467bb76-8e86-41c8-b01a-b518592e73c3",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "5fbc7c1e-fcd4-4aba-b016-9df66e098c9a",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:40:23.515901Z",
+          "EndTime": "2026-04-17T18:40:23.516259Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "452d5dda-51a7-4018-abe8-383a80a6c8b8",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "4eaf5a62-9c97-4c13-8d03-bf0aa53f3a3c",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:40:23.516282Z",
+          "EndTime": "2026-04-17T18:40:23.516665Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "bc3d505e-7d0c-40d6-8a72-a11eba9b0ced",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "3ac991cd-f16b-4746-a6b4-12e8bb7f52c4",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:40:23.516686Z",
+          "EndTime": "2026-04-17T18:40:23.517035Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "5e6d26b0-daeb-40a1-856e-9722d029bddb",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "adfa3cf0-eb74-48ac-8847-e9299b8f5cdb",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:40:23.51705Z",
+          "EndTime": "2026-04-17T18:40:23.517249Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "9322fed2-4855-47bf-a309-4dfd5b40c628",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "dc8b5c6b-e189-434f-9375-482548310703",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:40:23.517593Z",
+          "EndTime": "2026-04-17T18:40:37.12505Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "b1d02761-812e-4e9a-a610-80aec8d55e5a",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "dd417c6d-42b4-44d7-b29c-42d908c69072",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:40:37.125131Z",
+          "EndTime": "2026-04-17T18:40:37.127632Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "799d8838-0e95-48e2-8391-6be9ec539a8d",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "fee6fc7b-f87c-4073-a37f-424245a1505b",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:40:37.127656Z",
+          "EndTime": "2026-04-17T18:40:37.128276Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "940bec52-d45c-4298-a62d-c3971efaba2a",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "f7b5ee9c-5fd3-46b0-98c6-fa8584129fda",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:40:37.128288Z",
+          "EndTime": "2026-04-17T18:40:37.128638Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "092a1bff-3ea8-41f9-98d3-1e705ced8ce6",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "8440e50f-43bb-4279-9bb6-e3ac0f9e71f9",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:40:37.128653Z",
+          "EndTime": "2026-04-17T18:40:37.128794Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "a12f4b4b-8ec6-45a8-95db-a5f7121f1800",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "638a6b32-3930-4c81-a9c3-e95383cc77a6",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:40:37.128803Z",
+          "EndTime": "2026-04-17T18:40:37.129029Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "54506929-b0bb-49d1-b331-cf5a742e2bbf",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "f7576ef0-5d91-4ed6-9d81-664705503242",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:40:37.129038Z",
+          "EndTime": "2026-04-17T18:40:37.129239Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "20c53f60-7cae-407c-a91b-484b29936b73",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "21dad4b5-9feb-4bea-a4dc-9c7ea3af22f3",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:40:37.129248Z",
+          "EndTime": "2026-04-17T18:40:37.129448Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "37504b24-aab5-477c-b757-54d7d569073e",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "6e80ae61-a4ef-4c48-8f63-c55b21c02e78",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:40:37.130366Z",
+          "EndTime": "2026-04-17T18:40:42.605651Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "4ba4af8a-2818-436d-92b1-626c2a6bbc15",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "213f4a64-1a2b-4184-aacb-4d93b4b94e77",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:40:42.605746Z",
+          "EndTime": "2026-04-17T18:40:42.606789Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "ed4f3310-8183-4cf2-8297-de2a242a716d",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "df9f32ff-3cf1-4078-8fd7-3b77511d388c",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:40:42.606814Z",
+          "EndTime": "2026-04-17T18:40:42.607245Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "6eafef8d-de70-415f-9fa1-ba2cc4721580",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "592c527d-d527-4d7a-bb7a-56b8f32d24ed",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:40:42.607259Z",
+          "EndTime": "2026-04-17T18:40:42.607707Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "bebe3a19-ef5d-41da-9a6a-79a305048410",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "223780a4-5e0d-4ab0-b8ec-82eb6358f485",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:40:42.607729Z",
+          "EndTime": "2026-04-17T18:40:42.608414Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "a0b35c11-a48e-4779-9b10-ea63f75739eb",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "a6077fb0-4972-416c-b039-c0d6a0079fef",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:40:42.609626Z",
+          "EndTime": "2026-04-17T18:40:59.466474Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "92979ec6-58b8-4ef3-88fd-f7814001d040",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "c486a2c1-9842-465a-9456-119d0de38fec",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T18:40:59.466517Z",
+          "EndTime": "2026-04-17T18:40:59.467519Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "f9637d32-3418-47ab-ac48-2ddf89380da8",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "c5f5701d-a1bc-40ef-9645-dcf930505b21",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:40:59.468652Z",
+          "EndTime": "2026-04-17T18:41:10.63975Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "dc14623b-105b-4ca2-a4e5-492c8559e28e",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "ae4a2afd-ee5d-441b-bbad-89ad53d5f108",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T18:41:10.640058Z",
+          "EndTime": "2026-04-17T18:41:10.64045Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "c0d86c1a-ed1e-4eba-943c-d94021277142",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "8e41b2d2-152a-484b-ad29-1f4597817ada",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:41:10.641461Z",
+          "EndTime": "2026-04-17T18:41:19.24694Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "b091c746-3583-4e3c-925c-5f534aee4d2b",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "7a15d5e9-97ad-4a9e-afb0-8db9351cc17b",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:41:19.248348Z",
+          "EndTime": "2026-04-17T18:41:37.815858Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "89a374a1-c325-4519-b597-24d1e939f484",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:spawn_teammate",
+          "StartTime": "2026-04-17T18:41:37.816007Z",
+          "EndTime": "2026-04-17T18:41:37.816858Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:spawn_teammate",
+            "request_id": "3ee85fa6-b00d-4eb5-8e72-0795a85e4a2e",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "baccdde9-9f14-459b-9e55-fa9f3e67b5e5",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:41:37.817971Z",
+          "EndTime": "2026-04-17T18:41:47.570229Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "44c23f2c-fe8d-41e5-8e42-137f2c376ee5",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "cf4f4e64-2fd6-4d85-a7f8-6c2e3409c7b6",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:41:37.819642Z",
+          "EndTime": "2026-04-17T18:42:12.895933Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "6e41fce4-3296-4203-9629-3073cc4b81bf",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "5954e7d4-3ed6-42b3-8f3b-dd8cfa2cbad5",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:send_message",
+          "StartTime": "2026-04-17T18:41:47.571101Z",
+          "EndTime": "2026-04-17T18:41:47.571605Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:send_message",
+            "request_id": "f3bba036-2519-45d0-a7d1-629ae31d36fc",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "3fed6a55-47d1-4e82-839b-6d18d2903ba7",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:41:47.572778Z",
+          "EndTime": "2026-04-17T18:42:19.629206Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "34d2baa8-732d-44c3-9e9b-5770bfb9c089",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "9638be4d-1341-44d5-9016-aa4b67ee30bf",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:create_plan",
+          "StartTime": "2026-04-17T18:42:12.896713Z",
+          "EndTime": "2026-04-17T18:42:12.913348Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:create_plan",
+            "request_id": "6e1ff364-3ac8-4c6a-8a8b-926a1324cafa",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "45a82aa5-5ddf-4937-93d7-6f1c9ea04168",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:42:12.913432Z",
+          "EndTime": "2026-04-17T18:42:48.229154Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "2737c5f4-0faf-4356-93f3-2529076eb912",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "aea15e27-cf14-4540-8aaa-7507e6f275a8",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:42:19.631502Z",
+          "EndTime": "2026-04-17T18:42:53.885867Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "0bcde650-d9d6-4e2b-bc1c-afc666c79fd8",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "90f01204-74c5-40fd-b88d-3a8b25162869",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:claim_task",
+          "StartTime": "2026-04-17T18:42:48.22967Z",
+          "EndTime": "2026-04-17T18:42:48.232702Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:claim_task",
+            "request_id": "6192e8d4-3721-46fd-bd60-d80aeeea80ef",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "8181245f-2ea6-4d1c-8bca-daf33285582a",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:42:48.233079Z",
+          "EndTime": "2026-04-17T18:43:01.980535Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "1c2e0280-ee88-48b9-b40b-7801fe4a1ca2",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "6c766d78-6ffe-4b8b-b96c-96b0d2647f22",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:send_message",
+          "StartTime": "2026-04-17T18:42:53.886149Z",
+          "EndTime": "2026-04-17T18:42:53.886473Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:send_message",
+            "request_id": "9f75c8c8-c46a-4220-9c0c-92b6caedb2eb",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "003782ca-e620-4331-80d8-fa701ec97231",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:42:53.888187Z",
+          "EndTime": "2026-04-17T18:43:14.285809Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "0344d0a5-bf4e-4348-b9eb-22304522fed2",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "efcaec43-0bdf-4a72-aa6f-e45dc06fe780",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:update_task",
+          "StartTime": "2026-04-17T18:43:01.981303Z",
+          "EndTime": "2026-04-17T18:43:01.981873Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:update_task",
+            "request_id": "0c4e5b1e-11cb-455c-8f1e-f354672c4903",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "411a6566-d553-434a-8e2b-4bf22bd17fa4",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:43:01.982505Z",
+          "EndTime": "2026-04-17T18:43:20.500928Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "1d78774d-f7ff-4536-bf3f-e3a8a6a4bb38",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "1402f52f-2c95-4788-9fe1-51fa04e1712b",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_inbox",
+          "StartTime": "2026-04-17T18:43:14.285897Z",
+          "EndTime": "2026-04-17T18:43:14.288289Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_inbox",
+            "request_id": "965d14ad-9a2b-400c-9d95-4744df1df664",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "c84597ec-2492-4641-b360-5785f487a950",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:43:14.289759Z",
+          "EndTime": "2026-04-17T18:43:33.902235Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "efdd8489-8417-4e6f-a12f-1b952b2b0ff3",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "1c015020-92cf-48cb-a014-9da0e640b7a0",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:execute_task",
+          "StartTime": "2026-04-17T18:43:20.500987Z",
+          "EndTime": "2026-04-17T18:43:20.50102Z",
+          "Tags": {
+            "actor": "planner-002",
+            "error": "task: task 1 not pending",
+            "node": "tool:execute_task",
+            "request_id": "21aa6400-d336-4a16-bd3a-d9580e274d5d",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "error"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "9fa7dc56-df16-46a8-b6f5-e2e4547d05a2",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:43:20.501699Z",
+          "EndTime": "2026-04-17T18:43:49.931845Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "1720aa47-5280-4d5a-82d9-e135193aba7a",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "358a907e-ce1b-4f9d-81d9-e0053c027df8",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:43:33.904647Z",
+          "EndTime": "2026-04-17T18:44:02.751506Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "8a2bfa7e-433d-4634-9fa1-48193f47f0bc",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "11f4a204-39c6-4c8f-b37a-60e7b1807039",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:update_task",
+          "StartTime": "2026-04-17T18:43:49.931926Z",
+          "EndTime": "2026-04-17T18:43:49.935022Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:update_task",
+            "request_id": "76a90f5f-0c76-4a5c-9bb6-3aeb6e5a6870",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "5ea7613f-0361-42fa-9d9d-14a6abd748f1",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:43:49.935741Z",
+          "EndTime": "2026-04-17T18:44:06.920342Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "d469157c-dec3-4563-88e2-179e8cb802f8",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "43c4a26a-9509-4821-98fe-e78088f8399a",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:delegate_task",
+          "StartTime": "2026-04-17T18:44:02.752324Z",
+          "EndTime": "2026-04-17T18:48:46.867528Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:delegate_task",
+            "request_id": "29f04a18-3e5d-4e0b-8129-d3e3e8694708",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "eccc8777-a5ae-4e8e-92e9-2d0a7e2f5b03",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:list_tasks",
+          "StartTime": "2026-04-17T18:44:06.920397Z",
+          "EndTime": "2026-04-17T18:44:06.920455Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:list_tasks",
+            "request_id": "3a487380-bd07-4498-b610-7e3fd77d1eff",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "e9a2f0a0-49b0-4003-9fbc-2fd2e9495dc2",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:monitor_progress",
+          "StartTime": "2026-04-17T18:44:06.920468Z",
+          "EndTime": "2026-04-17T18:44:06.920496Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:monitor_progress",
+            "request_id": "0eb71000-d708-41ef-a29c-7715527ef7ca",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "81793895-b889-4331-ad51-0298ed314537",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:44:06.920858Z",
+          "EndTime": "2026-04-17T18:44:46.241003Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "b8a9e96a-38a2-42ea-8f5b-fbc7408ccbf9",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "5c36e71a-2b40-4798-97ef-a90dcab13960",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:send_message",
+          "StartTime": "2026-04-17T18:44:46.241075Z",
+          "EndTime": "2026-04-17T18:44:46.242333Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:send_message",
+            "request_id": "7e3d1bbd-5432-438f-9767-4009a02d8671",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "4d47932d-bd1f-4b0e-ad8f-6dfd41f7126f",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:44:46.24276Z",
+          "EndTime": "2026-04-17T18:45:16.904763Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "46fde5d7-d4fd-4824-8b10-2c4ae833c54b",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "4ab7fa2f-c0b4-4075-871d-d2cdba250a8c",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:45:16.907531Z",
+          "EndTime": "2026-04-17T18:48:02.476505Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "da298e12-5372-4f59-9b21-fde9612111b6",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "75de79a2-2c52-4926-8024-68ee82a011a6",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:update_task",
+          "StartTime": "2026-04-17T18:48:02.476557Z",
+          "EndTime": "2026-04-17T18:48:02.477227Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:update_task",
+            "request_id": "2a77f059-449d-443b-8d37-35054e05fb71",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "71148bd0-1c4d-4b35-a86b-f16fef8aa175",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:48:02.477712Z",
+          "EndTime": "2026-04-17T18:48:49.590684Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "320078e2-1209-4780-953c-d7ee1ac51323",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "fb9bf1e4-67e9-4e71-8bf6-736470d2bb1a",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:delegate_task",
+          "StartTime": "2026-04-17T18:48:46.867581Z",
+          "EndTime": "2026-04-17T18:54:44.34007Z",
+          "Tags": {
+            "actor": "lead",
+            "error": "Delegate (code_reviewer) failed: delegate: exceeded max iterations (30)",
+            "node": "tool:delegate_task",
+            "request_id": "7ad7f372-24fc-4d1e-917e-84d20197d2d1",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "error"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "74406356-8768-4a26-a5ff-9bdde7e8d751",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:list_tasks",
+          "StartTime": "2026-04-17T18:48:49.590802Z",
+          "EndTime": "2026-04-17T18:48:49.590869Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:list_tasks",
+            "request_id": "e465f097-c5b1-452c-8b12-44e30227dc15",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "bfe494e1-90fc-4f7c-9c68-830f70182c93",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:48:49.591676Z",
+          "EndTime": "2026-04-17T18:49:07.492716Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "52ddd739-26e6-46a5-b42e-8a8f079816ca",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "ad50d7aa-b7f1-436f-99c5-cdf1a10a9a0c",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:update_task",
+          "StartTime": "2026-04-17T18:49:07.492939Z",
+          "EndTime": "2026-04-17T18:49:07.493694Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:update_task",
+            "request_id": "4ec51abc-3d76-4530-9132-3deebd41d665",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "69b54405-340d-4e27-9154-b56a6248dc94",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:49:07.494139Z",
+          "EndTime": "2026-04-17T18:51:30.819273Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "751f2058-b7f6-4af0-bd8d-9ff2f22ffe6d",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "3e7e3978-334d-4b31-a354-fabe412341b3",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:claim_task",
+          "StartTime": "2026-04-17T18:51:30.81947Z",
+          "EndTime": "2026-04-17T18:51:30.821013Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:claim_task",
+            "request_id": "2982f85d-a873-4e65-8f14-e0e524a206fa",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "c83c1080-a4f5-4f29-8398-4e8db753c6b8",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:51:30.821412Z",
+          "EndTime": "2026-04-17T18:51:45.485654Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "a3afdfd7-a6b0-411f-9ef2-681e5c8ff833",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "37007005-b55f-496a-8e01-ce714d75c4db",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:update_task",
+          "StartTime": "2026-04-17T18:51:45.486033Z",
+          "EndTime": "2026-04-17T18:51:45.486607Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:update_task",
+            "request_id": "acb02b80-b864-4f4b-9667-707173b1a934",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "7e165877-db2f-4798-9afa-18b31a86366e",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:51:45.487224Z",
+          "EndTime": "2026-04-17T18:51:53.665594Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "b3bd38cf-b20e-41be-b06c-07116ed0eabf",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "89a541c6-c72b-428c-bedf-b63a001bd12c",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:update_task",
+          "StartTime": "2026-04-17T18:51:53.665698Z",
+          "EndTime": "2026-04-17T18:51:53.666576Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:update_task",
+            "request_id": "c9f64fa9-1a2a-4be0-a394-ece80536d268",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "6c92db43-9097-4981-96ac-eb11e1757428",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:51:53.667222Z",
+          "EndTime": "2026-04-17T18:52:10.168506Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "7ec3d494-72c5-4a12-859a-2a9dff0fa90f",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "cc227368-3393-46ff-ab69-0238752821c3",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:monitor_progress",
+          "StartTime": "2026-04-17T18:52:10.169342Z",
+          "EndTime": "2026-04-17T18:52:10.169385Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:monitor_progress",
+            "request_id": "606f7f87-ba4b-41f3-91ec-2ff6412d3fee",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "5159422e-91cf-413f-9bb6-233bb1d7034e",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:read_inbox",
+          "StartTime": "2026-04-17T18:52:10.169399Z",
+          "EndTime": "2026-04-17T18:52:10.169918Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:read_inbox",
+            "request_id": "1e892a47-4ffd-40c0-bb7f-5d0bde9f205d",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "dc01793c-bd0e-4e6b-b74f-18c4f1df465c",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:52:10.1708Z",
+          "EndTime": "2026-04-17T18:52:35.058912Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "8d2c7305-f21e-4a2f-b9c5-d19586b5de8b",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "18f2bc2d-fc11-410b-86bf-afb681f49f7c",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:tool:send_message",
+          "StartTime": "2026-04-17T18:52:35.05898Z",
+          "EndTime": "2026-04-17T18:52:35.06216Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "tool:send_message",
+            "request_id": "dd67a249-e5be-484a-80c0-e414d1e3a818",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "693d0dc6-8eda-4d93-aff3-254e69132b07",
+          "ParentID": "320c6a1f-16d7-4866-b6ee-cd511b616ab7",
+          "Operation": "planner-002:llm_call",
+          "StartTime": "2026-04-17T18:52:35.063061Z",
+          "EndTime": "2026-04-17T18:52:47.109204Z",
+          "Tags": {
+            "actor": "planner-002",
+            "node": "llm_call",
+            "request_id": "f2b9928b-67b9-4c01-9f8a-2d62d64d188a",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "7e64fdab-f200-4b19-a368-b47e2d9983a4",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:54:44.342855Z",
+          "EndTime": "2026-04-17T18:55:02.050038Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "ffa74e8a-f6da-4391-b27e-65a06c2a252f",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "fb5fab72-b6ce-44d8-92fc-67a707ec54de",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:review_plan",
+          "StartTime": "2026-04-17T18:55:02.050092Z",
+          "EndTime": "2026-04-17T18:55:02.052426Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:review_plan",
+            "request_id": "341942c6-8e0f-47a6-b81f-06b70c0e8672",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "ffddec01-0a9c-46f5-83d3-8b65d939f3c2",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:55:02.05379Z",
+          "EndTime": "2026-04-17T18:56:21.528897Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "b1f4f9df-5f33-45d2-bf38-1e023f314a1c",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "f6eaeba4-236b-46ab-9dcd-00e48f187885",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T18:56:21.528978Z",
+          "EndTime": "2026-04-17T18:56:21.529428Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "d8bdbf2e-c61e-4efe-a394-3b4a10532e23",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "cf3c83eb-6385-4e4a-91ca-88334c1c3245",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T18:56:21.529443Z",
+          "EndTime": "2026-04-17T18:56:21.530076Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "be911a56-b4e2-4a2e-8752-1c820ed34b10",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "795ccec8-f4ae-485d-a4b6-ca3f5bfbf8ae",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:56:21.531796Z",
+          "EndTime": "2026-04-17T18:56:39.99466Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "d56d3f29-c60d-48b5-a178-b3744861fcbb",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "0a0bc74c-099f-4f54-8476-360dc02c2dec",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:56:39.99627Z",
+          "EndTime": "2026-04-17T18:56:54.009852Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "41fd938f-45ae-4b78-887c-95528357df76",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "2f98befd-2923-43ae-a3ca-e1df41f16c04",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:56:54.011325Z",
+          "EndTime": "2026-04-17T18:56:59.475659Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "a2836519-9cca-4b66-9e52-7c317a042bc2",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "093e5bd5-b184-4e6a-b74a-03776609b6d4",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_teammates",
+          "StartTime": "2026-04-17T18:56:59.475724Z",
+          "EndTime": "2026-04-17T18:56:59.475755Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_teammates",
+            "request_id": "5a1612c4-e691-4b33-9ee7-d4c50d9d614b",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "116450c9-65e3-4606-8fb3-789d9ddb58d8",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_inbox",
+          "StartTime": "2026-04-17T18:56:59.475769Z",
+          "EndTime": "2026-04-17T18:56:59.476261Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_inbox",
+            "request_id": "852296e1-a318-4cb3-80ba-3b8eef31f945",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "a22c971e-629e-4fa8-be69-e219c509bd64",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:56:59.478048Z",
+          "EndTime": "2026-04-17T18:57:08.192819Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "06387114-7eb2-4934-890b-da40584ffff9",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "8d016e13-fa73-4e17-8f4c-72e206b02c97",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:57:08.194501Z",
+          "EndTime": "2026-04-17T18:57:14.723057Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "b56564a5-65e9-40cc-a601-783c3d65ac90",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "fd2d0177-21cb-41e6-9e16-7ee3b706469c",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:delegate_task",
+          "StartTime": "2026-04-17T18:57:14.723168Z",
+          "EndTime": "2026-04-17T18:58:05.747708Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:delegate_task",
+            "request_id": "903f390b-f2ee-4e58-a63d-92087bfe5d1e",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "53108596-9030-47ed-99f9-8b7d5f2b3e56",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:58:05.749621Z",
+          "EndTime": "2026-04-17T18:58:12.499921Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "d7373be9-3971-4f83-bc3f-7818b3efc9cd",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "c47ed4a7-4c59-4f66-a621-f0cba311c2d1",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:grep_search",
+          "StartTime": "2026-04-17T18:58:12.499984Z",
+          "EndTime": "2026-04-17T18:58:12.52505Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:grep_search",
+            "request_id": "01b61a61-a3aa-4b2a-8a80-f206582c5b58",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "836c1472-2e72-4696-aad6-2f5acdd24f0e",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:58:12.525103Z",
+          "EndTime": "2026-04-17T18:58:12.525409Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "09d154ec-a97e-4fea-bb55-17103cb0efe6",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "bf1d78f3-2d99-4cc8-a202-faa31371c0d9",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:58:12.525422Z",
+          "EndTime": "2026-04-17T18:58:12.525714Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "fd18eac2-2f77-41a6-91b4-194f76d9f653",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "86ce06e2-0543-4779-8220-c691705c5fac",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:58:12.527054Z",
+          "EndTime": "2026-04-17T18:58:18.727435Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "6fa836a1-0de3-486b-9cb7-294c45acaed7",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "11568edc-696e-4e4d-b375-5a2efcb5d90c",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:58:18.72749Z",
+          "EndTime": "2026-04-17T18:58:18.727844Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "9deadf7f-e85e-4974-a7db-ca7888f2b8b1",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "c2f647a3-01ed-4aa4-a9e7-ba2162ea6f3b",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:58:18.727857Z",
+          "EndTime": "2026-04-17T18:58:18.728667Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "3d27cdb3-022f-4853-b9e0-7f7d6d4701dd",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "8ce5ab2c-ef8d-4f73-bb46-1647d1cdb9b4",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T18:58:18.728688Z",
+          "EndTime": "2026-04-17T18:58:18.72906Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "8c384c4d-1d9b-4996-b71b-95437f9acf15",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "facf7cf0-5636-4197-860c-675b53cc6303",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:58:18.730363Z",
+          "EndTime": "2026-04-17T18:58:25.65471Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "64762aa1-a853-4e04-81e7-c83b97acc6ec",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "d6836463-ea00-4768-917e-2aee63d5aabf",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:58:25.654778Z",
+          "EndTime": "2026-04-17T18:58:25.655827Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "429d9af9-3bfd-4571-ace4-bc1426da8191",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "0ccb094b-5b3b-4b66-a177-b6117dc3e651",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:58:25.655852Z",
+          "EndTime": "2026-04-17T18:58:25.656286Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "16f7123b-d28e-4999-9348-22a580dbdaf5",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "99a72605-3bc6-4e70-838d-e49f1ab109cb",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:58:25.656298Z",
+          "EndTime": "2026-04-17T18:58:25.656452Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "f4bfeac4-30a5-42b0-b587-7cfe778d58f9",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "4f574627-9888-4fa5-8b7c-eade1373c772",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-17T18:58:25.656463Z",
+          "EndTime": "2026-04-17T18:58:25.656729Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "907d88c4-0964-4e43-a2ed-5a7af7980866",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "063a0c71-0ddd-4d9c-95ee-3ad6ecfaadc5",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:glob_search",
+          "StartTime": "2026-04-17T18:58:25.656743Z",
+          "EndTime": "2026-04-17T18:58:25.676039Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:glob_search",
+            "request_id": "f75ab464-f7b9-4574-86e9-890c541a145b",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "026ec5fc-2d28-4585-8b47-c4e6a45cba90",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:58:25.67732Z",
+          "EndTime": "2026-04-17T18:59:04.742765Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "54022015-44d8-4eb3-9e60-fde5b9eb3607",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "0ada4ae2-5107-495c-b745-b2df5492e29b",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T18:59:04.74296Z",
+          "EndTime": "2026-04-17T18:59:04.743393Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "68c3dba3-5587-4b42-a146-d369d549b45d",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "c51e2d83-ffac-4daa-8772-d4e0319c0b46",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T18:59:04.743412Z",
+          "EndTime": "2026-04-17T18:59:04.743663Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "2a3efd5d-783b-436a-b6cb-7ac986f03c8d",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "fb628871-03f7-46db-ac0e-37021b6f9c3a",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T18:59:04.74557Z",
+          "EndTime": "2026-04-17T19:01:57.878339Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "58e9b39d-4025-41af-99b3-a14d393165cc",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "dcc2ef60-e610-4ccb-94be-d87eee14e2b1",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T19:01:57.878439Z",
+          "EndTime": "2026-04-17T19:01:57.882177Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "f40561a6-499c-44b0-a8e2-2a3eebc7a55a",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "f4397bee-a35f-480c-96a8-80e90d39c837",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T19:01:57.882343Z",
+          "EndTime": "2026-04-17T19:01:57.882853Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "04715eb4-fcdb-40ed-a0fc-b2edf1a25411",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "539c0464-e2de-4aca-810c-dc3598d7f1a3",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T19:01:57.884757Z",
+          "EndTime": "2026-04-17T19:02:42.821076Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "a4fa9bdf-b34d-47aa-8fa7-e41c29dd8100",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "d9c55e62-57a7-4952-b04a-9c615b3c02f7",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T19:02:42.821338Z",
+          "EndTime": "2026-04-17T19:02:42.82198Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "1e8a1cfe-8470-4483-ac7d-1e4eb4becfd3",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "b83584d5-5a7c-42a6-a0d4-2bc67181d9d6",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T19:02:42.821998Z",
+          "EndTime": "2026-04-17T19:02:42.822258Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "a8c03026-4a5d-4649-8f33-98759964892b",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "cc2c3d1b-fd24-4751-a44b-57754f6e4f84",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T19:02:42.834951Z",
+          "EndTime": "2026-04-17T19:03:30.408791Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "a638fa84-4938-4cad-844a-edfb53a3264e",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "632b430e-246e-4ca1-9e44-e3755e1a4a05",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T19:03:30.409112Z",
+          "EndTime": "2026-04-17T19:03:30.409511Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "12cfe07c-5fc5-41f8-855c-8c816c9b8ce7",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "156e5d96-160c-46f8-a4dd-96d3b0bbdfd4",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T19:03:30.409526Z",
+          "EndTime": "2026-04-17T19:03:30.409801Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "3af73580-ac5e-4900-8d5a-f18e83b963b6",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "36261da9-54ff-4855-b2b6-d300e3c97bf2",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T19:03:30.411095Z",
+          "EndTime": "2026-04-17T19:04:21.087297Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "0e494938-588b-4a11-81ee-d05a0c66be4c",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "73446576-ee21-493c-ab2e-557c45d06f52",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T19:04:21.087349Z",
+          "EndTime": "2026-04-17T19:04:21.088274Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "5a9ccc39-c498-4eef-94f5-8f09dd253e32",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "0883afdc-74e4-4009-9eae-0cbdf1ab0ba7",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T19:04:21.088288Z",
+          "EndTime": "2026-04-17T19:04:21.08861Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "06bd4540-e8b7-4f6b-a8bc-974a32a7492a",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "0eba0ef7-ca46-443c-bd60-a86111451df5",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T19:04:21.09017Z",
+          "EndTime": "2026-04-17T19:04:48.584757Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "0475280d-2c45-4e00-bd51-3746b83cc03a",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "9451479d-a2f2-4aa2-ad55-4acc5dc2956c",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T19:04:48.585578Z",
+          "EndTime": "2026-04-17T19:04:48.586076Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "4f6cef48-c4c6-4c6d-b7eb-bb2ceedf565a",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "27a0ccb6-500f-4476-af60-412b6bec47ab",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T19:04:48.587926Z",
+          "EndTime": "2026-04-17T19:05:52.409989Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "1d977ee1-972f-4f96-8f50-9cbcb18d5bf1",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "8d74da88-e3f3-4c4f-af7c-992a515f6b71",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-17T19:05:52.410255Z",
+          "EndTime": "2026-04-17T19:05:52.410657Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "489289a2-34d0-431f-bacd-f97994f898d9",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "cbd36de9-20d2-4314-9069-0da8416af44f",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T19:05:52.41206Z",
+          "EndTime": "2026-04-17T19:05:57.611083Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "793de07a-88f6-41bb-980a-33cc9a7eb6f5",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "5eaf960b-eff9-4ad1-8bc1-3a755c0df0ae",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:tool:list_dir",
+          "StartTime": "2026-04-17T19:05:57.611143Z",
+          "EndTime": "2026-04-17T19:05:57.611542Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:list_dir",
+            "request_id": "84375c77-7d6c-42f3-a33f-8120e2634ecf",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "fc845ff3-f026-46cc-97bc-890459680cea",
+          "SpanID": "59f6abd2-3cdd-4cf9-b66a-d6418c3868d1",
+          "ParentID": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-17T19:05:57.6132Z",
+          "EndTime": "2026-04-17T19:06:21.740431Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "4124061b-c146-400d-abef-8c67725ad3c4",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "fc845ff3-f026-46cc-97bc-890459680cea",
+        "root_span_id": "9d1e710a-64d8-475a-942f-8ac1c7c66fce",
+        "operation": "lead:request:user_turn",
+        "start_time": "2026-04-17T18:39:57.284625Z",
+        "end_time": "2026-04-17T19:07:04.028883Z",
+        "status": "ok",
+        "span_count": 128,
+        "request_id": "3110955d-0067-427b-a6b6-89168ea2c0e5",
+        "run_label": "full-activation-throttled"
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "3a6f4fc7-aa78-421f-a581-1fd2777f790a",
+          "SpanID": "6174aa98-53e3-46f9-a066-b4b23a18a5e7",
+          "ParentID": "",
+          "Operation": "devops-001:llm_call",
+          "StartTime": "2026-04-17T18:39:57.135715Z",
+          "EndTime": "2026-04-17T18:40:01.97154Z",
+          "Tags": {
+            "actor": "devops-001",
+            "node": "llm_call",
+            "request_id": "ceb18394-73e1-4e8c-af8c-a84e3db01047",
+            "sandbox_run": "full-activation-throttled"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "3a6f4fc7-aa78-421f-a581-1fd2777f790a",
+        "root_span_id": "6174aa98-53e3-46f9-a066-b4b23a18a5e7",
+        "operation": "devops-001:llm_call",
+        "start_time": "2026-04-17T18:39:57.135715Z",
+        "end_time": "2026-04-17T18:40:01.97154Z",
+        "status": "ok",
+        "span_count": 1,
+        "request_id": "ceb18394-73e1-4e8c-af8c-a84e3db01047",
+        "run_label": "full-activation-throttled"
+      }
+    }
+  ],
+  "updated_at": "2026-04-17T19:07:41.701481Z"
+}

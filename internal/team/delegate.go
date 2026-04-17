@@ -37,6 +37,7 @@ func DelegateWork(ctx context.Context, model core.ChatModel, deps *core.AgentDep
 	if sysPrompt == "" {
 		sysPrompt = fmt.Sprintf("You are a helpful agent specialized in %s tasks.", tmpl.Role)
 	}
+	sysPrompt = core.BuildSystemPrompt(sysPrompt, deps, nil, "", "")
 
 	// Fresh message list — the core of context isolation.
 	messages := []types.Message{

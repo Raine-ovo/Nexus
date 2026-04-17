@@ -46,6 +46,19 @@ type SpanEvent struct {
 	Attrs     map[string]string
 }
 
+// TraceSummary is a compact trace-level view for debug listing endpoints.
+type TraceSummary struct {
+	TraceID    string    `json:"trace_id"`
+	RootSpanID string    `json:"root_span_id"`
+	Operation  string    `json:"operation"`
+	StartTime  time.Time `json:"start_time"`
+	EndTime    time.Time `json:"end_time"`
+	Status     string    `json:"status"`
+	SpanCount  int       `json:"span_count"`
+	RequestID  string    `json:"request_id,omitempty"`
+	RunLabel   string    `json:"run_label,omitempty"`
+}
+
 // NewTracer creates an empty in-memory tracer.
 func NewTracer() *Tracer {
 	return &Tracer{
@@ -143,6 +156,60 @@ func (t *Tracer) GetTrace(traceID string) []*Span {
 	sort.Slice(out, func(i, j int) bool {
 		return out[i].StartTime.Before(out[j].StartTime)
 	})
+	return out
+}
+
+// ListTraces returns recent trace summaries sorted by root span start time descending.
+func (t *Tracer) ListTraces(limit int) []TraceSummary {
+	if t == nil {
+		return nil
+	}
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+
+	type aggregate struct {
+		root  *Span
+		count int
+	}
+	agg := make(map[string]*aggregate)
+	for _, span := range t.spans {
+		if span == nil || span.TraceID == "" {
+			continue
+		}
+		item := agg[span.TraceID]
+		if item == nil {
+			item = &aggregate{}
+			agg[span.TraceID] = item
+		}
+		item.count++
+		if item.root == nil || span.ParentID == "" && span.StartTime.Before(item.root.StartTime) {
+			item.root = span
+		}
+	}
+
+	out := make([]TraceSummary, 0, len(agg))
+	for traceID, item := range agg {
+		if item == nil || item.root == nil {
+			continue
+		}
+		out = append(out, TraceSummary{
+			TraceID:    traceID,
+			RootSpanID: item.root.SpanID,
+			Operation:  item.root.Operation,
+			StartTime:  item.root.StartTime,
+			EndTime:    item.root.EndTime,
+			Status:     item.root.Status,
+			SpanCount:  item.count,
+			RequestID:  item.root.Tags["request_id"],
+			RunLabel:   item.root.Tags["sandbox_run"],
+		})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].StartTime.After(out[j].StartTime)
+	})
+	if limit > 0 && len(out) > limit {
+		out = out[:limit]
+	}
 	return out
 }
 

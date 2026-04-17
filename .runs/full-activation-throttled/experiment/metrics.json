@@ -1,0 +1,4 @@
+{
+  "status": 200,
+  "body": "{\"metrics\":{\"counters\":{\"callbacks_on_end\":2,\"callbacks_on_llm_end\":63,\"callbacks_on_llm_start\":63,\"callbacks_on_tool_end\":86,\"callbacks_on_tool_start\":86,\"callbacks_user_turn\":2,\"llm_calls_active\":0,\"runs_active\":0,\"tools_active\":0},\"histograms\":{\"callback_duration_seconds\":{\"Count\":2,\"Sum\":1661.284867249,\"Buckets\":[0.0005,0.001,0.005,0.01,0.025,0.05,0.1,0.25,0.5,1,2.5,5,10,30,60],\"Counts\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,2]},\"llm_duration_seconds\":{\"Count\":63,\"Sum\":2136.3803371260005,\"Buckets\":[0.0005,0.001,0.005,0.01,0.025,0.05,0.1,0.25,0.5,1,2.5,5,10,30,60],\"Counts\":[0,0,0,0,0,0,0,0,0,0,0,1,12,28,22]},\"tool_duration_seconds\":{\"Count\":86,\"Sum\":692.7866494970001,\"Buckets\":[0.0005,0.001,0.005,0.01,0.025,0.05,0.1,0.25,0.5,1,2.5,5,10,30,60],\"Counts\":[46,15,16,0,4,2,0,0,0,0,0,0,0,0,3]}}},\"run\":\"full-activation-throttled\",\"scope\":\"run\"}\n"
+}

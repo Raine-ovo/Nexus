@@ -1,0 +1,5 @@
+{
+  "response": "## 实验触发摘要\n\n**Agent 触发**：planner（persistent）、devops（persistent）、knowledge（delegate）、code_reviewer（delegate）— 4/4 全部触发。\n\n**写出文件**：16 个，位于 `.runs/full-activation-throttled/.outputs/full_activation_run/`，含 14 个编号文件 + 2 个补充报告。\n\n**机制触发**：\n\n| 机制 | 触发? | 备注 |\n|------|-------|------|\n| mcp_repo_probe | ✅ | 返回 mock 数据 |\n| delegate_task | ✅ | 3 次（knowledge 成功，code_reviewer 1 失败 1 成功） |\n| spawn_teammate | ✅ | planner-002 |\n| send_message | ✅ | 5 次（2 次因 teammate 已关闭投递失败） |\n| claim_task | ✅ | planner-002 认领 Task 1，devops-001 认领 Task 2/4 |\n| reflection | ❌ | 配置默认 enabled=false，未触发 |\n| memory 落盘 | ⚠️ | semantic.yaml.tmp 存在但 teammate 侧不可用；latest-traces.json 未生成（无运行服务器） |",
+  "session_id": "e5924b4c-aa48-447b-9f90-a6a4a282bb27",
+  "url": "ws://127.0.0.1:18215/api/ws"
+}

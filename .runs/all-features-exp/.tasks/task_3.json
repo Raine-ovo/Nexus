@@ -1,0 +1,15 @@
+{
+  "id": 3,
+  "title": "Validate 4-stage permission pipeline",
+  "description": "Verify the 4-stage permission pipeline (intent → policy → grant → enforce, or as documented). Walk each stage with sample operations, confirm stage transitions are correct, and that denial paths work. Acceptance: a report confirming all 4 stages fire in order, with pass/fail per stage. Depends on baseline checklist. Size: M.",
+  "status": "blocked",
+  "blocked_by": [
+    1
+  ],
+  "blocks": [
+    6
+  ],
+  "claimed_at": "0001-01-01T00:00:00Z",
+  "created_at": "2026-04-17T17:37:19.263925Z",
+  "updated_at": "2026-04-17T17:37:19.263925Z"
+}

@@ -1,0 +1,10 @@
+{
+  "job_id": "897a1a87-bd04-4cff-800f-0e5b6b90c58e",
+  "session_id": "41e7374e-7b0d-488e-99d4-171844699efa",
+  "lane": "main",
+  "status": "failed",
+  "error": "reflection/engine: agent run (attempt 1): lead: model generate: core/recovery: exhausted retries: core: chat completion status 429: {\"error\":{\"code\":\"1302\",\"message\":\"您的账户已达到速率限制，请您控制请求频率\"}}",
+  "created_at": "2026-04-18T01:35:15.321468+08:00",
+  "started_at": "2026-04-18T01:35:15.321488+08:00",
+  "finished_at": "2026-04-18T01:37:32.738726+08:00"
+}

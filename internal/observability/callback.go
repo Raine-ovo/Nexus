@@ -4,15 +4,18 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 )
 
 // CallbackHandler implements Eino-style callbacks for agent lifecycle events.
 // It provides hooks that can be attached to agent operations for tracing, metrics, and logging.
 type CallbackHandler struct {
-	tracer  *Tracer
-	metrics *MetricsCollector
-	logger  *Logger
+	tracer     *Tracer
+	metrics    *MetricsCollector
+	runMetrics map[string]*MetricsCollector
+	logger     *Logger
+	mu         sync.RWMutex
 }
 
 // CallbackEvent describes a single lifecycle notification.
@@ -20,6 +23,7 @@ type CallbackEvent struct {
 	Type      string // "on_start", "on_end", "on_error", "on_tool_start", "on_tool_end", "on_llm_start", "on_llm_end"
 	NodeName  string
 	RunID     string
+	RunLabel  string
 	ParentID  string
 	Data      map[string]interface{}
 	Timestamp time.Time
@@ -46,15 +50,16 @@ func (l *Logger) Print(event CallbackEvent) {
 		return
 	}
 	l.std.Printf("[%s] node=%s run=%s parent=%s dur=%s data=%v",
-		event.Type, event.NodeName, event.RunID, event.ParentID, event.Duration, event.Data)
+		event.Type, event.NodeName, event.RunLabel+"/"+event.RunID, event.ParentID, event.Duration, event.Data)
 }
 
 // NewCallbackHandler wires tracing and metrics; a default logger is attached.
 func NewCallbackHandler(tracer *Tracer, metrics *MetricsCollector) *CallbackHandler {
 	return &CallbackHandler{
-		tracer:  tracer,
-		metrics: metrics,
-		logger:  NewLogger("nexus/callback"),
+		tracer:     tracer,
+		metrics:    metrics,
+		runMetrics: make(map[string]*MetricsCollector),
+		logger:     NewLogger("nexus/callback"),
 	}
 }
 
@@ -118,36 +123,82 @@ func (h *CallbackHandler) handleLifecycle(defaultType string, event CallbackEven
 	}
 
 	if h.metrics != nil {
-		h.metrics.IncrCounter("callbacks_"+ev.Type, 1)
-		switch kind {
-		case lifecycleStart:
-			h.metrics.IncrCounter("runs_active", 1)
-		case lifecycleEnd:
-			h.metrics.IncrCounter("runs_active", -1)
-			if ev.Duration > 0 {
-				h.metrics.ObserveHistogram("callback_duration_seconds", ev.Duration.Seconds())
-			}
-		case lifecycleError:
-			h.metrics.IncrCounter("errors_total", 1)
-		case lifecycleToolStart:
-			h.metrics.IncrCounter("tools_active", 1)
-		case lifecycleToolEnd:
-			h.metrics.IncrCounter("tools_active", -1)
-			if ev.Duration > 0 {
-				h.metrics.ObserveHistogram("tool_duration_seconds", ev.Duration.Seconds())
-			}
-		case lifecycleLLMStart:
-			h.metrics.IncrCounter("llm_calls_active", 1)
-		case lifecycleLLMEnd:
-			h.metrics.IncrCounter("llm_calls_active", -1)
-			if ev.Duration > 0 {
-				h.metrics.ObserveHistogram("llm_duration_seconds", ev.Duration.Seconds())
-			}
-		}
+		applyLifecycleMetrics(h.metrics, ev, kind)
+	}
+	if strings.TrimSpace(ev.RunLabel) != "" {
+		applyLifecycleMetrics(h.collectorForRun(ev.RunLabel), ev, kind)
 	}
 
 	if h.logger != nil {
 		h.logger.Print(ev)
+	}
+}
+
+func (h *CallbackHandler) collectorForRun(runLabel string) *MetricsCollector {
+	runLabel = strings.TrimSpace(runLabel)
+	if h == nil || runLabel == "" {
+		return nil
+	}
+	h.mu.RLock()
+	existing := h.runMetrics[runLabel]
+	h.mu.RUnlock()
+	if existing != nil {
+		return existing
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.runMetrics[runLabel] == nil {
+		h.runMetrics[runLabel] = NewMetricsCollector()
+	}
+	return h.runMetrics[runLabel]
+}
+
+func (h *CallbackHandler) SnapshotForRun(runLabel string) map[string]interface{} {
+	runLabel = strings.TrimSpace(runLabel)
+	if h == nil || runLabel == "" {
+		return nil
+	}
+	h.mu.RLock()
+	mc := h.runMetrics[runLabel]
+	h.mu.RUnlock()
+	if mc == nil {
+		return map[string]interface{}{
+			"counters":   map[string]int64{},
+			"histograms": map[string]interface{}{},
+		}
+	}
+	return mc.Snapshot()
+}
+
+func applyLifecycleMetrics(mc *MetricsCollector, ev CallbackEvent, kind lifecycleKind) {
+	if mc == nil {
+		return
+	}
+	mc.IncrCounter("callbacks_"+ev.Type, 1)
+	switch kind {
+	case lifecycleStart:
+		mc.IncrCounter("runs_active", 1)
+	case lifecycleEnd:
+		mc.IncrCounter("runs_active", -1)
+		if ev.Duration > 0 {
+			mc.ObserveHistogram("callback_duration_seconds", ev.Duration.Seconds())
+		}
+	case lifecycleError:
+		mc.IncrCounter("errors_total", 1)
+	case lifecycleToolStart:
+		mc.IncrCounter("tools_active", 1)
+	case lifecycleToolEnd:
+		mc.IncrCounter("tools_active", -1)
+		if ev.Duration > 0 {
+			mc.ObserveHistogram("tool_duration_seconds", ev.Duration.Seconds())
+		}
+	case lifecycleLLMStart:
+		mc.IncrCounter("llm_calls_active", 1)
+	case lifecycleLLMEnd:
+		mc.IncrCounter("llm_calls_active", -1)
+		if ev.Duration > 0 {
+			mc.ObserveHistogram("llm_duration_seconds", ev.Duration.Seconds())
+		}
 	}
 }
 

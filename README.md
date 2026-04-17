@@ -32,7 +32,7 @@ Nexus 是一个基于 [CloudWeGo Eino](https://github.com/cloudwego/eino) 框架
 | **JSONL 邮箱异步总线** | 每个 Agent 独立 `{name}.jsonl` 收件箱，追加写入 + 读即清空（at-most-once），无需外部消息队列 |
 | **自治调度引擎** | 空闲轮询优先级：收件箱 > 任务板自动认领（角色匹配）> 超时自动关闭，三级调度策略 |
 | **RAG 知识库** | 文档加载 → 分块 → Embedding → 多通道检索 → Rerank → 生成 |
-| **MCP 工具协议** | 实现 MCP Server/Client，支持 stdio 和 SSE 传输，动态发现外部工具 |
+| **MCP 工具协议** | 实现 MCP Server/Client；运行时主链默认挂载 HTTP/SSE 端点并支持远端工具自动注册，底层 Transport 仍兼容 stdio |
 | **DAG 任务引擎** | JSON 持久化任务图谱，依赖解析，DFS 环检测，自主认领执行 |
 | **三层 Context 管理** | micro-compact + auto-compact + manual-compact，token 预算守护 |
 | **四级权限管道** | deny → mode → allow → ask 四阶段，路径沙箱 + 危险命令拦截 |
@@ -71,8 +71,10 @@ nexus/
 
 - `go build ./cmd/nexus` 可通过
 - `POST /api/sessions` 与 `POST /api/chat` 可正常工作
-- 已验证可接入智谱 OpenAI 兼容接口，使用 `glm-4.7`
+- 已验证可接入智谱 OpenAI 兼容接口，默认示例使用 `glm-5.1`
 - `semi_auto` 模式下已默认放行安全只读工具，如 `read_file`、`grep_search`、`glob_search`
+- 已接入全局 LLM 节流器，可通过 `model.max_concurrency` 与 `model.min_request_interval_ms` 控制并发与请求节拍
+- 已提供本地治理入口：`/debug/dashboard`、`/api/debug/*`、run 级 `latest-traces.json`
 
 仍需额外准备或按需接入的部分：
 
@@ -101,7 +103,7 @@ go version
 ```bash
 export NEXUS_API_KEY="your-zhipu-api-key"
 export NEXUS_BASE_URL="https://open.bigmodel.cn/api/paas/v4/"
-export NEXUS_MODEL="glm-4.7"
+export NEXUS_MODEL="glm-5.1"
 ```
 
 如果你希望保留本地独立配置，也可以：
@@ -127,6 +129,13 @@ go build -o nexus-server ./cmd/nexus
 
 - HTTP: `:8080`
 - WebSocket: `:8081`
+
+默认节流建议：
+
+- `model.max_concurrency: 1`
+- `model.min_request_interval_ms: 2500`
+
+这两个配置是**进程级全局限制**，会同时约束 Lead、Teammate、Reflection 和 Delegate 的 LLM 出口，避免供应商 429 被多角色放大。
 
 ### 5. 健康检查
 
@@ -181,6 +190,20 @@ wscat -c ws://127.0.0.1:8081/api/ws
 ```json
 {"session_id":"<session_id>","input":"帮我总结一下当前仓库结构","lane":"main"}
 ```
+
+### 8. 治理与调试
+
+当开启观测后，可以直接访问：
+
+- `GET /debug/dashboard?run=<run_id>`
+- `GET /api/debug/metrics?run=<run_id>`
+- `GET /api/debug/traces?run=<run_id>`
+
+说明：
+
+- `/api/health`、`/debug/dashboard` 与 `/api/debug/*` 默认视为**公共调试入口**，即使业务接口启用了 auth，也不会要求额外 header。
+- 业务接口如 `/api/chat`、`/api/chat/jobs`、`/api/ws` 是否鉴权，取决于 `gateway.auth` 配置。
+- 每个 run 的目录下会自动生成 `README.md` 与 `latest-traces.json`，便于离线分析。
 
 ## 使用文档
 
