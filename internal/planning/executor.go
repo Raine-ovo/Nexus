@@ -63,7 +63,7 @@ func (e *PlanExecutor) ExecuteTask(ctx context.Context, taskID int) (slotID stri
 	}
 	agent := e.resolveAgent(t.Title)
 
-	claimed, err := e.taskManager.Claim(taskID, agent, "manual")
+	claimed, err := e.taskManager.Claim(taskID, agent, "", "manual")
 	if err != nil {
 		return "", err
 	}

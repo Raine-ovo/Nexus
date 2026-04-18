@@ -109,7 +109,7 @@ func NewManager(ctx context.Context, cfg ManagerConfig) (*Manager, error) {
 	// Build lead tools: base tools + team tools + lead-only tools.
 	leadTools := make([]*types.ToolMeta, 0, len(cfg.LeadBaseTools)+16)
 	leadTools = append(leadTools, cfg.LeadBaseTools...)
-	leadTools = append(leadTools, BuildTeammateTools(leadName, bus, roster, tracker, cfg.TaskManager, claimLogger, m)...)
+	leadTools = append(leadTools, BuildTeammateTools(leadName, "lead", bus, roster, tracker, cfg.TaskManager, claimLogger, m)...)
 	leadTools = append(leadTools, BuildLeadTools(m, bus, roster, tracker)...)
 
 	lead := newLead(m, cfg.Model, cfg.Deps, leadTools, cfg.LeadSystemPrompt)
@@ -182,7 +182,7 @@ func (m *Manager) Spawn(ctx context.Context, name, role, prompt string) error {
 		sysPrompt = fmt.Sprintf("You are a helpful agent specialized in %s tasks.", role)
 	}
 
-	teamTools := BuildTeammateTools(name, m.bus, m.roster, m.tracker, m.taskManager, m.claimLogger, nil)
+	teamTools := BuildTeammateTools(name, role, m.bus, m.roster, m.tracker, m.taskManager, m.claimLogger, nil)
 	allTools := make([]*types.ToolMeta, 0, len(baseTools)+len(teamTools))
 	allTools = append(allTools, baseTools...)
 	allTools = append(allTools, teamTools...)
@@ -357,6 +357,7 @@ func (m *Manager) rehydrate(ctx context.Context) {
 		}
 		if member.Status == StatusWorking {
 			if err := m.roster.UpdateStatus(member.Name, StatusIdle); err == nil {
+				_ = m.roster.UpdateActivity(member.Name, "waiting_for_work", 0)
 				member.Status = StatusIdle
 				if m.observer != nil {
 					m.observer.Info("team: reset stale teammate status", "name", member.Name, "from", StatusWorking, "to", StatusIdle)

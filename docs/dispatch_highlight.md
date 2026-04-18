@@ -16,6 +16,10 @@
 - 可约束性
 - 更强的运行稳定性
 
+如果你想看这套 dispatch 机制是如何进一步落到 task board、claim 和 teammate 状态层，形成“调度意图 -> 任务指派 -> 认领门禁 -> roster 活动状态”闭环，见：
+
+- [task_dispatch_highlight.md](file:///Users/bytedance/rainea/nexus/docs/task_dispatch_highlight.md)
+
 ## 为什么这是亮点
 
 ### 1. 从“靠 prompt 猜”变成“画像 + 规则”

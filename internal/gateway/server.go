@@ -33,6 +33,30 @@ type Supervisor interface {
 	HandleRequest(ctx context.Context, sessionID, input string) (string, error)
 }
 
+// ScopedSupervisor can use full session metadata when routing a request.
+type ScopedSupervisor interface {
+	HandleScopedRequest(ctx context.Context, session *Session, input string) (string, error)
+}
+
+// ScopeDebugInfo is a user-facing debug view of one persisted workstream scope.
+type ScopeDebugInfo struct {
+	Scope          string    `json:"scope"`
+	Channel        string    `json:"channel,omitempty"`
+	User           string    `json:"user,omitempty"`
+	Workstream     string    `json:"workstream,omitempty"`
+	Summary        string    `json:"summary,omitempty"`
+	Keywords       []string  `json:"keywords,omitempty"`
+	Recent         []string  `json:"recent,omitempty"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	ManagerRunning bool      `json:"manager_running"`
+	TeamDir        string    `json:"team_dir,omitempty"`
+}
+
+// ScopeDebugger exposes scoped team/workstream state for debug endpoints.
+type ScopeDebugger interface {
+	DebugScopes() []ScopeDebugInfo
+}
+
 // Observer for logging.
 type Observer interface {
 	Info(msg string, keysAndValues ...interface{})
@@ -161,6 +185,7 @@ func (g *Gateway) newPrimaryMux() *http.ServeMux {
 	mux.HandleFunc("POST /api/chat/jobs", g.handleCreateChatJob)
 	mux.HandleFunc("GET /api/chat/jobs/{id}", g.handleGetChatJob)
 	mux.HandleFunc("GET /api/debug/metrics", g.handleDebugMetrics)
+	mux.HandleFunc("GET /api/debug/scopes", g.handleDebugScopes)
 	mux.HandleFunc("GET /api/debug/traces", g.handleDebugTraces)
 	mux.HandleFunc("GET /api/debug/traces/{id}", g.handleDebugTrace)
 	mux.HandleFunc("GET /debug/dashboard", g.handleDebugDashboard)
@@ -226,13 +251,17 @@ func (g *Gateway) handleHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 type createSessionReq struct {
-	Channel string `json:"channel"`
-	User    string `json:"user"`
+	Channel    string `json:"channel"`
+	User       string `json:"user"`
+	Scope      string `json:"scope,omitempty"`
+	Workstream string `json:"workstream,omitempty"`
 }
 
 type createSessionResp struct {
-	SessionID string `json:"session_id"`
-	AgentID   string `json:"agent_id,omitempty"`
+	SessionID  string `json:"session_id"`
+	AgentID    string `json:"agent_id,omitempty"`
+	Scope      string `json:"scope,omitempty"`
+	Workstream string `json:"workstream,omitempty"`
 }
 
 func (g *Gateway) handleCreateSession(w http.ResponseWriter, r *http.Request) {
@@ -247,11 +276,21 @@ func (g *Gateway) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": "invalid json"})
 		return
 	}
-	s := g.sessions.Create(req.Channel, req.User)
+	s := g.sessions.CreateWithOptions(
+		req.Channel,
+		req.User,
+		strings.TrimSpace(req.Scope),
+		strings.TrimSpace(req.Workstream),
+	)
 	if aid, ok := g.router.Route(req.Channel, req.User); ok {
 		s.AgentID = aid
 	}
-	_ = json.NewEncoder(w).Encode(createSessionResp{SessionID: s.ID, AgentID: s.AgentID})
+	_ = json.NewEncoder(w).Encode(createSessionResp{
+		SessionID:  s.ID,
+		AgentID:    s.AgentID,
+		Scope:      s.Scope,
+		Workstream: s.Workstream,
+	})
 }
 
 type chatReq struct {
@@ -305,6 +344,9 @@ func (g *Gateway) handleChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	out, err := g.lanes.Submit(r.Context(), lane, func(ctx context.Context) (string, error) {
+		if scoped, ok := g.supervisor.(ScopedSupervisor); ok {
+			return scoped.HandleScopedRequest(ctx, sess, req.Input)
+		}
 		return g.supervisor.HandleRequest(ctx, sess.ID, req.Input)
 	})
 	if err != nil {
@@ -332,6 +374,9 @@ func (g *Gateway) handleCreateChatJob(w http.ResponseWriter, r *http.Request) {
 	}
 	g.jobs.Run(baseCtx, job.ID, func(ctx context.Context) (string, error) {
 		return g.lanes.Submit(ctx, lane, func(c context.Context) (string, error) {
+			if scoped, ok := g.supervisor.(ScopedSupervisor); ok {
+				return scoped.HandleScopedRequest(c, sess, req.Input)
+			}
 			return g.supervisor.HandleRequest(c, sess.ID, req.Input)
 		})
 	})
@@ -434,6 +479,9 @@ func (g *Gateway) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 		ctx, cancel := context.WithTimeout(r.Context(), g.serverCfg.WriteTimeout)
 		out, err := g.lanes.Submit(ctx, lane, func(c context.Context) (string, error) {
+			if scoped, ok := g.supervisor.(ScopedSupervisor); ok {
+				return scoped.HandleScopedRequest(c, sess, msg.Input)
+			}
 			return g.supervisor.HandleRequest(c, sess.ID, msg.Input)
 		})
 		cancel()

@@ -101,10 +101,10 @@ func (l *Lead) Start(ctx context.Context) {
 func (l *Lead) leadLoop(ctx context.Context) {
 	defer close(l.done)
 	defer func() {
-		_ = l.roster.UpdateStatus(leadName, StatusShutdown)
+		l.setRosterState(StatusShutdown, "shutdown", 0)
 	}()
 
-	_ = l.roster.UpdateStatus(leadName, StatusWorking)
+	l.setRosterState(StatusWorking, "waiting_for_request", 0)
 
 	// Initial system context.
 	l.messages = append(l.messages, types.Message{
@@ -155,8 +155,8 @@ func (l *Lead) handleOneRequest(ctx context.Context, input string) (output strin
 }
 
 func (l *Lead) executeRequest(ctx context.Context, input string) (string, error) {
-	_ = l.roster.UpdateStatus(leadName, StatusWorking)
-	defer func() { _ = l.roster.UpdateStatus(leadName, StatusIdle) }()
+	l.setRosterState(StatusWorking, "handling_request", 0)
+	defer func() { l.setRosterState(StatusIdle, "waiting_for_request", 0) }()
 
 	// Drain any pending teammate messages first.
 	l.drainInbox()
@@ -294,6 +294,7 @@ func (l *Lead) buildSystem() string {
 	teamCtx := fmt.Sprintf(
 		"\n\nYou are the team lead. Your team members: %s\n"+
 			"Use spawn_teammate to create workers. Use send_message to assign work.\n"+
+			"Use assign_task to reserve task-board items for a teammate or role before they claim them.\n"+
 			"Use shutdown_teammate to stop workers. Use review_plan to approve risky plans.\n"+
 			"For simple tasks, handle them yourself using available tools.\n"+
 			"Before using ANY routing tool (delegate_task, spawn_teammate, send_message), include a dispatch block in the assistant text using this exact schema:\n"+

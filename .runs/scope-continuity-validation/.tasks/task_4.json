@@ -1,0 +1,16 @@
+{
+  "id": 4,
+  "title": "Validate observability and metrics",
+  "description": "Verify that observability stack (logs, metrics, traces) is emitting and ingesting data correctly. Acceptance: confirmation that dashboards show live data and no gaps in trace coverage. Size: S.",
+  "status": "completed",
+  "blocked_by": [
+    1
+  ],
+  "blocks": [
+    5
+  ],
+  "claimed_at": "2026-04-18T08:22:53.736452Z",
+  "claim_source": "manual",
+  "created_at": "2026-04-18T08:20:24.687501Z",
+  "updated_at": "2026-04-18T08:24:29.029013Z"
+}

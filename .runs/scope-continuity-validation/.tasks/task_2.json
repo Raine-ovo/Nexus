@@ -1,0 +1,14 @@
+{
+  "id": 2,
+  "title": "Validate knowledge retrieval pipeline",
+  "description": "Confirm that the knowledge retrieval subsystem returns correct and complete results for a set of canonical queries. Acceptance: retrieval accuracy report with query→result mapping. Size: M.",
+  "status": "completed",
+  "blocked_by": null,
+  "blocks": [
+    5
+  ],
+  "claimed_at": "2026-04-18T08:22:53.733811Z",
+  "claim_source": "manual",
+  "created_at": "2026-04-18T08:20:24.685308Z",
+  "updated_at": "2026-04-18T08:24:29.026963Z"
+}

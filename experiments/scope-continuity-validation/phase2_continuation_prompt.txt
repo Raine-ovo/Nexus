@@ -1,0 +1,20 @@
+请继续刚才那个 scope continuity 实验，不要新开一个无关工作线。
+
+你的目标是：
+- 明确承接上一轮已经建立的同一实验 workstream
+- 继续使用 `.runs/scope-continuity-validation/.outputs/scope_continuity_run/` 作为输出目录
+- 补充 cross-session continuation 的证据
+
+这次至少要做这些事：
+1. 说明你承接的是上一轮哪个实验目标。
+2. 明确记录当前 continuation 沿用的输出目录。
+3. 检查并说明当前 dashboard / traces / scopes 是否能看到这条工作线。
+4. 生成至少这些补充文件：
+   - `41_cross_session_continuation.md`
+   - `42_scope_trace_quality.md`
+5. 在文件里明确写出：如果后续再次说“继续刚才那个 scope continuity 实验”，仍然应该继续这条工作线。
+
+最后只输出简短摘要：
+- 是否成功承接上一轮实验
+- 这次新增了哪些证据文件
+- continuity 是否有任何失败或不确定点

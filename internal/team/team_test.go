@@ -3,6 +3,7 @@ package team
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,11 +13,46 @@ import (
 
 	"github.com/rainea/nexus/configs"
 	"github.com/rainea/nexus/internal/core"
+	"github.com/rainea/nexus/internal/gateway"
+	gatewaymw "github.com/rainea/nexus/internal/gateway/middleware"
 	"github.com/rainea/nexus/internal/memory"
 	"github.com/rainea/nexus/internal/observability"
 	"github.com/rainea/nexus/internal/planning"
 	"github.com/rainea/nexus/pkg/types"
 )
+
+type captureObserver struct {
+	mu    sync.Mutex
+	infos []string
+}
+
+func (o *captureObserver) Info(msg string, keysAndValues ...interface{}) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.infos = append(o.infos, msg+" "+strings.TrimSpace(renderKV(keysAndValues...)))
+}
+func (o *captureObserver) Warn(string, ...interface{})  {}
+func (o *captureObserver) Debug(string, ...interface{}) {}
+func (o *captureObserver) Error(string, ...interface{}) {}
+
+func renderKV(keysAndValues ...interface{}) string {
+	var b strings.Builder
+	for i := 0; i < len(keysAndValues); i += 2 {
+		if b.Len() > 0 {
+			b.WriteByte(' ')
+		}
+		b.WriteString(toString(keysAndValues[i]))
+		b.WriteByte('=')
+		if i+1 < len(keysAndValues) {
+			b.WriteString(toString(keysAndValues[i+1]))
+		}
+	}
+	return b.String()
+}
+
+func toString(v interface{}) string {
+	return strings.TrimSpace(fmt.Sprint(v))
+}
 
 func tmpDir(t *testing.T) string {
 	t.Helper()
@@ -61,6 +97,21 @@ func TestRoster_UpdateStatus(t *testing.T) {
 	m, _ := r.Get("bob")
 	if m.Status != StatusWorking {
 		t.Fatalf("expected working, got %s", m.Status)
+	}
+}
+
+func TestRoster_UpdateActivity(t *testing.T) {
+	r, err := NewRoster(tmpDir(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = r.Add("bob", "tester", StatusIdle)
+	if err := r.UpdateActivity("bob", "claimed_task", 7); err != nil {
+		t.Fatal(err)
+	}
+	m, _ := r.Get("bob")
+	if m.Activity != "claimed_task" || m.ClaimedTaskID != 7 {
+		t.Fatalf("unexpected activity payload: %+v", m)
 	}
 }
 
@@ -378,36 +429,41 @@ func TestProtocol_PlanApprovalFlow(t *testing.T) {
 func TestAutonomy_IsClaimable(t *testing.T) {
 	// Claimable: pending, no owner, no blocked, role matches.
 	task := &planning.Task{Status: planning.TaskPending}
-	if !IsClaimable(task, "") {
+	if !IsClaimable(task, "", "") {
 		t.Fatal("expected claimable")
 	}
 
 	// Not claimable: already has owner.
 	task2 := &planning.Task{Status: planning.TaskPending, ClaimedBy: "bob"}
-	if IsClaimable(task2, "") {
+	if IsClaimable(task2, "", "") {
 		t.Fatal("should not be claimable with owner")
 	}
 
 	// Not claimable: wrong role.
 	task3 := &planning.Task{Status: planning.TaskPending, ClaimRole: "frontend"}
-	if IsClaimable(task3, "backend") {
+	if IsClaimable(task3, "", "backend") {
 		t.Fatal("should not be claimable with wrong role")
 	}
 
 	// Claimable: matching role.
-	if !IsClaimable(task3, "frontend") {
+	if !IsClaimable(task3, "", "frontend") {
 		t.Fatal("should be claimable with matching role")
 	}
 
 	// Claimable: task has no role restriction.
 	task4 := &planning.Task{Status: planning.TaskPending}
-	if !IsClaimable(task4, "anything") {
+	if !IsClaimable(task4, "worker", "anything") {
 		t.Fatal("should be claimable when no role restriction")
+	}
+
+	taskAssigned := &planning.Task{Status: planning.TaskPending, AssignedTo: "alice"}
+	if IsClaimable(taskAssigned, "bob", "") {
+		t.Fatal("should not be claimable by a different assignee")
 	}
 
 	// Not claimable: blocked.
 	task5 := &planning.Task{Status: planning.TaskPending, BlockedBy: []int{1}}
-	if IsClaimable(task5, "") {
+	if IsClaimable(task5, "", "") {
 		t.Fatal("should not be claimable when blocked")
 	}
 }
@@ -439,12 +495,12 @@ func TestAutonomy_ScanClaimable(t *testing.T) {
 	}
 	_, _ = tm2.Create("Backend task", "desc", nil)
 
-	all := ScanClaimable(tm2, "")
+	all := ScanClaimable(tm2, "", "")
 	if len(all) < 2 {
 		t.Fatalf("expected at least 2 claimable, got %d", len(all))
 	}
 
-	frontOnly := ScanClaimable(tm2, "frontend")
+	frontOnly := ScanClaimable(tm2, "frontend-worker", "frontend")
 	// Should include the one with matching role + the one with no role.
 	found := false
 	for _, task := range frontOnly {
@@ -732,7 +788,7 @@ func TestTeammate_ShutdownReleasesClaimedTasks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := tm.Claim(task.ID, "worker", "manual"); err != nil {
+	if _, err := tm.Claim(task.ID, "worker", "coder", "manual"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -911,6 +967,194 @@ func TestManager_RegisterTemplate(t *testing.T) {
 	}
 }
 
+func TestRegistry_ReusesExplicitScopeAcrossSessions(t *testing.T) {
+	dir := tmpDir(t)
+	taskDir := filepath.Join(dir, "tasks")
+	tm, _ := planning.NewTaskManager(taskDir)
+	model := &stubModel{
+		responses: []core.ChatModelResponse{
+			{Content: "first response", FinishReason: "stop"},
+			{Content: "second response", FinishReason: "stop"},
+		},
+	}
+
+	reg := NewRegistry(RegistryConfig{
+		BaseManagerConfig: ManagerConfig{
+			TeamDir:          filepath.Join(dir, ".team"),
+			Model:            model,
+			Deps:             &core.AgentDependencies{},
+			TaskManager:      tm,
+			LeadSystemPrompt: "Lead.",
+		},
+		MemoryConfig: configs.MemoryConfig{
+			ConversationWindow: 20,
+			MaxSemanticEntries: 20,
+			SemanticFile:       filepath.Join(dir, "semantic.yaml"),
+		},
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	defer reg.Shutdown(ctx)
+
+	s1 := &gateway.Session{ID: "s1", Channel: "cli", User: "demo", Scope: "nexus/team"}
+	s2 := &gateway.Session{ID: "s2", Channel: "cli", User: "demo", Scope: "nexus/team"}
+	if _, err := reg.HandleScopedRequest(ctx, s1, "design the registry"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := reg.HandleScopedRequest(ctx, s2, "continue implementing"); err != nil {
+		t.Fatal(err)
+	}
+	if s1.Scope != s2.Scope {
+		t.Fatalf("expected sessions to share resolved scope, got %q vs %q", s1.Scope, s2.Scope)
+	}
+	scopeRoot := filepath.Join(dir, ".team", "scopes")
+	entries, err := os.ReadDir(scopeRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 scoped team directory, got %d", len(entries))
+	}
+}
+
+func TestRegistry_ContinuationCueReusesRecentScope(t *testing.T) {
+	dir := tmpDir(t)
+	taskDir := filepath.Join(dir, "tasks")
+	tm, _ := planning.NewTaskManager(taskDir)
+	model := &stubModel{
+		responses: []core.ChatModelResponse{
+			{Content: "first response", FinishReason: "stop"},
+			{Content: "second response", FinishReason: "stop"},
+		},
+	}
+
+	reg := NewRegistry(RegistryConfig{
+		BaseManagerConfig: ManagerConfig{
+			TeamDir:          filepath.Join(dir, ".team"),
+			Model:            model,
+			Deps:             &core.AgentDependencies{},
+			TaskManager:      tm,
+			LeadSystemPrompt: "Lead.",
+		},
+		MemoryConfig: configs.MemoryConfig{
+			ConversationWindow: 20,
+			MaxSemanticEntries: 20,
+			SemanticFile:       filepath.Join(dir, "semantic.yaml"),
+		},
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	defer reg.Shutdown(ctx)
+
+	s1 := &gateway.Session{ID: "s1", Channel: "cli", User: "demo"}
+	if _, err := reg.HandleScopedRequest(ctx, s1, "Design TeamRegistry integration for nexus"); err != nil {
+		t.Fatal(err)
+	}
+	if s1.Scope == "" {
+		t.Fatal("expected first session to be assigned a scope")
+	}
+
+	s2 := &gateway.Session{ID: "s2", Channel: "cli", User: "demo"}
+	if _, err := reg.HandleScopedRequest(ctx, s2, "继续昨天的 TeamRegistry 方案"); err != nil {
+		t.Fatal(err)
+	}
+	if s2.Scope != s1.Scope {
+		t.Fatalf("expected continuation cue to reuse scope %q, got %q", s1.Scope, s2.Scope)
+	}
+}
+
+func TestRegistry_PersistsScopeIndexAcrossRestart(t *testing.T) {
+	dir := tmpDir(t)
+	taskDir := filepath.Join(dir, "tasks")
+	tm, _ := planning.NewTaskManager(taskDir)
+	cfg := RegistryConfig{
+		BaseManagerConfig: ManagerConfig{
+			TeamDir:          filepath.Join(dir, ".team"),
+			Model:            &stubModel{responses: []core.ChatModelResponse{{Content: "ok", FinishReason: "stop"}}},
+			Deps:             &core.AgentDependencies{},
+			TaskManager:      tm,
+			LeadSystemPrompt: "Lead.",
+		},
+		MemoryConfig: configs.MemoryConfig{
+			ConversationWindow: 20,
+			MaxSemanticEntries: 20,
+			SemanticFile:       filepath.Join(dir, "semantic.yaml"),
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	reg1 := NewRegistry(cfg)
+	s1 := &gateway.Session{ID: "s1", Channel: "cli", User: "demo"}
+	if _, err := reg1.HandleScopedRequest(ctx, s1, "Design TeamRegistry integration for nexus"); err != nil {
+		t.Fatal(err)
+	}
+	if s1.Scope == "" {
+		t.Fatal("expected first scope")
+	}
+	reg1.Shutdown(ctx)
+
+	cfg.BaseManagerConfig.Model = &stubModel{responses: []core.ChatModelResponse{{Content: "ok again", FinishReason: "stop"}}}
+	reg2 := NewRegistry(cfg)
+	defer reg2.Shutdown(ctx)
+	s2 := &gateway.Session{ID: "s2", Channel: "cli", User: "demo"}
+	if _, err := reg2.HandleScopedRequest(ctx, s2, "继续昨天的 TeamRegistry 方案"); err != nil {
+		t.Fatal(err)
+	}
+	if s2.Scope != s1.Scope {
+		t.Fatalf("expected persisted scope %q after restart, got %q", s1.Scope, s2.Scope)
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".team", "index", "scopes.json")); err != nil {
+		t.Fatalf("expected persisted scope index file: %v", err)
+	}
+}
+
+func TestRegistry_LogsScopeResolutionReason(t *testing.T) {
+	dir := tmpDir(t)
+	taskDir := filepath.Join(dir, "tasks")
+	tm, _ := planning.NewTaskManager(taskDir)
+	obs := &captureObserver{}
+	reg := NewRegistry(RegistryConfig{
+		BaseManagerConfig: ManagerConfig{
+			TeamDir:          filepath.Join(dir, ".team"),
+			Model:            &stubModel{responses: []core.ChatModelResponse{{Content: "ok", FinishReason: "stop"}}},
+			Deps:             &core.AgentDependencies{},
+			TaskManager:      tm,
+			LeadSystemPrompt: "Lead.",
+			Observer:         obs,
+		},
+		MemoryConfig: configs.MemoryConfig{
+			ConversationWindow: 20,
+			MaxSemanticEntries: 20,
+			SemanticFile:       filepath.Join(dir, "semantic.yaml"),
+		},
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	defer reg.Shutdown(ctx)
+
+	sess := &gateway.Session{ID: "s1", Channel: "cli", User: "demo", Scope: "nexus/team"}
+	if _, err := reg.HandleScopedRequest(ctx, sess, "continue with the scope"); err != nil {
+		t.Fatal(err)
+	}
+	if len(obs.infos) == 0 {
+		t.Fatal("expected scope resolution log to be emitted")
+	}
+	found := false
+	for _, line := range obs.infos {
+		if strings.Contains(line, "team scope resolved") && strings.Contains(line, "decision=explicit_scope") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected explicit scope resolution log, got %v", obs.infos)
+	}
+}
+
 func TestManager_RehydrateResetsStaleWorkingStatus(t *testing.T) {
 	dir := tmpDir(t)
 	taskDir := filepath.Join(dir, "tasks")
@@ -1016,6 +1260,52 @@ func TestRuntime_WritesLatestTraceSnapshot(t *testing.T) {
 	}
 	if _, ok := counters["callbacks_on_llm_start"]; !ok {
 		t.Fatalf("expected llm counter in snapshot metrics, got: %+v", counters)
+	}
+}
+
+func TestRuntime_StartSpanCarriesScopeDecisionTags(t *testing.T) {
+	obs := observability.New(configs.ObservabilityConfig{
+		TraceEnabled:   true,
+		MetricsEnabled: true,
+		LogLevel:       "error",
+	})
+	rt := &Runtime{
+		obs:     obs,
+		fullObs: obs,
+	}
+	ctx := gatewaymw.WithScopeDecision(context.Background(), gatewaymw.ScopeDecision{
+		Scope:      "nexus/team",
+		Workstream: "TeamRegistry design",
+		Decision:   "continuation_match",
+		Reason:     "summary retrieval exceeded threshold",
+		Score:      9,
+		Threshold:  6,
+		Candidates: []gatewaymw.ScopeDecisionCandidate{
+			{Scope: "nexus/team", Workstream: "TeamRegistry design", Summary: "Primary match", Score: 9},
+			{Scope: "session:abc", Workstream: "Other work", Summary: "Secondary match", Score: 3},
+		},
+	})
+	trace, _ := rt.startSpan(ctx, "lead", "request:user_turn", "on_start")
+	if trace == nil || trace.span == nil {
+		t.Fatal("expected span to be created")
+	}
+	if trace.span.Tags["scope"] != "nexus/team" {
+		t.Fatalf("expected scope tag, got %+v", trace.span.Tags)
+	}
+	if trace.span.Tags["workstream"] != "TeamRegistry design" {
+		t.Fatalf("expected workstream tag, got %+v", trace.span.Tags)
+	}
+	if trace.span.Tags["scope_decision"] != "continuation_match" {
+		t.Fatalf("expected scope decision tag, got %+v", trace.span.Tags)
+	}
+	if trace.span.Tags["scope_reason"] == "" {
+		t.Fatalf("expected scope reason tag, got %+v", trace.span.Tags)
+	}
+	if trace.span.Tags["scope_score"] != "9" || trace.span.Tags["scope_threshold"] != "6" {
+		t.Fatalf("expected scope score/threshold tags, got %+v", trace.span.Tags)
+	}
+	if !strings.Contains(trace.span.Tags["scope_candidates_json"], "\"scope\":\"nexus/team\"") {
+		t.Fatalf("expected scope candidates tag, got %+v", trace.span.Tags)
 	}
 }
 

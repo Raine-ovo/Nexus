@@ -1,0 +1,90 @@
+你现在要执行一次“scope continuity + full feature validation”实验。
+
+目标有两层：
+1. 尽可能触发 Nexus 当前已经接入主链路的关键功能。
+2. 为后续跨 session / 跨重启 continuation 验证打好上下文基础，让后续新 session 说“继续刚才那个实验”时，你可以在同一条 workstream 下继续推进，而不是重新开一个不相关的新任务。
+
+## 这次主实验必须尽量触发的能力
+
+- Lead 调度
+- dispatch_profile
+- spawn_teammate
+- send_message
+- read_inbox
+- claim_task
+- delegate_task
+- create_plan / list_tasks / update_task / execute_task / monitor_progress
+- planner persistent teammate
+- devops persistent teammate
+- knowledge delegate_task
+- code_reviewer delegate_task
+- reflection
+- semantic memory 持久化
+- trace / metrics / latest-traces.json
+- dashboard / debug scopes / trace detail
+- run sandbox 落盘
+- MCP server / MCP client
+- WebSocket follow-up 的准备工作
+
+## 角色要求
+
+- 必须至少创建两个 persistent teammates：
+  - 一个 planner
+  - 一个 devops
+- knowledge 必须至少执行 1 次 delegate_task
+- code_reviewer 必须至少执行 1 次 delegate_task
+- 如果有必要，可以额外创建其他 teammate，但不是硬性要求
+
+## 输出目录
+
+统一写到：
+- `.runs/scope-continuity-validation/.outputs/scope_continuity_run/`
+
+至少产出这些文件：
+- `00_mission.md`
+- `01_dispatch.md`
+- `02_team_roster.md`
+- `10_task_plan.md`
+- `11_task_board.md`
+- `20_mcp_and_rag.md`
+- `21_delegate_results.md`
+- `22_team_messages.md`
+- `23_claim_progress.md`
+- `30_runtime_and_observability.md`
+- `31_permission_and_risk.md`
+- `32_state_persistence.md`
+- `40_evidence_index.md`
+- `99_final_report.md`
+
+## continuity 特别要求
+
+- 你必须在本轮任务中显式记录：
+  - 当前实验的目标是什么
+  - 后续 continuation 应该继续哪条工作线
+  - 后续如果用户说“继续刚才那个 scope continuity 实验”，应该在哪个输出目录上继续补充材料
+- 在 `40_evidence_index.md` 或 `99_final_report.md` 里明确写出：
+  - 后续 continuation 输出仍应落在 `.runs/scope-continuity-validation/.outputs/scope_continuity_run/`
+
+## 执行要求
+
+1. planner teammate 必须创建任务板，并推动至少一个任务进入执行或完成状态。
+2. devops teammate 必须检查至少两个地址：
+   - `http://127.0.0.1:18224/api/health`
+   - `http://127.0.0.1:18224/debug/dashboard?run=scope-continuity-validation`
+   - `http://127.0.0.1:18224/api/debug/metrics?run=scope-continuity-validation`
+3. knowledge delegate 必须 ingest `docs/architecture.md` 或 `docs/features.md`，然后完成至少一次搜索回答。
+4. code_reviewer delegate 必须至少检查以下一个文件：
+   - `internal/team/registry.go`
+   - `internal/gateway/debug.go`
+   - `internal/team/runtime.go`
+5. 如果可见 `mcp_repo_probe`，必须调用并记录结果。
+6. 如果任何步骤失败，必须如实写进产物，不允许假装成功。
+
+## 输出要求
+
+最后请用简短摘要汇报：
+- 创建了哪些 persistent teammates
+- 哪些 delegate_task 真正运行了
+- 哪些能力已经验证，哪些失败
+- 已落盘了哪些关键文件
+- 对 continuation / scope 复用最关键的 5 条事实

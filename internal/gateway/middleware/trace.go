@@ -11,6 +11,23 @@ type ctxKey string
 
 const requestIDKey ctxKey = "nexus_request_id"
 
+type ScopeDecision struct {
+	Scope      string
+	Workstream string
+	Decision   string
+	Reason     string
+	Score      int
+	Threshold  int
+	Candidates []ScopeDecisionCandidate
+}
+
+type ScopeDecisionCandidate struct {
+	Scope      string `json:"scope"`
+	Workstream string `json:"workstream,omitempty"`
+	Summary    string `json:"summary,omitempty"`
+	Score      int    `json:"score"`
+}
+
 // TraceMiddleware injects a request ID and propagates it through context.
 type TraceMiddleware struct{}
 
@@ -35,5 +52,22 @@ func (t *TraceMiddleware) Wrap(next http.Handler) http.Handler {
 // RequestIDFromContext returns the request id if present.
 func RequestIDFromContext(ctx context.Context) string {
 	v, _ := ctx.Value(requestIDKey).(string)
+	return v
+}
+
+// WithScopeDecision attaches scope routing context to the request context.
+func WithScopeDecision(ctx context.Context, decision ScopeDecision) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return context.WithValue(ctx, ctxKey("nexus_scope_decision"), decision)
+}
+
+// ScopeDecisionFromContext returns scope routing context if present.
+func ScopeDecisionFromContext(ctx context.Context) ScopeDecision {
+	if ctx == nil {
+		return ScopeDecision{}
+	}
+	v, _ := ctx.Value(ctxKey("nexus_scope_decision")).(ScopeDecision)
 	return v
 }

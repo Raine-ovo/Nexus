@@ -37,6 +37,7 @@ Nexus 是一个基于 [CloudWeGo Eino](https://github.com/cloudwego/eino) 框架
 | **三层 Context 管理** | micro-compact + auto-compact + manual-compact，token 预算守护 |
 | **四级权限管道** | deny → mode → allow → ask 四阶段，路径沙箱 + 危险命令拦截 |
 | **多通道网关** | HTTP/WebSocket 归一化，5 级绑定路由，Named Lane 语义隔离 |
+| **Scope / Workstream Continuity** | Session 可绑定 scope/workstream，支持 continuation 命中、跨 session 复用、跨重启恢复与可观测决策链 |
 | **全链路可观测** | Callback 驱动的 Trace + Metrics + 结构化日志 |
 
 ## 目录结构
@@ -75,6 +76,7 @@ nexus/
 - `semi_auto` 模式下已默认放行安全只读工具，如 `read_file`、`grep_search`、`glob_search`
 - 已接入全局 LLM 节流器，可通过 `model.max_concurrency` 与 `model.min_request_interval_ms` 控制并发与请求节拍
 - 已提供本地治理入口：`/debug/dashboard`、`/api/debug/*`、run 级 `latest-traces.json`
+- 已支持 `scope/workstream` 连续性：`/api/sessions` 可显式传 `scope` / `workstream`，也支持 continuation cue 命中旧工作线
 
 仍需额外准备或按需接入的部分：
 
@@ -213,6 +215,7 @@ wscat -c ws://127.0.0.1:8081/api/ws
 - [docs/production.md](file:///Users/bytedance/rainea/nexus/docs/production.md)
 - [docs/dispatch_policy.md](file:///Users/bytedance/rainea/nexus/docs/dispatch_policy.md)
 - [docs/dispatch_highlight.md](file:///Users/bytedance/rainea/nexus/docs/dispatch_highlight.md)
+- [docs/scope_continuity_highlight.md](file:///Users/bytedance/rainea/nexus/docs/scope_continuity_highlight.md)
 
 ## 工程亮点
 
@@ -222,15 +225,18 @@ wscat -c ws://127.0.0.1:8081/api/ws
 ### 2. 基于 Eino Graph 的 RAG 编排
 使用 Eino Workflow 实现文档加载 → 分块 → Embedding → 多通道检索 → Rerank → 生成的全流程。向量检索与关键词检索并行执行，通过 Reciprocal Rank Fusion (RRF) 合并排名，后处理链包含去重、归一化、Rerank、TopK 截断。
 
-### 3. DAG 任务引擎 + 团队自主认领
+### 3. Scope / Workstream Continuity（长期协作能力）
+Nexus 不再把 team 简单等同于一次 session，而是引入 `scope/workstream` 作为长期工作线边界。`/api/sessions` 可显式传入 `scope` 或 `workstream`，未显式提供时也可基于 continuation cue、摘要检索和阈值决策尝试命中旧工作线。每条工作线有独立的 team 目录、semantic memory、reflection memory 和调试视图；scope 索引持久化后，服务重启后仍可恢复 continuation。对应的决策链会落入日志、trace tags、`/api/debug/scopes` 和 dashboard，形成可解释的长期协作运行时。
+
+### 4. DAG 任务引擎 + 团队自主认领
 每个 Task 以独立 JSON 文件持久化在 `.tasks/` 目录，`blockedBy`/`blocks` 双向索引。完成一个任务时自动解锁下游（O(B) 复杂度）。创建依赖前通过 DFS 检测循环（O(V+E)）。空闲 Teammate 通过 `ScanClaimable` 按角色匹配自动认领可执行任务，与 `ClaimLogger` 审计日志配合。
 
-### 4. 三层恢复洋葱
+### 5. 三层恢复洋葱
 - Layer 1 (工具级)：handler 错误包装为 tool_result 返回 LLM 自修正
 - Layer 2 (Context 级)：ContextGuard 检测 token 超限，触发 auto-compact
 - Layer 3 (传输级)：指数退避 + 抖动 + 总预算控制
 
-### 5. Named Lane 语义隔离
+### 6. Named Lane 语义隔离
 main/cron/background 各自独立 FIFO 队列 + 独立并发度。main lane max=1 保证用户消息串行（防状态混乱），cron lane max=1 防重入。每个 task 记录 generation，reset 后旧结果自动丢弃（类比 epoch/fencing token）。
 
 ## 技术栈

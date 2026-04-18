@@ -1,0 +1,19 @@
+请继续刚才那个 scope continuity 实验。注意：服务刚刚重启过，你现在要验证的是跨重启 continuation 是否仍然承接同一条工作线。
+
+要求：
+1. 不要重新开一个不相关的新工作线。
+2. 继续沿用 `.runs/scope-continuity-validation/.outputs/scope_continuity_run/`。
+3. 明确说明这次是在“重启之后继续上次实验”。
+4. 检查 debug scopes、trace detail、dashboard，并判断当前 continuation 是否真的回到了同一 scope/workstream。
+5. 至少生成这些补充文件：
+   - `43_restart_resume_validation.md`
+   - `44_final_continuity_assessment.md`
+6. 把下列内容写清楚：
+   - 已验证事实
+   - 失败/阻塞
+   - 仍存在的不确定性
+
+最后只输出简短摘要：
+- 是否成功跨重启承接同一工作线
+- 你依据哪些证据判断
+- 新增了哪些文件

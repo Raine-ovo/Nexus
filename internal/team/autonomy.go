@@ -68,9 +68,9 @@ func (cl *ClaimLogger) Log(taskID int, owner, role, source string) error {
 	return err
 }
 
-// IsClaimable checks whether a task can be safely claimed by a teammate with the given role.
-// A task is claimable when: pending, no owner, not blocked, and role matches (if ClaimRole is set).
-func IsClaimable(t *planning.Task, role string) bool {
+// IsClaimable checks whether a task can be safely claimed by a teammate identity.
+// A task is claimable when: pending, no owner, not blocked, and any assignee/role constraints match.
+func IsClaimable(t *planning.Task, owner, role string) bool {
 	if t.Status != planning.TaskPending {
 		return false
 	}
@@ -82,21 +82,25 @@ func IsClaimable(t *planning.Task, role string) bool {
 		// but GetUnclaimed already filters that. For standalone checks, treat non-empty as blocked.
 		return false
 	}
-	if t.ClaimRole != "" && role != "" && t.ClaimRole != role {
+	if t.AssignedTo != "" && owner != "" && t.AssignedTo != owner {
+		return false
+	}
+	requiredRole := t.AssignedRole
+	if requiredRole == "" {
+		requiredRole = t.ClaimRole
+	}
+	if requiredRole != "" && role != "" && requiredRole != role {
 		return false
 	}
 	return true
 }
 
 // ScanClaimable returns unclaimed tasks that match the given role from the TaskManager.
-func ScanClaimable(tm *planning.TaskManager, role string) []planning.Task {
+func ScanClaimable(tm *planning.TaskManager, owner, role string) []planning.Task {
 	unclaimed := tm.GetUnclaimed()
-	if role == "" {
-		return unclaimed
-	}
 	var out []planning.Task
 	for i := range unclaimed {
-		if unclaimed[i].ClaimRole == "" || unclaimed[i].ClaimRole == role {
+		if IsClaimable(&unclaimed[i], owner, role) {
 			out = append(out, unclaimed[i])
 		}
 	}

@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -57,6 +59,11 @@ type TraceSummary struct {
 	SpanCount  int       `json:"span_count"`
 	RequestID  string    `json:"request_id,omitempty"`
 	RunLabel   string    `json:"run_label,omitempty"`
+	Scope      string    `json:"scope,omitempty"`
+	Workstream string    `json:"workstream,omitempty"`
+	Decision   string    `json:"scope_decision,omitempty"`
+	Score      int       `json:"scope_score,omitempty"`
+	Threshold  int       `json:"scope_threshold,omitempty"`
 }
 
 // NewTracer creates an empty in-memory tracer.
@@ -202,6 +209,11 @@ func (t *Tracer) ListTraces(limit int) []TraceSummary {
 			SpanCount:  item.count,
 			RequestID:  item.root.Tags["request_id"],
 			RunLabel:   item.root.Tags["sandbox_run"],
+			Scope:      strings.TrimSpace(item.root.Tags["scope"]),
+			Workstream: strings.TrimSpace(item.root.Tags["workstream"]),
+			Decision:   strings.TrimSpace(item.root.Tags["scope_decision"]),
+			Score:      parseIntTag(item.root.Tags["scope_score"]),
+			Threshold:  parseIntTag(item.root.Tags["scope_threshold"]),
 		})
 	}
 	sort.Slice(out, func(i, j int) bool {
@@ -211,6 +223,18 @@ func (t *Tracer) ListTraces(limit int) []TraceSummary {
 		out = out[:limit]
 	}
 	return out
+}
+
+func parseIntTag(v string) int {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return 0
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil {
+		return 0
+	}
+	return n
 }
 
 // TraceIDFromContext returns the trace id propagated on ctx, if any.

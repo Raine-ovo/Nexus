@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/Users/bytedance/rainea/nexus/experiments/all-features/mcp_mock_server.py", line 150, in <module>
+    main()
+  File "/Users/bytedance/rainea/nexus/experiments/all-features/mcp_mock_server.py", line 144, in main
+    server = HTTPServer(("127.0.0.1", 18110), Handler)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 457, in __init__
+    self.server_bind()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/http/server.py", line 140, in server_bind
+    socketserver.TCPServer.server_bind(self)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 478, in server_bind
+    self.socket.bind(self.server_address)
+OSError: [Errno 48] Address already in use

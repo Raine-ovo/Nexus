@@ -1,0 +1,15 @@
+{
+  "id": 1,
+  "title": "Verify infrastructure health checks",
+  "description": "Validate that all infrastructure components (services, databases, message queues) are healthy and reachable. Acceptance: a summary of component statuses with pass/fail per service. Size: S.",
+  "status": "completed",
+  "blocked_by": null,
+  "blocks": [
+    4,
+    5
+  ],
+  "claimed_at": "2026-04-18T08:20:41.158027Z",
+  "claim_source": "manual",
+  "created_at": "2026-04-18T08:20:24.684175Z",
+  "updated_at": "2026-04-18T08:22:22.079854Z"
+}

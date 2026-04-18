@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/rainea/nexus/pkg/utils"
 )
@@ -18,9 +19,12 @@ const (
 
 // TeamMember is one entry in the persistent roster.
 type TeamMember struct {
-	Name   string `json:"name"`
-	Role   string `json:"role"`
-	Status string `json:"status"`
+	Name          string    `json:"name"`
+	Role          string    `json:"role"`
+	Status        string    `json:"status"`
+	Activity      string    `json:"activity,omitempty"`
+	ClaimedTaskID int       `json:"claimed_task_id,omitempty"`
+	UpdatedAt     time.Time `json:"updated_at,omitempty"`
 }
 
 // TeamConfig is the on-disk representation of the team roster.
@@ -83,9 +87,10 @@ func (r *Roster) Add(name, role, status string) error {
 		}
 	}
 	r.config.Members = append(r.config.Members, TeamMember{
-		Name:   name,
-		Role:   role,
-		Status: status,
+		Name:      name,
+		Role:      role,
+		Status:    status,
+		UpdatedAt: time.Now().UTC(),
 	})
 	return r.save()
 }
@@ -97,6 +102,7 @@ func (r *Roster) UpdateStatus(name, status string) error {
 	for i := range r.config.Members {
 		if r.config.Members[i].Name == name {
 			r.config.Members[i].Status = status
+			r.config.Members[i].UpdatedAt = time.Now().UTC()
 			return r.save()
 		}
 	}
@@ -110,6 +116,22 @@ func (r *Roster) UpdateRole(name, role string) error {
 	for i := range r.config.Members {
 		if r.config.Members[i].Name == name {
 			r.config.Members[i].Role = role
+			r.config.Members[i].UpdatedAt = time.Now().UTC()
+			return r.save()
+		}
+	}
+	return fmt.Errorf("roster: member %q not found", name)
+}
+
+// UpdateActivity sets a member's current activity and optional claimed task id.
+func (r *Roster) UpdateActivity(name, activity string, taskID int) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i := range r.config.Members {
+		if r.config.Members[i].Name == name {
+			r.config.Members[i].Activity = activity
+			r.config.Members[i].ClaimedTaskID = taskID
+			r.config.Members[i].UpdatedAt = time.Now().UTC()
 			return r.save()
 		}
 	}

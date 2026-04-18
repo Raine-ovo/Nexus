@@ -91,9 +91,11 @@ func intArg(args map[string]interface{}, key string) int {
 // --- create_plan ---
 
 type planTaskSpec struct {
-	Title              string `json:"title"`
-	Description        string `json:"description"`
-	BlockedByIndices   []int  `json:"blocked_by_indices"`
+	Title            string `json:"title"`
+	Description      string `json:"description"`
+	BlockedByIndices []int  `json:"blocked_by_indices"`
+	ClaimRole        string `json:"claim_role"`
+	AssignedTo       string `json:"assigned_to"`
 }
 
 func (p *PlannerAgent) toolCreatePlan() *types.ToolMeta {
@@ -119,6 +121,14 @@ func (p *PlannerAgent) toolCreatePlan() *types.ToolMeta {
 								},
 								"description": map[string]interface{}{
 									"type": "string",
+								},
+								"claim_role": map[string]interface{}{
+									"type":        "string",
+									"description": "Optional role that should claim this task (e.g. devops, planner)",
+								},
+								"assigned_to": map[string]interface{}{
+									"type":        "string",
+									"description": "Optional persistent teammate name that should own this task",
 								},
 								"blocked_by_indices": map[string]interface{}{
 									"type": "array",
@@ -152,6 +162,8 @@ func (p *PlannerAgent) toolCreatePlan() *types.ToolMeta {
 				var s planTaskSpec
 				s.Title = utils.GetString(m, "title")
 				s.Description = utils.GetString(m, "description")
+				s.ClaimRole = strings.TrimSpace(utils.GetString(m, "claim_role"))
+				s.AssignedTo = strings.TrimSpace(utils.GetString(m, "assigned_to"))
 				if bi, ok := m["blocked_by_indices"].([]interface{}); ok {
 					for _, v := range bi {
 						switch n := v.(type) {
@@ -196,6 +208,12 @@ func (p *PlannerAgent) toolCreatePlan() *types.ToolMeta {
 				if err != nil {
 					return toolResult("", err)
 				}
+				if sp.ClaimRole != "" || sp.AssignedTo != "" {
+					t, err = p.taskManager.Assign(t.ID, "planner", sp.AssignedTo, sp.ClaimRole, "create_plan routing hint")
+					if err != nil {
+						return toolResult("", err)
+					}
+				}
 				idMap[i] = t.ID
 				created = append(created, map[string]interface{}{
 					"local_index": i,
@@ -203,7 +221,7 @@ func (p *PlannerAgent) toolCreatePlan() *types.ToolMeta {
 				})
 			}
 			out := map[string]interface{}{
-				"goal":         goal,
+				"goal":          goal,
 				"tasks_created": created,
 			}
 			b, err := json.MarshalIndent(out, "", "  ")

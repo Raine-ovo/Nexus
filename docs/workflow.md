@@ -194,7 +194,7 @@ flowchart TD
     VALIDATE -->|通过| TOUCH[SessionManager.Touch 续期]
     TOUCH --> SELECT_LANE[选择 Lane<br/>默认 main]
     SELECT_LANE --> SUBMIT[LaneManager.Submit]
-    SUBMIT --> TEAM_CALL[team.Manager.HandleRequest<br/>→ Lead 处理]
+    SUBMIT --> TEAM_CALL[team.Registry / ScopedSupervisor.HandleScopedRequest<br/>→ 解析 scope/workstream → 具体 team.Manager / Lead 处理]
     TEAM_CALL --> RESPOND[JSON Response {output}]
 
     WS --> WS_LOOP[WebSocket 消息循环]

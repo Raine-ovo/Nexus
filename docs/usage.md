@@ -11,6 +11,7 @@
 - `semi_auto` 模式下已默认放行安全只读工具，真实 smoke test 已验证 `read_file` 工具链路可用
 - 已接入进程级 LLM 节流器，支持 `model.max_concurrency` 与 `model.min_request_interval_ms`
 - 已提供 run 级调试入口：`/debug/dashboard`、`/api/debug/*` 与 `.runs/<run_id>/latest-traces.json`
+- 已支持 `scope/workstream` 连续性：既可显式绑定工作线，也可让后续 continuation 请求继续命中之前的 team
 
 这不等于“所有扩展能力都零配置可用”。以下部分仍然是按需接入：
 
@@ -31,9 +32,17 @@
 
 - [dispatch_highlight.md](file:///Users/bytedance/rainea/nexus/docs/dispatch_highlight.md)
 
+如果你想看这次针对 `planner/devops` 任务认领错配、`working/idle` 状态语义不清等问题的系统性修复，以及为什么它把 task board 从“自由抢单”推进成“遵循调度意图的分配面”，见：
+
+- [task_dispatch_highlight.md](file:///Users/bytedance/rainea/nexus/docs/task_dispatch_highlight.md)
+
 如果你想理解为什么这次 memory / reflection 修复是“主链路激活”而不只是“模块存在”，见：
 
 - [memory_reflection_highlight.md](file:///Users/bytedance/rainea/nexus/docs/memory_reflection_highlight.md)
+
+如果你想理解为什么这次 `scope/workstream` 增强是把 Team Runtime 从“单次任务执行器”推进到“长期工作线运行时”的关键一步，见：
+
+- [scope_continuity_highlight.md](file:///Users/bytedance/rainea/nexus/docs/scope_continuity_highlight.md)
 
 ## 前置要求
 
@@ -182,13 +191,31 @@ curl -X POST http://127.0.0.1:8080/api/chat \
 }
 ```
 
+如果你希望显式把一个新 session 绑定到某条长期工作线，也可以这样创建：
+
+```json
+{
+  "channel": "cli",
+  "user": "demo",
+  "workstream": "team runtime continuity experiment"
+}
+```
+
 返回体：
 
 ```json
 {
-  "session_id": "..."
+  "session_id": "...",
+  "scope": "workstream:cli-demo-team-runtime-continuity-experiment",
+  "workstream": "team runtime continuity experiment"
 }
 ```
+
+字段说明：
+
+- `scope`: 可选，显式指定会话所属团队边界
+- `workstream`: 可选，显式指定长期工作线名称
+- 若两者都不传，系统仍可在后续 continuation 请求中基于提示词、摘要检索和最近工作线状态尝试复用旧 team
 
 ### `POST /api/chat`
 
@@ -272,6 +299,7 @@ curl -X POST http://127.0.0.1:8080/api/chat \
 用途：
 
 - 本地治理页面，展示 run 级 traces、metrics、trace tree、错误高亮和耗时分组
+- 也会展示 scopes 卡片、trace 列表中的 scope decision 摘要，以及 trace detail 中的匹配质量
 
 示例：
 
@@ -296,6 +324,7 @@ curl 'http://127.0.0.1:8080/api/debug/metrics?run=demo'
 用途：
 
 - 查看指定 run 的 trace 摘要列表
+- trace 摘要会直接带出 `scope`、`workstream`、`scope_decision`、`scope_score`、`scope_threshold`
 
 示例：
 
@@ -308,6 +337,21 @@ curl 'http://127.0.0.1:8080/api/debug/traces?run=demo'
 用途：
 
 - 查看单条 trace 的 spans、树结构、错误与耗时聚合
+- `scope_summary` 中会包含 `decision`、`reason`、`score`、`threshold` 和候选列表
+
+### `GET /api/debug/scopes`
+
+用途：
+
+- 查看当前系统记住了哪些 `scope/workstream`
+- 判断 continuation 命中时到底复用了哪条工作线
+- 排查 scope 是否过多、是否串扰、是否在重启后成功恢复
+
+示例：
+
+```bash
+curl 'http://127.0.0.1:8080/api/debug/scopes'
+```
 
 ### `GET /api/ws`
 

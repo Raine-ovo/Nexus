@@ -1,0 +1,121 @@
+server:
+  http_addr: ":18224"
+  ws_addr: ":18225"
+  read_timeout: 10m
+  write_timeout: 10m
+
+model:
+  provider: "openai"
+  model_name: "glm-5.1"
+  api_key: "51eb19fdb4bb479882e4632934218664.m6xoQdVSHGYrbZKZ"
+  base_url: "https://open.bigmodel.cn/api/paas/v4/"
+  max_tokens: 8192
+  temperature: 0.7
+  max_concurrency: 1
+  min_request_interval_ms: 5000
+
+agent:
+  max_iterations: 24
+  token_threshold: 100000
+  compact_target_ratio: 0.6
+  micro_compact_size: 51200
+  output_persist_dir: ".outputs"
+
+rag:
+  chunk_size: 512
+  chunk_overlap: 64
+  embedding_dim: 1536
+  top_k: 5
+  rerank_top_k: 3
+  knowledge_dir: ".knowledge"
+  vector_backend: "memory"
+  keyword_backend: "memory"
+  elasticsearch:
+    addresses:
+      - "http://localhost:9200"
+    index_name: "nexus_chunks"
+    shards: 1
+    replicas: 0
+    bm25_k1: 1.2
+    bm25_b: 0.75
+    auto_create: true
+  milvus:
+    address: "localhost:19530"
+    collection_name: "nexus_vectors"
+    metric_type: "COSINE"
+    index_type: "IVF_FLAT"
+    nlist: 128
+    nprobe: 16
+    consistency_level: "Session"
+    auto_create_collection: true
+
+memory:
+  conversation_window: 20
+  max_semantic_entries: 500
+  semantic_file: ".memory/semantic.yaml"
+  compaction_threshold: 80000
+
+planning:
+  task_dir: ".tasks"
+  max_background_slots: 3
+  cron_poll_interval: 60s
+
+team:
+  dir: ".team-scope-continuity-validation"
+  poll_interval: 3s
+  idle_timeout: 20m
+
+run:
+  sandbox_dir: ".runs/scope-continuity-validation"
+
+gateway:
+  lanes:
+    main:
+      max_concurrency: 1
+    cron:
+      max_concurrency: 1
+    background:
+      max_concurrency: 3
+  auth:
+    api_keys:
+      - "nexus-local-dev-key"
+    jwt_secret: ""
+  rate_limit:
+    enabled: true
+    rps: 20
+    burst: 40
+
+mcp:
+  server_enabled: true
+  rpc_path: "/mcp/rpc"
+  sse_path: "/mcp/sse"
+  clients:
+    - name: "mock-activation-server"
+      enabled: true
+      base_url: "http://127.0.0.1:18110"
+      rpc_path: "/mcp/rpc"
+      sse_path: "/mcp/sse"
+      connect_sse: false
+
+permission:
+  mode: "full_auto"
+  workspace_root: "."
+  dangerous_patterns:
+    - "rm -rf /"
+    - "sudo"
+    - "chmod 777"
+    - "> /dev/sda"
+    - "mkfs"
+
+reflection:
+  enabled: true
+  max_attempts: 3
+  threshold: 0.7
+  enable_prospect: true
+  memory_file: ".memory/reflections.yaml"
+  max_mem_entries: 200
+
+observability:
+  trace_enabled: true
+  metrics_enabled: true
+  log_level: "info"

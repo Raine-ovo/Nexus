@@ -25,18 +25,28 @@ const (
 
 // Task represents a unit of work in the DAG.
 type Task struct {
-	ID          int       `json:"id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Status      string    `json:"status"`
-	BlockedBy   []int     `json:"blocked_by"`
-	Blocks      []int     `json:"blocks"`
-	ClaimedBy   string    `json:"claimed_by,omitempty"`
-	ClaimRole   string    `json:"claim_role,omitempty"`
-	ClaimedAt   time.Time `json:"claimed_at,omitempty"`
-	ClaimSource string    `json:"claim_source,omitempty"` // "auto" or "manual"
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID              int       `json:"id"`
+	Title           string    `json:"title"`
+	Description     string    `json:"description"`
+	Status          string    `json:"status"`
+	BlockedBy       []int     `json:"blocked_by"`
+	Blocks          []int     `json:"blocks"`
+	ClaimRole       string    `json:"claim_role,omitempty"`
+	AssignedTo      string    `json:"assigned_to,omitempty"`
+	AssignedRole    string    `json:"assigned_role,omitempty"`
+	AssignedBy      string    `json:"assigned_by,omitempty"`
+	AssignReason    string    `json:"assign_reason,omitempty"`
+	AssignedAt      time.Time `json:"assigned_at,omitempty"`
+	ClaimedBy       string    `json:"claimed_by,omitempty"`
+	ClaimedRole     string    `json:"claimed_role,omitempty"`
+	ClaimedAt       time.Time `json:"claimed_at,omitempty"`
+	ClaimSource     string    `json:"claim_source,omitempty"` // "auto" or "manual"
+	LastClaimedBy   string    `json:"last_claimed_by,omitempty"`
+	LastClaimedRole string    `json:"last_claimed_role,omitempty"`
+	LastClaimedAt   time.Time `json:"last_claimed_at,omitempty"`
+	LastClaimSource string    `json:"last_claim_source,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 type taskMeta struct {
@@ -145,6 +155,43 @@ func (m *TaskManager) allPrereqsCompletedLocked(t *Task) bool {
 		}
 	}
 	return true
+}
+
+func (m *TaskManager) roleConstraintLocked(t *Task) string {
+	if t == nil {
+		return ""
+	}
+	if strings.TrimSpace(t.AssignedRole) != "" {
+		return strings.TrimSpace(t.AssignedRole)
+	}
+	return strings.TrimSpace(t.ClaimRole)
+}
+
+func (m *TaskManager) canClaimLocked(t *Task, agentName, agentRole string) error {
+	if t == nil {
+		return fmt.Errorf("task: nil task")
+	}
+	if t.Status != TaskPending {
+		return fmt.Errorf("task: task %d not pending", t.ID)
+	}
+	if !m.allPrereqsCompletedLocked(t) {
+		return fmt.Errorf("task: task %d still blocked", t.ID)
+	}
+	if t.ClaimedBy != "" {
+		return fmt.Errorf("task: task %d already claimed by %s", t.ID, t.ClaimedBy)
+	}
+	if assignedTo := strings.TrimSpace(t.AssignedTo); assignedTo != "" && assignedTo != agentName {
+		return fmt.Errorf("task: task %d assigned to %s", t.ID, assignedTo)
+	}
+	if requiredRole := m.roleConstraintLocked(t); requiredRole != "" {
+		if strings.TrimSpace(agentRole) == "" {
+			return fmt.Errorf("task: task %d requires role %s", t.ID, requiredRole)
+		}
+		if strings.TrimSpace(agentRole) != requiredRole {
+			return fmt.Errorf("task: task %d requires role %s", t.ID, requiredRole)
+		}
+	}
+	return nil
 }
 
 func (m *TaskManager) initialStatusLocked(blockedBy []int) string {
@@ -271,6 +318,9 @@ func (m *TaskManager) Update(id int, status string) error {
 	t.UpdatedAt = time.Now().UTC()
 	if status != TaskInProgress {
 		t.ClaimedBy = ""
+		t.ClaimedRole = ""
+		t.ClaimedAt = time.Time{}
+		t.ClaimSource = ""
 	}
 	if err := m.persistTaskLocked(t); err != nil {
 		return err
@@ -307,8 +357,9 @@ func (m *TaskManager) ReleaseClaimsByOwner(owner string) ([]int, error) {
 			released = append(released, t.ID)
 			changed = true
 		}
-		if t.ClaimedBy != "" || !t.ClaimedAt.IsZero() || t.ClaimSource != "" {
+		if t.ClaimedBy != "" || t.ClaimedRole != "" || !t.ClaimedAt.IsZero() || t.ClaimSource != "" {
 			t.ClaimedBy = ""
+			t.ClaimedRole = ""
 			t.ClaimedAt = time.Time{}
 			t.ClaimSource = ""
 			changed = true
@@ -323,6 +374,38 @@ func (m *TaskManager) ReleaseClaimsByOwner(owner string) ([]int, error) {
 	}
 	sort.Ints(released)
 	return released, nil
+}
+
+// Assign records routing intent for a task. At least one of assignee or role must be provided.
+func (m *TaskManager) Assign(id int, assignedBy, assignee, role, reason string) (*Task, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	t := m.tasks[id]
+	if t == nil {
+		return nil, fmt.Errorf("task: unknown id %d", id)
+	}
+	assignee = strings.TrimSpace(assignee)
+	role = strings.TrimSpace(role)
+	if assignee == "" && role == "" {
+		return nil, fmt.Errorf("task: assignee or role required")
+	}
+	now := time.Now().UTC()
+	t.AssignedTo = assignee
+	t.AssignedRole = role
+	t.AssignedBy = strings.TrimSpace(assignedBy)
+	t.AssignReason = strings.TrimSpace(reason)
+	t.AssignedAt = now
+	// Keep the legacy field in sync so existing claim filters still reflect role intent.
+	if role != "" {
+		t.ClaimRole = role
+	}
+	t.UpdatedAt = now
+	if err := m.persistTaskLocked(t); err != nil {
+		return nil, err
+	}
+	cp := *t
+	return &cp, nil
 }
 
 // ResolveDownstream unblocks tasks that were waiting on completedID (same as completion side-effect).
@@ -447,7 +530,7 @@ func removeInt(s []int, v int) []int {
 
 // Claim assigns agentName to a pending, unblocked task if still unclaimed.
 // source should be "auto" (autonomous claim) or "manual" (explicit assignment).
-func (m *TaskManager) Claim(id int, agentName, source string) (*Task, error) {
+func (m *TaskManager) Claim(id int, agentName, agentRole, source string) (*Task, error) {
 	if agentName == "" {
 		return nil, fmt.Errorf("task: agent name required")
 	}
@@ -458,19 +541,18 @@ func (m *TaskManager) Claim(id int, agentName, source string) (*Task, error) {
 	if t == nil {
 		return nil, fmt.Errorf("task: unknown id %d", id)
 	}
-	if t.Status != TaskPending {
-		return nil, fmt.Errorf("task: task %d not pending", id)
-	}
-	if !m.allPrereqsCompletedLocked(t) {
-		return nil, fmt.Errorf("task: task %d still blocked", id)
-	}
-	if t.ClaimedBy != "" {
-		return nil, fmt.Errorf("task: task %d already claimed by %s", id, t.ClaimedBy)
+	if err := m.canClaimLocked(t, strings.TrimSpace(agentName), strings.TrimSpace(agentRole)); err != nil {
+		return nil, err
 	}
 	now := time.Now().UTC()
 	t.ClaimedBy = agentName
+	t.ClaimedRole = strings.TrimSpace(agentRole)
 	t.ClaimedAt = now
 	t.ClaimSource = source
+	t.LastClaimedBy = agentName
+	t.LastClaimedRole = strings.TrimSpace(agentRole)
+	t.LastClaimedAt = now
+	t.LastClaimSource = source
 	t.Status = TaskInProgress
 	t.UpdatedAt = now
 	if err := m.persistTaskLocked(t); err != nil {

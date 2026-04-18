@@ -19,10 +19,12 @@
 - 支持 `POST /api/sessions`
 - 支持 `POST /api/chat`
 - 支持 `GET /api/ws`
+- 支持在 `POST /api/sessions` 中显式携带 `scope` / `workstream`
 - 支持 OpenAI 兼容模型接入，可直接对接智谱 `glm-5.1`
 - 支持 `semi_auto` 模式下的默认只读工具放行
 - 支持进程级 LLM 节流：`model.max_concurrency` + `model.min_request_interval_ms`
 - 支持本地治理入口：`/debug/dashboard`、`/api/debug/*`、run 目录下的 `latest-traces.json`
+- 支持 `scope/workstream` 连续性：scope 索引持久化、跨 session continuation、重启后恢复，以及 `debug/scopes` / trace detail 可观测
 - 支持优雅退出：响应 `SIGINT` / `SIGTERM`，停止 cron、团队管理器、后台任务，并 flush 内存
 
 当前仓库尚未内置以下生产配套物：

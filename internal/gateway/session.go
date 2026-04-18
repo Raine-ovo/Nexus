@@ -20,6 +20,8 @@ type Session struct {
 	Channel    string
 	User       string
 	AgentID    string
+	Scope      string
+	Workstream string
 	CreatedAt  time.Time
 	LastActive time.Time
 	Metadata   map[string]interface{}
@@ -35,11 +37,18 @@ func NewSessionManager(ttl time.Duration) *SessionManager {
 
 // Create registers a new session.
 func (m *SessionManager) Create(channel, user string) *Session {
+	return m.CreateWithOptions(channel, user, "", "")
+}
+
+// CreateWithOptions registers a new session with optional scope/workstream hints.
+func (m *SessionManager) CreateWithOptions(channel, user, scope, workstream string) *Session {
 	now := time.Now()
 	s := &Session{
 		ID:         uuid.NewString(),
 		Channel:    channel,
 		User:       user,
+		Scope:      scope,
+		Workstream: workstream,
 		CreatedAt:  now,
 		LastActive: now,
 		Metadata:   make(map[string]interface{}),

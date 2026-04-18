@@ -120,6 +120,16 @@ func (t *Teammate) RequestShutdown(requestID string) {
 	}
 }
 
+func (t *Teammate) setRosterState(status, activity string, taskID int) {
+	if t.roster == nil {
+		return
+	}
+	if status != "" {
+		_ = t.roster.UpdateStatus(t.name, status)
+	}
+	_ = t.roster.UpdateActivity(t.name, activity, taskID)
+}
+
 func (t *Teammate) log(msg string, kv ...interface{}) {
 	if t.observer != nil {
 		t.observer.Info(fmt.Sprintf("[%s] %s", t.name, msg), kv...)
@@ -144,11 +154,11 @@ func (t *Teammate) run(ctx context.Context, initialPrompt string) {
 				t.log("released claimed tasks during shutdown", "task_ids", released)
 			}
 		}
-		_ = t.roster.UpdateStatus(t.name, StatusShutdown)
+		t.setRosterState(StatusShutdown, "shutdown", 0)
 		t.log("shutdown complete")
 	}()
 
-	_ = t.roster.UpdateStatus(t.name, StatusWorking)
+	t.setRosterState(StatusWorking, "initial_prompt", 0)
 
 	t.messages = append(t.messages, types.Message{
 		ID:        uuid.NewString(),
@@ -203,7 +213,17 @@ func (t *Teammate) runWorkUnit(ctx context.Context, input string) {
 
 // executeWorkPhase runs the model/tool loop until the model produces final text or limits are hit.
 func (t *Teammate) executeWorkPhase(ctx context.Context, input string) (string, error) {
-	_ = t.roster.UpdateStatus(t.name, StatusWorking)
+	taskID := 0
+	if t.roster != nil {
+		if member, ok := t.roster.Get(t.name); ok {
+			taskID = member.ClaimedTaskID
+		}
+	}
+	activity := "self_directed"
+	if taskID > 0 {
+		activity = "claimed_task"
+	}
+	t.setRosterState(StatusWorking, activity, taskID)
 	_ = input
 
 	for iter := 0; iter < maxTeammateIterations; iter++ {
@@ -254,7 +274,7 @@ func (t *Teammate) executeWorkPhase(ctx context.Context, input string) (string, 
 
 // idlePhase checks inbox then task board; returns true to resume work.
 func (t *Teammate) idlePhase(ctx context.Context) (bool, string) {
-	_ = t.roster.UpdateStatus(t.name, StatusIdle)
+	t.setRosterState(StatusIdle, "waiting_for_work", 0)
 
 	for poll := 0; poll < t.maxIdlePolls; poll++ {
 		select {
@@ -285,21 +305,23 @@ func (t *Teammate) idlePhase(ctx context.Context) (bool, string) {
 				resumedInput = append(resumedInput, payload)
 			}
 			t.ensureIdentity()
+			t.setRosterState(StatusWorking, "processing_inbox", 0)
 			return true, strings.Join(resumedInput, "\n")
 		}
 
 		// Priority 2: claimable tasks.
 		if t.taskManager != nil {
-			claimable := ScanClaimable(t.taskManager, t.role)
+			claimable := ScanClaimable(t.taskManager, t.name, t.role)
 			if len(claimable) > 0 {
 				task := claimable[0]
-				claimed, err := t.taskManager.Claim(task.ID, t.name, "auto")
+				claimed, err := t.taskManager.Claim(task.ID, t.name, t.role, "auto")
 				if err == nil {
 					if t.claimLogger != nil {
 						_ = t.claimLogger.Log(claimed.ID, t.name, t.role, "auto")
 					}
 					t.log("auto-claimed task", "task_id", claimed.ID, "title", claimed.Title)
 					t.ensureIdentity()
+					t.setRosterState(StatusWorking, "claimed_task", claimed.ID)
 					taskPrompt := fmt.Sprintf("<auto-claimed>Task #%d: %s\n%s</auto-claimed>", claimed.ID, claimed.Title, claimed.Description)
 					t.messages = append(t.messages, types.Message{
 						ID:        uuid.NewString(),
@@ -379,7 +401,7 @@ func (t *Teammate) buildSystem() string {
 	base := t.systemPrompt
 	teamCtx := fmt.Sprintf(
 		"\n\nYou are '%s', role: %s. Use send_message to communicate with teammates. "+
-			"Use read_inbox to check for messages. Use claim_task to pick up work.",
+			"Use read_inbox to check for messages. Use assign_task to route task-board items before handoff. Use claim_task to pick up work.",
 		t.name, t.role,
 	)
 	if t.runtime != nil {

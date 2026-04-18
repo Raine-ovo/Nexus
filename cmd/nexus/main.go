@@ -158,10 +158,6 @@ func main() {
 		},
 	}
 
-	teamRuntime, err := team.NewRuntime(agentDeps, chatModel, obs, runLabel, cfg.Run.SandboxDir, cfg.Reflection)
-	if err != nil {
-		log.Fatalf("failed to initialize team runtime: %v", err)
-	}
 	obs.Info("team runtime initialized", "reflection_enabled", cfg.Reflection.Enabled, "run_label", runLabel)
 
 	leadSystemPrompt := `You are the lead of a multi-agent team. Your job is to:
@@ -170,14 +166,16 @@ func main() {
 3. For simple non-scheduled tasks, you may handle them yourself using available tools.
 4. For focused one-off tasks that need specialized expertise, use delegate_task — it runs a role-specialized agent in a clean, isolated context (no shared history) and returns the result.
 5. For long-running or multi-step work, send_message to an existing teammate. Teammates persist across tasks and accumulate context, making them ideal for ongoing collaboration.
-6. Only spawn_teammate when you need a new persistent worker that doesn't exist yet. Reuse existing teammates for subsequent work.
-7. Review and approve plans submitted by teammates before risky operations proceed.
+6. When a task board item should belong to a specific teammate or specialist role, use assign_task before asking them to claim it.
+7. Only spawn_teammate when you need a new persistent worker that doesn't exist yet. Reuse existing teammates for subsequent work.
+8. Review and approve plans submitted by teammates before risky operations proceed.
 
 Choosing the right dispatch mechanism:
 - scheduled task: persist via planner/team first, then hand off to a persistent teammate; never delegate_task and never execute it yourself
 - YOU directly: simple non-scheduled tasks you can handle with your own tools
 - delegate_task: one-off specialized work where context isolation matters (e.g. "review this file", "search for X") — starts with a clean slate, result returns, state discarded
 - send_message: ongoing work for existing teammates who need accumulated context (e.g. "continue implementing feature Y", "run more tests on that module")
+- assign_task: reserve a task-board item for a teammate or role so claims follow dispatch intent
 - spawn_teammate: only when you need a NEW persistent worker
 
 Available roles for delegate_task and spawn_teammate:
@@ -204,40 +202,41 @@ Available roles for delegate_task and spawn_teammate:
 	)
 	leadBaseTools = appendDistinctTools(leadBaseTools, toolRegistry.FilterBySource("mcp")...)
 
-	// Create the team manager (replaces the old Supervisor).
-	teamMgr, err := team.NewManager(ctx, team.ManagerConfig{
-		TeamDir:          cfg.Team.Dir,
-		PollInterval:     cfg.Team.PollInterval,
-		IdleTimeout:      cfg.Team.IdleTimeout,
-		Model:            chatModel,
-		Deps:             agentDeps,
-		TaskManager:      taskManager,
-		Observer:         obs,
-		Runtime:          teamRuntime,
-		LeadSystemPrompt: leadSystemPrompt,
-		LeadBaseTools:    leadBaseTools,
+	teamRegistry := team.NewRegistry(team.RegistryConfig{
+		BaseManagerConfig: team.ManagerConfig{
+			TeamDir:          cfg.Team.Dir,
+			PollInterval:     cfg.Team.PollInterval,
+			IdleTimeout:      cfg.Team.IdleTimeout,
+			Model:            chatModel,
+			Deps:             agentDeps,
+			TaskManager:      taskManager,
+			Observer:         obs,
+			LeadSystemPrompt: leadSystemPrompt,
+			LeadBaseTools:    leadBaseTools,
+		},
+		MemoryConfig:     cfg.Memory,
+		ReflectionConfig: cfg.Reflection,
+		RunLabel:         runLabel,
+		SandboxDir:       cfg.Run.SandboxDir,
 	})
-	if err != nil {
-		log.Fatalf("failed to initialize team manager: %v", err)
-	}
 
 	// Register agent templates so the lead can spawn role-specialized teammates.
-	teamMgr.RegisterTemplate("code_reviewer", team.AgentTemplate{
+	teamRegistry.RegisterTemplate("code_reviewer", team.AgentTemplate{
 		Role:         "code_reviewer",
 		SystemPrompt: crAgent.GetSystemPrompt(),
 		Tools:        crAgent.GetTools(),
 	})
-	teamMgr.RegisterTemplate("knowledge", team.AgentTemplate{
+	teamRegistry.RegisterTemplate("knowledge", team.AgentTemplate{
 		Role:         "knowledge",
 		SystemPrompt: kbAgent.GetSystemPrompt(),
 		Tools:        kbAgent.GetTools(),
 	})
-	teamMgr.RegisterTemplate("devops", team.AgentTemplate{
+	teamRegistry.RegisterTemplate("devops", team.AgentTemplate{
 		Role:         "devops",
 		SystemPrompt: dopsAgent.GetSystemPrompt(),
 		Tools:        dopsAgent.GetTools(),
 	})
-	teamMgr.RegisterTemplate("planner", team.AgentTemplate{
+	teamRegistry.RegisterTemplate("planner", team.AgentTemplate{
 		Role:         "planner",
 		SystemPrompt: planAgent.GetSystemPrompt(),
 		Tools:        planAgent.GetTools(),
@@ -245,13 +244,13 @@ Available roles for delegate_task and spawn_teammate:
 
 	obs.Info("team system initialized",
 		"templates", []string{"code_reviewer", "knowledge", "devops", "planner"},
-		"roster", teamMgr.Roster().Names(),
+		"base_team_dir", cfg.Team.Dir,
 	)
 
 	cronResultDir := filepath.Join(cfg.Planning.TaskDir, "cron_results")
 
 	planExec := planning.NewPlanExecutor(taskManager, bgManager, nil, func(runCtx context.Context, agentName string, task *planning.Task) (string, error) {
-		return teamMgr.HandleRequest(runCtx, "cron:task:"+fmt.Sprintf("%d", task.ID), task.Title+"\n"+task.Description)
+		return teamRegistry.HandleRequest(runCtx, "cron:task:"+fmt.Sprintf("%d", task.ID), task.Title+"\n"+task.Description)
 	})
 
 	cronScheduler.SetJobHandler(func(ctx context.Context, job planning.CronJob) {
@@ -260,7 +259,7 @@ Available roles for delegate_task and spawn_teammate:
 
 		switch job.Type {
 		case planning.CronTypeAgentTurn:
-			result, err := teamMgr.HandleRequest(ctx, sessionID, buildScheduledAgentTurnPrompt(job, skillManager))
+			result, err := teamRegistry.HandleRequest(ctx, sessionID, buildScheduledAgentTurnPrompt(job, skillManager))
 			rec := map[string]interface{}{
 				"job":       job.Name,
 				"type":      job.Type,
@@ -292,7 +291,7 @@ Available roles for delegate_task and spawn_teammate:
 		}
 	})
 
-	gw := gateway.New(cfg.Gateway, cfg.Server, teamMgr, obs)
+	gw := gateway.New(cfg.Gateway, cfg.Server, teamRegistry, obs)
 	if cfg.MCP.ServerEnabled {
 		mcpServer := mcp.NewServer(
 			toolRegistry,
@@ -329,7 +328,7 @@ Available roles for delegate_task and spawn_teammate:
 	cancel()
 	cronScheduler.Stop()
 	shutCtx, shutCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	teamMgr.Shutdown(shutCtx)
+	teamRegistry.Shutdown(shutCtx)
 	_ = bgManager.Shutdown(shutCtx)
 	shutCancel()
 	mcpManager.CloseAll()

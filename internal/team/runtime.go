@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -343,6 +344,31 @@ func (r *Runtime) startSpan(ctx context.Context, actorName, nodeName, eventType 
 		span.Tags["request_id"] = runID
 		if r.runLabel != "" {
 			span.Tags["sandbox_run"] = r.runLabel
+		}
+		scopeDecision := gatewaymw.ScopeDecisionFromContext(ctx)
+		if strings.TrimSpace(scopeDecision.Scope) != "" {
+			span.Tags["scope"] = strings.TrimSpace(scopeDecision.Scope)
+		}
+		if strings.TrimSpace(scopeDecision.Workstream) != "" {
+			span.Tags["workstream"] = strings.TrimSpace(scopeDecision.Workstream)
+		}
+		if strings.TrimSpace(scopeDecision.Decision) != "" {
+			span.Tags["scope_decision"] = strings.TrimSpace(scopeDecision.Decision)
+		}
+		if strings.TrimSpace(scopeDecision.Reason) != "" {
+			span.Tags["scope_reason"] = strings.TrimSpace(scopeDecision.Reason)
+		}
+		if scopeDecision.Score > 0 {
+			span.Tags["scope_score"] = strconv.Itoa(scopeDecision.Score)
+		}
+		if scopeDecision.Threshold > 0 {
+			span.Tags["scope_threshold"] = strconv.Itoa(scopeDecision.Threshold)
+		}
+		if len(scopeDecision.Candidates) > 0 {
+			span.Tags["scope_candidate_count"] = strconv.Itoa(len(scopeDecision.Candidates))
+			if payload, err := json.Marshal(scopeDecision.Candidates); err == nil {
+				span.Tags["scope_candidates_json"] = string(payload)
+			}
 		}
 	}
 	if cb := r.fullObs.Callback(); cb != nil {

@@ -1,0 +1,5 @@
+{"event":"task.claimed","task_id":1,"owner":"planner-alpha","role":"","source":"manual","ts":1776500441.159}
+{"event":"task.claimed","task_id":2,"owner":"planner-alpha","role":"","source":"manual","ts":1776500573.735}
+{"event":"task.claimed","task_id":3,"owner":"planner-alpha","role":"","source":"manual","ts":1776500573.736}
+{"event":"task.claimed","task_id":4,"owner":"planner-alpha","role":"","source":"manual","ts":1776500573.737}
+{"event":"task.claimed","task_id":5,"owner":"planner-alpha","role":"","source":"manual","ts":1776500695.609}

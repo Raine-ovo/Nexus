@@ -11,12 +11,13 @@ import (
 )
 
 // BuildTeammateTools returns the set of team-specific tools that every teammate gets.
-func BuildTeammateTools(name string, bus *MessageBus, roster *Roster, tracker *RequestTracker, tm *planning.TaskManager, claimLogger *ClaimLogger, mgr *Manager) []*types.ToolMeta {
+func BuildTeammateTools(name, role string, bus *MessageBus, roster *Roster, tracker *RequestTracker, tm *planning.TaskManager, claimLogger *ClaimLogger, mgr *Manager) []*types.ToolMeta {
 	return []*types.ToolMeta{
 		toolSendMessage(name, bus, mgr),
 		toolReadInbox(name, bus),
 		toolListTeammates(roster),
-		toolClaimTask(name, tm, claimLogger),
+		toolAssignTask(name, tm),
+		toolClaimTask(name, role, roster, tm, claimLogger),
 		toolSubmitPlan(name, bus, tracker),
 	}
 }
@@ -96,7 +97,7 @@ func toolListTeammates(roster *Roster) *types.ToolMeta {
 	return &types.ToolMeta{
 		Definition: types.ToolDefinition{
 			Name:        "list_teammates",
-			Description: "List all team members with name, role, and status.",
+			Description: "List all team members with name, role, status, current activity, and claimed task id.",
 			Parameters:  map[string]interface{}{"type": "object", "properties": map[string]interface{}{}},
 		},
 		Permission: types.PermRead,
@@ -112,7 +113,50 @@ func toolListTeammates(roster *Roster) *types.ToolMeta {
 	}
 }
 
-func toolClaimTask(name string, tm *planning.TaskManager, cl *ClaimLogger) *types.ToolMeta {
+func toolAssignTask(name string, tm *planning.TaskManager) *types.ToolMeta {
+	return &types.ToolMeta{
+		Definition: types.ToolDefinition{
+			Name:        "assign_task",
+			Description: "Reserve a task for a teammate or role before it is claimed.",
+			Parameters: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"task_id":  map[string]interface{}{"type": "integer", "description": "Task ID to assign"},
+					"assignee": map[string]interface{}{"type": "string", "description": "Optional teammate name that should own the task"},
+					"role":     map[string]interface{}{"type": "string", "description": "Optional role that is allowed to claim the task"},
+					"reason":   map[string]interface{}{"type": "string", "description": "Short routing reason for audit/debugging"},
+				},
+				"required": []string{"task_id"},
+			},
+		},
+		Permission: types.PermWrite,
+		Source:     "team",
+		Handler: func(ctx context.Context, args map[string]interface{}) (*types.ToolResult, error) {
+			_ = ctx
+			taskID := utils.GetInt(args, "task_id")
+			assignee := utils.GetString(args, "assignee")
+			role := utils.GetString(args, "role")
+			reason := utils.GetString(args, "reason")
+			if taskID == 0 {
+				return &types.ToolResult{Content: "Error: task_id required", IsError: true}, nil
+			}
+			if tm == nil {
+				return &types.ToolResult{Content: "Error: task manager not available", IsError: true}, nil
+			}
+			assigned, err := tm.Assign(taskID, name, assignee, role, reason)
+			if err != nil {
+				return &types.ToolResult{Content: fmt.Sprintf("Error: %v", err), IsError: true}, nil
+			}
+			target := assigned.AssignedTo
+			if target == "" {
+				target = assigned.AssignedRole
+			}
+			return &types.ToolResult{Content: fmt.Sprintf("Assigned task #%d to %s", assigned.ID, target)}, nil
+		},
+	}
+}
+
+func toolClaimTask(name, role string, roster *Roster, tm *planning.TaskManager, cl *ClaimLogger) *types.ToolMeta {
 	return &types.ToolMeta{
 		Definition: types.ToolDefinition{
 			Name:        "claim_task",
@@ -135,12 +179,16 @@ func toolClaimTask(name string, tm *planning.TaskManager, cl *ClaimLogger) *type
 			if tm == nil {
 				return &types.ToolResult{Content: "Error: task manager not available", IsError: true}, nil
 			}
-			claimed, err := tm.Claim(taskID, name, "manual")
+			claimed, err := tm.Claim(taskID, name, role, "manual")
 			if err != nil {
 				return &types.ToolResult{Content: fmt.Sprintf("Error: %v", err), IsError: true}, nil
 			}
 			if cl != nil {
-				_ = cl.Log(claimed.ID, name, "", "manual")
+				_ = cl.Log(claimed.ID, name, role, "manual")
+			}
+			if roster != nil {
+				_ = roster.UpdateStatus(name, StatusWorking)
+				_ = roster.UpdateActivity(name, "claimed_task", claimed.ID)
 			}
 			return &types.ToolResult{Content: fmt.Sprintf("Claimed task #%d: %s", claimed.ID, claimed.Title)}, nil
 		},

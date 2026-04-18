@@ -299,9 +299,9 @@
 
 **Detail：**
 
-- **组件：** `SessionManager`（TTL 如 24h）、`BindingRouter`、`LaneManager`、中间件（认证、限流、trace）。
+- **组件：** `SessionManager`（TTL 如 24h，可带 `scope/workstream`）、`BindingRouter`、`LaneManager`、中间件（认证、限流、trace）。
 - **价值：** 无 Gateway 时 Agent 只能嵌入 CLI 或单测；有 Gateway 后可多客户端接入、统一鉴权与背压。
-- **与 Team Manager：** `Gateway` 依赖 `Supervisor` 接口（`HandleRequest(ctx, sessionID, input)`），`team.Manager` 实现该接口——请求由 Lead 接收并自主决定直接处理、delegate 或 send_message 给 Teammate，编排逻辑与传输层分离。
+- **与 Team Runtime：** `Gateway` 依赖 `Supervisor` / `ScopedSupervisor` 接口；当前主链路由 `team.Registry` 接住请求，再按 `scope/workstream` 把它映射到具体 `team.Manager`。这样会话层和长期工作线层分离，请求仍由 Lead 接收并自主决定直接处理、delegate 或 send_message 给 Teammate。
 - **当前调试边界：** `/api/health`、`/debug/dashboard`、`/api/debug/*` 默认免鉴权，便于浏览器直接查看治理页；业务接口仍走 API Key / JWT。
 
 ---
@@ -682,7 +682,7 @@
 
 **Core：** 因为它不只是“会调 LLM 和几个工具”，而是把**运行时、调度、恢复、权限、可观测、实验验证、持久化证据**都做成了闭环。
 
-**Detail：** 可从 5 个关键词概括：**有状态团队、可恢复、可观测、可约束、可验证**。有状态团队体现在 persistent teammate 和 rehydrate；可恢复体现在三层恢复与反思；可观测体现在 trace/metrics/dashboard/latest-traces；可约束体现在 permission pipeline、rate limit、LLM throttling；可验证体现在 full-feature experiment 与 run 目录留痕。这个回答很适合作为项目收束题的总答法。
+**Detail：** 可从 6 个关键词概括：**有状态团队、连续工作线、可恢复、可观测、可约束、可验证**。有状态团队体现在 persistent teammate 和 rehydrate；连续工作线体现在 `scope/workstream`、跨 session continuation 与重启后恢复；可恢复体现在三层恢复与反思；可观测体现在 trace/metrics/dashboard/latest-traces/debug-scopes；可约束体现在 permission pipeline、rate limit、LLM throttling；可验证体现在 full-feature experiment 与三阶段 continuity experiment。这个回答很适合作为项目收束题的总答法。
 
 ---
 

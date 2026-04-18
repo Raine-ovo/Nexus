@@ -1,0 +1,17 @@
+{
+  "id": 5,
+  "title": "Compile task board and write output",
+  "description": "Aggregate final task statuses into the markdown table format and write to .runs/scope-continuity-validation/.outputs/scope_continuity_run/11_task_board.md. Acceptance: file exists with correct table. Size: S.",
+  "status": "completed",
+  "blocked_by": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "blocks": null,
+  "claimed_at": "2026-04-18T08:24:55.608639Z",
+  "claim_source": "manual",
+  "created_at": "2026-04-18T08:20:24.689234Z",
+  "updated_at": "2026-04-18T08:27:17.884398Z"
+}

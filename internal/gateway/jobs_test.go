@@ -25,6 +25,39 @@ func (s stubSupervisor) HandleRequest(ctx context.Context, sessionID, input stri
 	return s.output, s.err
 }
 
+type scopedStubSupervisor struct {
+	output             string
+	lastSessionID      string
+	lastScope          string
+	lastWorkstream     string
+	lastInput          string
+	handleRequestCalls int
+}
+
+func (s *scopedStubSupervisor) HandleRequest(ctx context.Context, sessionID, input string) (string, error) {
+	s.handleRequestCalls++
+	return s.output, nil
+}
+
+func (s *scopedStubSupervisor) HandleScopedRequest(ctx context.Context, session *Session, input string) (string, error) {
+	if session != nil {
+		s.lastSessionID = session.ID
+		s.lastScope = session.Scope
+		s.lastWorkstream = session.Workstream
+	}
+	s.lastInput = input
+	return s.output, nil
+}
+
+func (s *scopedStubSupervisor) DebugScopes() []ScopeDebugInfo {
+	return []ScopeDebugInfo{{
+		Scope:      "nexus/team",
+		Workstream: "TeamRegistry design",
+		Summary:    "Continue the scoped team routing design",
+		Recent:     []string{"Design TeamRegistry", "继续昨天那个方案"},
+	}}
+}
+
 type stubDebugObserver struct {
 	noopObserver
 	metrics    map[string]interface{}
@@ -140,6 +173,94 @@ func TestGateway_ChatJobEndpoints(t *testing.T) {
 	}
 }
 
+func TestGateway_CreateSessionAndChatPassScopeMetadata(t *testing.T) {
+	sup := &scopedStubSupervisor{output: "done"}
+	g := New(configs.GatewayConfig{
+		Lanes: map[string]configs.LaneConfig{
+			"main": {MaxConcurrency: 1},
+		},
+	}, configs.ServerConfig{}, sup, nil)
+	g.lanes.Start(context.Background())
+	defer g.lanes.Stop()
+
+	createReq := httptest.NewRequest(http.MethodPost, "/api/sessions", strings.NewReader(`{"channel":"cli","user":"demo","scope":"nexus/team","workstream":"TeamRegistry design"}`))
+	createReq.Header.Set("Content-Type", "application/json")
+	createRec := httptest.NewRecorder()
+	g.handleCreateSession(createRec, createReq)
+	if createRec.Code != http.StatusOK {
+		t.Fatalf("unexpected create status: %d body=%s", createRec.Code, createRec.Body.String())
+	}
+	var sessResp createSessionResp
+	if err := json.Unmarshal(createRec.Body.Bytes(), &sessResp); err != nil {
+		t.Fatal(err)
+	}
+	if sessResp.Scope != "nexus/team" || sessResp.Workstream != "TeamRegistry design" {
+		t.Fatalf("unexpected session metadata: %+v", sessResp)
+	}
+
+	chatReq := httptest.NewRequest(http.MethodPost, "/api/chat", strings.NewReader(`{"session_id":"`+sessResp.SessionID+`","input":"continue the design","lane":"main"}`))
+	chatReq.Header.Set("Content-Type", "application/json")
+	chatRec := httptest.NewRecorder()
+	g.handleChat(chatRec, chatReq)
+	if chatRec.Code != http.StatusOK {
+		t.Fatalf("unexpected chat status: %d body=%s", chatRec.Code, chatRec.Body.String())
+	}
+	if sup.lastSessionID != sessResp.SessionID {
+		t.Fatalf("expected session id %s, got %s", sessResp.SessionID, sup.lastSessionID)
+	}
+	if sup.lastScope != "nexus/team" {
+		t.Fatalf("expected scope to be passed through, got %q", sup.lastScope)
+	}
+	if sup.lastWorkstream != "TeamRegistry design" {
+		t.Fatalf("expected workstream to be passed through, got %q", sup.lastWorkstream)
+	}
+	if sup.handleRequestCalls != 0 {
+		t.Fatalf("expected scoped handler to be used, HandleRequest fallback called %d times", sup.handleRequestCalls)
+	}
+}
+
+func TestGateway_DebugScopesEndpoint(t *testing.T) {
+	sup := &scopedStubSupervisor{output: "done"}
+	g := New(configs.GatewayConfig{}, configs.ServerConfig{}, sup, nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/debug/scopes", nil)
+	rec := httptest.NewRecorder()
+	g.handleDebugScopes(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("unexpected status: %d body=%s", rec.Code, rec.Body.String())
+	}
+	var payload struct {
+		Count  int              `json:"count"`
+		Scopes []ScopeDebugInfo `json:"scopes"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatal(err)
+	}
+	if payload.Count != 1 || len(payload.Scopes) != 1 {
+		t.Fatalf("unexpected scopes payload: %+v", payload)
+	}
+	if payload.Scopes[0].Scope != "nexus/team" {
+		t.Fatalf("unexpected scope: %+v", payload.Scopes[0])
+	}
+}
+
+func TestGateway_DebugDashboardIncludesScopesCard(t *testing.T) {
+	obs := stubDebugObserver{
+		metrics: map[string]interface{}{"counters": map[string]int64{}},
+	}
+	sup := &scopedStubSupervisor{output: "done"}
+	g := New(configs.GatewayConfig{}, configs.ServerConfig{}, sup, obs)
+	req := httptest.NewRequest(http.MethodGet, "/debug/dashboard", nil)
+	rec := httptest.NewRecorder()
+	g.handleDebugDashboard(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("unexpected status: %d body=%s", rec.Code, rec.Body.String())
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "Scopes") || !strings.Contains(body, "/api/debug/scopes") {
+		t.Fatalf("expected scopes card and link in dashboard, got %s", body)
+	}
+}
+
 func TestGateway_DebugEndpoints(t *testing.T) {
 	obs := stubDebugObserver{
 		metrics: map[string]interface{}{"counters": map[string]int64{"llm_calls_active": 0}},
@@ -147,11 +268,16 @@ func TestGateway_DebugEndpoints(t *testing.T) {
 			"governance": {"counters": map[string]int64{"llm_calls_active": 2, "tools_active": 1}},
 		},
 		traces: []observability.TraceSummary{{
-			TraceID:   "trace-1",
-			Operation: "lead:request",
-			SpanCount: 2,
-			RunLabel:  "governance",
-			RequestID: "req-1",
+			TraceID:    "trace-1",
+			Operation:  "lead:request",
+			SpanCount:  2,
+			RunLabel:   "governance",
+			RequestID:  "req-1",
+			Scope:      "nexus/team",
+			Workstream: "TeamRegistry design",
+			Decision:   "continuation_match",
+			Score:      9,
+			Threshold:  6,
 		}, {
 			TraceID:   "trace-2",
 			Operation: "lead:request",
@@ -166,8 +292,15 @@ func TestGateway_DebugEndpoints(t *testing.T) {
 				Operation: "lead:request",
 				Status:    "ok",
 				Tags: map[string]string{
-					"sandbox_run": "governance",
-					"request_id":  "req-1",
+					"sandbox_run":           "governance",
+					"request_id":            "req-1",
+					"scope":                 "nexus/team",
+					"workstream":            "TeamRegistry design",
+					"scope_decision":        "continuation_match",
+					"scope_reason":          "summary retrieval exceeded threshold",
+					"scope_score":           "9",
+					"scope_threshold":       "6",
+					"scope_candidates_json": `[{"scope":"nexus/team","workstream":"TeamRegistry design","summary":"Continue scoped team routing","score":9},{"scope":"session:abc","workstream":"Other work","summary":"Lower confidence path","score":3}]`,
 				},
 			}},
 		},
@@ -204,6 +337,12 @@ func TestGateway_DebugEndpoints(t *testing.T) {
 	if !strings.Contains(traceRec.Body.String(), "\"tree\"") || !strings.Contains(traceRec.Body.String(), "\"grouped\"") {
 		t.Fatalf("unexpected trace detail body: %s", traceRec.Body.String())
 	}
+	if !strings.Contains(traceRec.Body.String(), "\"scope_summary\"") || !strings.Contains(traceRec.Body.String(), "continuation_match") {
+		t.Fatalf("expected scope summary in trace detail body: %s", traceRec.Body.String())
+	}
+	if !strings.Contains(traceRec.Body.String(), "\"score\":9") || !strings.Contains(traceRec.Body.String(), "\"threshold\":6") || !strings.Contains(traceRec.Body.String(), "\"candidates\"") {
+		t.Fatalf("expected scope matching quality in trace detail body: %s", traceRec.Body.String())
+	}
 
 	dashboardReq := httptest.NewRequest(http.MethodGet, "/debug/dashboard?run=governance", nil)
 	dashboardRec := httptest.NewRecorder()
@@ -213,6 +352,15 @@ func TestGateway_DebugEndpoints(t *testing.T) {
 	}
 	if !strings.Contains(dashboardRec.Body.String(), "Nexus Debug Dashboard") || !strings.Contains(dashboardRec.Body.String(), "governance") {
 		t.Fatalf("unexpected dashboard body: %s", dashboardRec.Body.String())
+	}
+	if !strings.Contains(dashboardRec.Body.String(), "Scope Decision") {
+		t.Fatalf("expected scope decision section in dashboard body: %s", dashboardRec.Body.String())
+	}
+	if !strings.Contains(dashboardRec.Body.String(), "item.scope_decision") || !strings.Contains(dashboardRec.Body.String(), "item.scope_score") || !strings.Contains(dashboardRec.Body.String(), "item.scope_threshold") {
+		t.Fatalf("expected trace list scope decision rendering logic in dashboard: %s", dashboardRec.Body.String())
+	}
+	if !strings.Contains(dashboardRec.Body.String(), "Scope Candidates") || !strings.Contains(dashboardRec.Body.String(), "score-high") || !strings.Contains(dashboardRec.Body.String(), "score-medium") || !strings.Contains(dashboardRec.Body.String(), "score-low") {
+		t.Fatalf("expected candidates table and score color classes in dashboard: %s", dashboardRec.Body.String())
 	}
 }
 
