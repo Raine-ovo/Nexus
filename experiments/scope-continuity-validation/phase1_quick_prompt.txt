@@ -1,0 +1,23 @@
+请执行一个极简的 scope continuity phase1 验证。目标不是覆盖全部功能，而是为后续 continuation 建立清晰锚点。
+
+严格要求：
+- 只做必要动作，不要扩展任务。
+- 不要无限重试，任何失败最多尝试 1 次。
+- 最终尽快结束本轮。
+
+必须完成：
+1. 创建一个 planner persistent teammate。
+2. 调用一次 knowledge delegate_task，基于 `docs/features.md` 给出一句结论。
+3. 在 `.runs/scope-continuity-quick/.outputs/scope_continuity_run/` 下写入以下文件：
+   - `00_anchor.md`
+   - `10_delegate_note.md`
+   - `99_phase1_summary.md`
+4. 在文件里明确写出：
+   - 当前 workstream 名称
+   - 如果后续说“继续刚才那个 quick scope continuity 实验”，就继续当前工作线
+   - 后续仍写入 `.runs/scope-continuity-quick/.outputs/scope_continuity_run/`
+
+最后只输出：
+- 是否创建了 planner
+- knowledge delegate 是否执行
+- phase1 锚点是否建立

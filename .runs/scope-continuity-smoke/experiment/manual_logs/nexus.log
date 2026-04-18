@@ -1,0 +1,62 @@
+nexus 2026/04/18 17:34:54.936875 INFO nexus starting config=/Users/bytedance/rainea/nexus/experiments/scope-continuity-validation/config.smoke.yaml
+nexus 2026/04/18 17:34:54.937130 INFO run sandbox enabled sandbox_dir=.runs/scope-continuity-smoke task_dir=.runs/scope-continuity-smoke/.tasks output_dir=.runs/scope-continuity-smoke/.outputs semantic_file=.runs/scope-continuity-smoke/.memory/semantic.yaml reflection_file=.runs/scope-continuity-smoke/.memory/reflections.yaml team_dir=.team-scope-continuity-smoke
+nexus 2026/04/18 17:34:54.937159 INFO tool system initialized builtin_count=8
+nexus 2026/04/18 17:34:54.937176 INFO memory system initialized
+nexus 2026/04/18 17:34:54.937193 INFO RAG engine initialized knowledge_dir=.knowledge vector_backend=memory
+nexus 2026/04/18 17:34:54.937618 INFO planning system initialized task_dir=.runs/scope-continuity-smoke/.tasks
+nexus 2026/04/18 17:34:54.937644 INFO intelligence system initialized skills=0
+nexus 2026/04/18 17:34:54.937655 INFO chat model initialized provider=openai model=glm-5.1 max_concurrency=1 min_request_interval_ms=5000
+nexus 2026/04/18 17:34:54.937662 INFO team runtime initialized reflection_enabled=false run_label=scope-continuity-smoke
+nexus 2026/04/18 17:34:54.937698 INFO team system initialized templates=[code_reviewer knowledge devops planner] base_team_dir=.team-scope-continuity-smoke
+nexus 2026/04/18 17:34:54.938045 INFO nexus ready http=:18234 ws=:18235
+nexus 2026/04/18 17:34:54.938145 INFO gateway websocket listening addr=:18235
+nexus 2026/04/18 17:34:54.938157 INFO gateway listening addr=:18234
+nexus 2026/04/18 17:34:55.604091 INFO team manager started team_dir=.team-scope-continuity-smoke/scopes/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation members=[lead]
+nexus 2026/04/18 17:34:55.604683 INFO team scope resolved session_id=5e4d1c7b-ce44-4055-8c26-88d5db3567a2 scope=workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation decision=explicit_workstream reason=session provided an explicit workstream score=0 threshold=0 candidate_count=0 input=执行一个 smoke 级 scope continuity phase1。
+nexus/callback 2026/04/18 17:34:55.605006 [user_turn] node=lead:request:user_turn run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/f0012685-805d-4542-a72d-98712768fdca parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:34:55.608855 [on_llm_start] node=lead:llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/e588ba49-fbb3-4d3d-87ef-605462e4f243 parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:35:05.243489 [on_llm_end] node=llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=9.634700417s data=map[error:]
+nexus/callback 2026/04/18 17:35:05.243546 [on_tool_start] node=lead:tool:write_file run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/833af334-eb9e-440e-9c57-0d4a37c129e1 parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:35:05.244680 [on_tool_end] node=tool:write_file run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=1.11875ms data=map[error:]
+nexus/callback 2026/04/18 17:35:05.244725 [on_llm_start] node=lead:llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/53b0dac3-dacf-4b7c-975f-1e4ddcb86f1b parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:35:10.368578 [on_llm_end] node=llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=5.123886416s data=map[error:]
+nexus/callback 2026/04/18 17:35:23.101762 [on_end] node=request:user_turn run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=27.496973042s data=map[error:]
+nexus 2026/04/18 17:35:23.860995 INFO team scope resolved session_id=33ce73fe-146e-432b-8228-28e071da0a1a scope=workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation decision=continuation_match reason=single recent candidate matched the continuation query score=52 threshold=6 candidate_count=1 input=请继续刚才那个 smoke continuity 实验，不要新开工作线。
+nexus/callback 2026/04/18 17:35:23.861063 [user_turn] node=lead:request:user_turn run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/7d18badb-0aa3-457b-8a6f-9041e3a68c43 parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:35:23.862198 [on_llm_start] node=lead:llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/37c9c55f-1a6f-445c-90c5-c50cd3ecb9e4 parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:35:36.142166 [on_llm_end] node=llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=12.280065s data=map[error:]
+nexus/callback 2026/04/18 17:35:36.142760 [on_tool_start] node=lead:tool:write_file run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/7a7a221f-d265-4859-a399-c1f797a648bf parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:35:36.144845 [on_tool_end] node=tool:write_file run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=2.044292ms data=map[error:]
+nexus/callback 2026/04/18 17:35:36.144952 [on_llm_start] node=lead:llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/d336b602-7a40-4a66-be1f-de884f04e489 parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:35:40.467947 [on_llm_end] node=llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=4.323012625s data=map[error:]
+nexus/callback 2026/04/18 17:35:54.169976 [on_end] node=request:user_turn run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=30.309131291s data=map[error:]
+nexus 2026/04/18 17:35:56.214613 INFO team scope resolved session_id=7c5e672e-bd2f-4600-bfd1-1c7335d27cc9 scope=workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation decision=continuation_match reason=single recent candidate matched the continuation query score=52 threshold=6 candidate_count=1 input=请继续刚才那个 smoke continuity 实验。注意：服务刚刚重启过。
+nexus/callback 2026/04/18 17:35:56.214657 [user_turn] node=lead:request:user_turn run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/20827b34-a9db-4129-89ba-780823def19d parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:35:56.216411 [on_llm_start] node=lead:llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/b50e3911-1edb-43fe-9454-a929de30f896 parent= dur=0s data=map[]
+nexus 2026/04/18 17:35:56.291632 INFO nexus starting config=/Users/bytedance/rainea/nexus/experiments/scope-continuity-validation/config.smoke.yaml
+nexus 2026/04/18 17:35:56.291816 INFO run sandbox enabled sandbox_dir=.runs/scope-continuity-smoke task_dir=.runs/scope-continuity-smoke/.tasks output_dir=.runs/scope-continuity-smoke/.outputs semantic_file=.runs/scope-continuity-smoke/.memory/semantic.yaml reflection_file=.runs/scope-continuity-smoke/.memory/reflections.yaml team_dir=.team-scope-continuity-smoke
+nexus 2026/04/18 17:35:56.291845 INFO tool system initialized builtin_count=8
+nexus 2026/04/18 17:35:56.291863 INFO memory system initialized
+nexus 2026/04/18 17:35:56.291888 INFO RAG engine initialized knowledge_dir=.knowledge vector_backend=memory
+nexus 2026/04/18 17:35:56.292106 INFO planning system initialized task_dir=.runs/scope-continuity-smoke/.tasks
+nexus 2026/04/18 17:35:56.292120 INFO intelligence system initialized skills=0
+nexus 2026/04/18 17:35:56.292131 INFO chat model initialized provider=openai model=glm-5.1 max_concurrency=1 min_request_interval_ms=5000
+nexus 2026/04/18 17:35:56.292147 INFO team runtime initialized reflection_enabled=false run_label=scope-continuity-smoke
+nexus 2026/04/18 17:35:56.292386 INFO team system initialized templates=[code_reviewer knowledge devops planner] base_team_dir=.team-scope-continuity-smoke
+nexus 2026/04/18 17:35:56.292749 INFO nexus ready http=:18234 ws=:18235
+nexus 2026/04/18 17:35:56.292892 INFO gateway listening addr=:18234
+nexus 2026/04/18 17:35:56.292890 INFO gateway websocket listening addr=:18235
+2026/04/18 17:35:56 gateway error: listen tcp :18234: bind: address already in use
+exit status 1
+nexus/callback 2026/04/18 17:36:01.709753 [on_llm_end] node=llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=5.493366959s data=map[error:]
+nexus/callback 2026/04/18 17:36:01.710030 [on_tool_start] node=lead:tool:read_file run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/e7f4c5ae-1753-455c-9c06-a316b8bec40d parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:36:01.710809 [on_tool_end] node=tool:read_file run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=758.208µs data=map[error:]
+nexus/callback 2026/04/18 17:36:01.710826 [on_tool_start] node=lead:tool:read_file run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/f38e5aa0-6133-41c6-bed1-917321a7e71e parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:36:01.711092 [on_tool_end] node=tool:read_file run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=257.542µs data=map[error:]
+nexus/callback 2026/04/18 17:36:01.711139 [on_llm_start] node=lead:llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/83a3cb1d-9e4d-4518-8841-8f9f1a6fa269 parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:36:11.719428 [on_llm_end] node=llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=10.008367125s data=map[error:]
+nexus/callback 2026/04/18 17:36:11.719515 [on_tool_start] node=lead:tool:write_file run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/9e12617e-8d24-48ce-aa7d-73115c307620 parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:36:11.719937 [on_tool_end] node=tool:write_file run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=408.208µs data=map[error:]
+nexus/callback 2026/04/18 17:36:11.720031 [on_llm_start] node=lead:llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/f6854d6d-f76c-4676-816e-07244df2ef93 parent= dur=0s data=map[]
+nexus/callback 2026/04/18 17:36:13.946668 [on_llm_end] node=llm_call run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=2.2266105s data=map[error:]
+nexus/callback 2026/04/18 17:36:27.524386 [on_end] node=request:user_turn run=scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation/ parent= dur=31.309991791s data=map[error:]

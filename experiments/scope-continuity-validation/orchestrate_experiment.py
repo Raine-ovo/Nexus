@@ -26,6 +26,14 @@ def wait_http_ready(url: str, timeout: float = 60.0, headers=None) -> None:
     raise RuntimeError(f"service not ready: {url}")
 
 
+def is_http_ready(url: str, timeout: float = 3.0, headers=None) -> bool:
+    try:
+        wait_http_ready(url, timeout=timeout, headers=headers)
+        return True
+    except Exception:
+        return False
+
+
 def terminate(proc: subprocess.Popen):
     if proc is None or proc.poll() is not None:
         return
@@ -64,7 +72,7 @@ def run_phase(args, phase, prompt_name, *, workstream="", run_ws_probe=False):
         cmd += ["--workstream", workstream]
     if run_ws_probe:
         cmd.append("--run-ws-probe")
-    result = subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True)
+    result = subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True, timeout=args.phase_timeout_seconds)
     phase_dir = Path(args.sandbox) / "experiment" / phase
     (phase_dir / "runner_stdout.txt").write_text(result.stdout)
     (phase_dir / "runner_stderr.txt").write_text(result.stderr)
@@ -82,6 +90,7 @@ def parse_args():
     parser.add_argument("--api-key", default="nexus-local-dev-key")
     parser.add_argument("--run-name", default="scope-continuity-validation")
     parser.add_argument("--workstream", default="scope continuity validation workstream")
+    parser.add_argument("--phase-timeout-seconds", type=int, default=900)
     parser.add_argument("--keep-nexus-alive", action="store_true")
     return parser.parse_args()
 
@@ -99,14 +108,18 @@ def main() -> int:
     mock = None
     nexus = None
     try:
-        mock = subprocess.Popen(
-            [sys.executable, str(ROOT / "experiments" / "all-features" / "mcp_mock_server.py")],
-            cwd=ROOT,
-            stdout=mock_log,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
-        wait_http_ready("http://127.0.0.1:18110/mcp/sse", timeout=20.0)
+        if is_http_ready("http://127.0.0.1:18110/mcp/sse", timeout=2.0):
+            mock_log.write("reusing existing MCP mock on 127.0.0.1:18110\n")
+            mock_log.flush()
+        else:
+            mock = subprocess.Popen(
+                [sys.executable, str(ROOT / "experiments" / "all-features" / "mcp_mock_server.py")],
+                cwd=ROOT,
+                stdout=mock_log,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+            wait_http_ready("http://127.0.0.1:18110/mcp/sse", timeout=20.0)
 
         def start_nexus():
             return subprocess.Popen(

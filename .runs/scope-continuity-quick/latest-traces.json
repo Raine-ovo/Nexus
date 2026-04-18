@@ -1,0 +1,538 @@
+{
+  "metrics": {
+    "counters": {
+      "callbacks_on_end": 3,
+      "callbacks_on_llm_end": 7,
+      "callbacks_on_llm_start": 7,
+      "callbacks_on_tool_end": 5,
+      "callbacks_on_tool_start": 5,
+      "callbacks_user_turn": 3,
+      "llm_calls_active": 0,
+      "runs_active": 0,
+      "tools_active": 0
+    },
+    "histograms": {
+      "callback_duration_seconds": {
+        "Count": 3,
+        "Sum": 145.851912041,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          3
+        ]
+      },
+      "llm_duration_seconds": {
+        "Count": 7,
+        "Sum": 45.172332084000004,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4,
+          2,
+          1,
+          0
+        ]
+      },
+      "tool_duration_seconds": {
+        "Count": 5,
+        "Sum": 0.0034995,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          2,
+          2,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+  "trace_count": 3,
+  "traces": [
+    {
+      "spans": [
+        {
+          "TraceID": "3ea113d3-fc17-4a91-8714-a18fb2a213fc",
+          "SpanID": "c32c4240-fc21-4732-9df2-f33b2b73f65a",
+          "ParentID": "",
+          "Operation": "lead:request:user_turn",
+          "StartTime": "2026-04-18T09:32:38.928624Z",
+          "EndTime": "2026-04-18T09:33:23.64915Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "request:user_turn",
+            "request_id": "84aacdb1-cb1e-4fd6-9206-ce9ad5c73638",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "3ea113d3-fc17-4a91-8714-a18fb2a213fc",
+          "SpanID": "3732c9e9-6df2-4877-91f8-f209220cf1ae",
+          "ParentID": "c32c4240-fc21-4732-9df2-f33b2b73f65a",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:32:38.929749Z",
+          "EndTime": "2026-04-18T09:32:43.828278Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "f0bd7bd1-4f6b-4823-8321-9032b4ad9695",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "3ea113d3-fc17-4a91-8714-a18fb2a213fc",
+          "SpanID": "3b4f1372-d451-45ab-bd11-07cb91499635",
+          "ParentID": "c32c4240-fc21-4732-9df2-f33b2b73f65a",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-18T09:32:43.828333Z",
+          "EndTime": "2026-04-18T09:32:43.829957Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "f81fd32e-a702-4dea-8eef-1a4e528b8677",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "3ea113d3-fc17-4a91-8714-a18fb2a213fc",
+          "SpanID": "270ebe2f-4ad3-4b54-8203-7c092bfb5f53",
+          "ParentID": "c32c4240-fc21-4732-9df2-f33b2b73f65a",
+          "Operation": "lead:tool:read_file",
+          "StartTime": "2026-04-18T09:32:43.829974Z",
+          "EndTime": "2026-04-18T09:32:43.830275Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:read_file",
+            "request_id": "87753f25-59a9-4dcf-88aa-6d30a593dfef",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "3ea113d3-fc17-4a91-8714-a18fb2a213fc",
+          "SpanID": "deda5ed2-179e-43b5-a027-24f9b8391159",
+          "ParentID": "c32c4240-fc21-4732-9df2-f33b2b73f65a",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:32:43.830326Z",
+          "EndTime": "2026-04-18T09:32:49.782294Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "7fed1f90-8350-4ac0-b70f-e3051328b0cb",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "3ea113d3-fc17-4a91-8714-a18fb2a213fc",
+          "SpanID": "0aa206b0-a5e1-4d72-9afd-16d0c41a9477",
+          "ParentID": "c32c4240-fc21-4732-9df2-f33b2b73f65a",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-18T09:32:49.782358Z",
+          "EndTime": "2026-04-18T09:32:49.782738Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "72247244-0e66-4d85-85bd-d67fee1aab22",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "3ea113d3-fc17-4a91-8714-a18fb2a213fc",
+          "SpanID": "0db49122-4955-4f46-becf-96b34eca76cd",
+          "ParentID": "c32c4240-fc21-4732-9df2-f33b2b73f65a",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:32:49.782776Z",
+          "EndTime": "2026-04-18T09:32:53.68476Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "2a8d3146-26df-4e58-acc7-c8726adecc45",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "3ea113d3-fc17-4a91-8714-a18fb2a213fc",
+        "root_span_id": "c32c4240-fc21-4732-9df2-f33b2b73f65a",
+        "operation": "lead:request:user_turn",
+        "start_time": "2026-04-18T09:32:38.928624Z",
+        "end_time": "2026-04-18T09:33:23.64915Z",
+        "status": "ok",
+        "span_count": 7,
+        "request_id": "84aacdb1-cb1e-4fd6-9206-ce9ad5c73638",
+        "run_label": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+        "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+        "workstream": "smoke scope continuity validation",
+        "scope_decision": "continuation_match",
+        "scope_score": 52,
+        "scope_threshold": 6
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "0a55b1fe-bac6-4206-98ae-1cdec2fdeea5",
+          "SpanID": "5b1e211d-f4af-4a16-828f-46114d71710c",
+          "ParentID": "",
+          "Operation": "lead:request:user_turn",
+          "StartTime": "2026-04-18T09:30:39.169241Z",
+          "EndTime": "2026-04-18T09:31:27.508488Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "request:user_turn",
+            "request_id": "8f97dee7-8a0e-4d48-bea6-3da5e20c507d",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "0a55b1fe-bac6-4206-98ae-1cdec2fdeea5",
+          "SpanID": "ab6b367c-0010-4dde-96af-320746d22b8e",
+          "ParentID": "5b1e211d-f4af-4a16-828f-46114d71710c",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:30:39.172007Z",
+          "EndTime": "2026-04-18T09:30:46.227595Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "8c5bf6d8-bc81-479c-b2c8-9d6c8f8babf7",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "0a55b1fe-bac6-4206-98ae-1cdec2fdeea5",
+          "SpanID": "493bae57-66b8-44a9-a17b-a96bfca86778",
+          "ParentID": "5b1e211d-f4af-4a16-828f-46114d71710c",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-18T09:30:46.227663Z",
+          "EndTime": "2026-04-18T09:30:46.228259Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "4ed843eb-cb36-4ae9-84cc-272bf5766c53",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "0a55b1fe-bac6-4206-98ae-1cdec2fdeea5",
+          "SpanID": "7792c4a7-892c-45d3-a35c-f5d7d4e04974",
+          "ParentID": "5b1e211d-f4af-4a16-828f-46114d71710c",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:30:46.228302Z",
+          "EndTime": "2026-04-18T09:30:48.904354Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "51765718-4e64-4759-9ade-4936cb489bd0",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "0a55b1fe-bac6-4206-98ae-1cdec2fdeea5",
+        "root_span_id": "5b1e211d-f4af-4a16-828f-46114d71710c",
+        "operation": "lead:request:user_turn",
+        "start_time": "2026-04-18T09:30:39.169241Z",
+        "end_time": "2026-04-18T09:31:27.508488Z",
+        "status": "ok",
+        "span_count": 4,
+        "request_id": "8f97dee7-8a0e-4d48-bea6-3da5e20c507d",
+        "run_label": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+        "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+        "workstream": "smoke scope continuity validation",
+        "scope_decision": "continuation_match",
+        "scope_score": 52,
+        "scope_threshold": 6
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "7ff6907b-3a5f-43dd-9553-8e87269e3489",
+          "SpanID": "1ed45643-2154-4a5f-9cde-764d89dbaf3f",
+          "ParentID": "",
+          "Operation": "lead:request:user_turn",
+          "StartTime": "2026-04-18T09:28:28.006715Z",
+          "EndTime": "2026-04-18T09:29:20.797642Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "request:user_turn",
+            "request_id": "43aa40c7-97f6-48f3-b8b6-e783f68841cd",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "7ff6907b-3a5f-43dd-9553-8e87269e3489",
+          "SpanID": "05a8a7e2-1a50-4189-a0da-d8e94924d63e",
+          "ParentID": "1ed45643-2154-4a5f-9cde-764d89dbaf3f",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:28:28.009593Z",
+          "EndTime": "2026-04-18T09:28:44.310131Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "e5d9cbfc-5829-410f-853c-b6a48f241d54",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "7ff6907b-3a5f-43dd-9553-8e87269e3489",
+          "SpanID": "3720c0e9-9f65-4860-966b-db4582f44fec",
+          "ParentID": "1ed45643-2154-4a5f-9cde-764d89dbaf3f",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-18T09:28:44.310205Z",
+          "EndTime": "2026-04-18T09:28:44.310886Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "dc5d99b9-cd34-47ac-8bd6-1d9ae296e106",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "7ff6907b-3a5f-43dd-9553-8e87269e3489",
+          "SpanID": "f2fe01de-4cc3-4659-b680-b2bcb87b1d11",
+          "ParentID": "1ed45643-2154-4a5f-9cde-764d89dbaf3f",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:28:44.310943Z",
+          "EndTime": "2026-04-18T09:28:48.698402Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "46fc008a-e7a9-4e12-bb4b-be89816638ef",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "7ff6907b-3a5f-43dd-9553-8e87269e3489",
+        "root_span_id": "1ed45643-2154-4a5f-9cde-764d89dbaf3f",
+        "operation": "lead:request:user_turn",
+        "start_time": "2026-04-18T09:28:28.006715Z",
+        "end_time": "2026-04-18T09:29:20.797642Z",
+        "status": "ok",
+        "span_count": 4,
+        "request_id": "43aa40c7-97f6-48f3-b8b6-e783f68841cd",
+        "run_label": "scope-continuity-quick/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+        "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+        "workstream": "smoke scope continuity validation",
+        "scope_decision": "explicit_workstream"
+      }
+    }
+  ],
+  "updated_at": "2026-04-18T09:33:23.650002Z"
+}

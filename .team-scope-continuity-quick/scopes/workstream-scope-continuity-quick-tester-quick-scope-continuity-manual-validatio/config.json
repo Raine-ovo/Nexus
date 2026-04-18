@@ -1,0 +1,19 @@
+{
+  "team_name": "default",
+  "members": [
+    {
+      "name": "lead",
+      "role": "lead",
+      "status": "idle",
+      "activity": "waiting_for_request",
+      "updated_at": "2026-04-18T09:32:01.398593Z"
+    },
+    {
+      "name": "planner",
+      "role": "planner",
+      "status": "shutdown",
+      "activity": "shutdown",
+      "updated_at": "2026-04-18T09:37:00.342675Z"
+    }
+  ]
+}

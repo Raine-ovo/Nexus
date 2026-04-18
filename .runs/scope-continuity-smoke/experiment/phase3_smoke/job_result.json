@@ -1,0 +1,10 @@
+{
+  "job_id": "0105cd9b-8797-424e-8733-e42b9f684481",
+  "session_id": "7c5e672e-bd2f-4600-bfd1-1c7335d27cc9",
+  "lane": "main",
+  "status": "succeeded",
+  "output": "phase3 resumed after restart",
+  "created_at": "2026-04-18T17:35:56.213355+08:00",
+  "started_at": "2026-04-18T17:35:56.213394+08:00",
+  "finished_at": "2026-04-18T17:36:27.526029+08:00"
+}

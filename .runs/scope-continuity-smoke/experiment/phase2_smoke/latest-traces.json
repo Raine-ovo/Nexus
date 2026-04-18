@@ -1,0 +1,350 @@
+{
+  "metrics": {
+    "counters": {
+      "callbacks_on_end": 2,
+      "callbacks_on_llm_end": 4,
+      "callbacks_on_llm_start": 4,
+      "callbacks_on_tool_end": 2,
+      "callbacks_on_tool_start": 2,
+      "callbacks_user_turn": 2,
+      "llm_calls_active": 0,
+      "runs_active": 0,
+      "tools_active": 0
+    },
+    "histograms": {
+      "callback_duration_seconds": {
+        "Count": 2,
+        "Sum": 57.806104333,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      },
+      "llm_duration_seconds": {
+        "Count": 4,
+        "Sum": 31.361664458,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          2,
+          1,
+          0
+        ]
+      },
+      "tool_duration_seconds": {
+        "Count": 2,
+        "Sum": 0.003163042,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+  "trace_count": 2,
+  "traces": [
+    {
+      "spans": [
+        {
+          "TraceID": "168b2b35-0551-4666-9bf4-ea3c8763c23a",
+          "SpanID": "6aa70caa-ba36-439d-81a5-fc6b3e64165f",
+          "ParentID": "",
+          "Operation": "lead:request:user_turn",
+          "StartTime": "2026-04-18T09:35:23.861029Z",
+          "EndTime": "2026-04-18T09:35:54.169952Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "request:user_turn",
+            "request_id": "7d18badb-0aa3-457b-8a6f-9041e3a68c43",
+            "sandbox_run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "168b2b35-0551-4666-9bf4-ea3c8763c23a",
+          "SpanID": "113def04-c73a-42f5-b873-e8181ab8d0da",
+          "ParentID": "6aa70caa-ba36-439d-81a5-fc6b3e64165f",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:35:23.862193Z",
+          "EndTime": "2026-04-18T09:35:36.142161Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "37c9c55f-1a6f-445c-90c5-c50cd3ecb9e4",
+            "sandbox_run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "168b2b35-0551-4666-9bf4-ea3c8763c23a",
+          "SpanID": "ff2bb222-75d4-4a93-b737-3ced79b5250e",
+          "ParentID": "6aa70caa-ba36-439d-81a5-fc6b3e64165f",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-18T09:35:36.14275Z",
+          "EndTime": "2026-04-18T09:35:36.144839Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "7a7a221f-d265-4859-a399-c1f797a648bf",
+            "sandbox_run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "168b2b35-0551-4666-9bf4-ea3c8763c23a",
+          "SpanID": "a3f7624b-a8cc-4582-9d82-956878a0273f",
+          "ParentID": "6aa70caa-ba36-439d-81a5-fc6b3e64165f",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:35:36.144937Z",
+          "EndTime": "2026-04-18T09:35:40.467943Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "d336b602-7a40-4a66-be1f-de884f04e489",
+            "sandbox_run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_candidate_count": "1",
+            "scope_candidates_json": "[{\"scope\":\"workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation\",\"workstream\":\"smoke scope continuity validation\",\"summary\":\"smoke scope continuity validation | 执行一个 smoke 级 scope continuity phase1。\\n\\n要求：\\n- 不要创建 teammate。\\n- 不要做 delegate_task。\\n- 不要额外扩展任务。\\n- 只完成下面两件事然后结束。\\n\\n必须完成：\\n1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，\",\"score\":52}]",
+            "scope_decision": "continuation_match",
+            "scope_reason": "single recent candidate matched the continuation query",
+            "scope_score": "52",
+            "scope_threshold": "6",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "168b2b35-0551-4666-9bf4-ea3c8763c23a",
+        "root_span_id": "6aa70caa-ba36-439d-81a5-fc6b3e64165f",
+        "operation": "lead:request:user_turn",
+        "start_time": "2026-04-18T09:35:23.861029Z",
+        "end_time": "2026-04-18T09:35:54.169952Z",
+        "status": "ok",
+        "span_count": 4,
+        "request_id": "7d18badb-0aa3-457b-8a6f-9041e3a68c43",
+        "run_label": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+        "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+        "workstream": "smoke scope continuity validation",
+        "scope_decision": "continuation_match",
+        "scope_score": 52,
+        "scope_threshold": 6
+      }
+    },
+    {
+      "spans": [
+        {
+          "TraceID": "bfa3a872-7504-47a4-b202-8b7c12dc2505",
+          "SpanID": "b03a253b-14ca-4a2f-99c7-ef7775fb3286",
+          "ParentID": "",
+          "Operation": "lead:request:user_turn",
+          "StartTime": "2026-04-18T09:34:55.604999Z",
+          "EndTime": "2026-04-18T09:35:23.101747Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "request:user_turn",
+            "request_id": "f0012685-805d-4542-a72d-98712768fdca",
+            "sandbox_run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "bfa3a872-7504-47a4-b202-8b7c12dc2505",
+          "SpanID": "46c171ce-e1d0-49ca-a4e1-3884e7d59522",
+          "ParentID": "b03a253b-14ca-4a2f-99c7-ef7775fb3286",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:34:55.608853Z",
+          "EndTime": "2026-04-18T09:35:05.243486Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "e588ba49-fbb3-4d3d-87ef-605462e4f243",
+            "sandbox_run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "bfa3a872-7504-47a4-b202-8b7c12dc2505",
+          "SpanID": "25480195-de15-41c3-947e-bd4160c83e35",
+          "ParentID": "b03a253b-14ca-4a2f-99c7-ef7775fb3286",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-18T09:35:05.243544Z",
+          "EndTime": "2026-04-18T09:35:05.244676Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "833af334-eb9e-440e-9c57-0d4a37c129e1",
+            "sandbox_run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "bfa3a872-7504-47a4-b202-8b7c12dc2505",
+          "SpanID": "7ad05d08-31f0-43e8-8f08-7871b9fcc578",
+          "ParentID": "b03a253b-14ca-4a2f-99c7-ef7775fb3286",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:35:05.244723Z",
+          "EndTime": "2026-04-18T09:35:10.368574Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "53b0dac3-dacf-4b7c-975f-1e4ddcb86f1b",
+            "sandbox_run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "bfa3a872-7504-47a4-b202-8b7c12dc2505",
+        "root_span_id": "b03a253b-14ca-4a2f-99c7-ef7775fb3286",
+        "operation": "lead:request:user_turn",
+        "start_time": "2026-04-18T09:34:55.604999Z",
+        "end_time": "2026-04-18T09:35:23.101747Z",
+        "status": "ok",
+        "span_count": 4,
+        "request_id": "f0012685-805d-4542-a72d-98712768fdca",
+        "run_label": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+        "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+        "workstream": "smoke scope continuity validation",
+        "scope_decision": "explicit_workstream"
+      }
+    }
+  ],
+  "updated_at": "2026-04-18T09:35:54.170939Z"
+}

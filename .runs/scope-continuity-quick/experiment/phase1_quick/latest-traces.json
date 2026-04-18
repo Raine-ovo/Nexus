@@ -1,0 +1,514 @@
+{
+  "metrics": {
+    "counters": {
+      "callbacks_on_end": 1,
+      "callbacks_on_llm_end": 9,
+      "callbacks_on_llm_start": 9,
+      "callbacks_on_tool_end": 8,
+      "callbacks_on_tool_start": 8,
+      "callbacks_user_turn": 1,
+      "llm_calls_active": 0,
+      "runs_active": 0,
+      "tools_active": 0
+    },
+    "histograms": {
+      "callback_duration_seconds": {
+        "Count": 1,
+        "Sum": 300.408146709,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "llm_duration_seconds": {
+        "Count": 9,
+        "Sum": 211.817768457,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          4,
+          3,
+          1
+        ]
+      },
+      "tool_duration_seconds": {
+        "Count": 8,
+        "Sum": 58.811079459,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          5,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  },
+  "run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+  "trace_count": 1,
+  "traces": [
+    {
+      "spans": [
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "ParentID": "",
+          "Operation": "lead:request:user_turn",
+          "StartTime": "2026-04-18T09:23:27.563191Z",
+          "EndTime": "2026-04-18T09:28:27.99277Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "request:user_turn",
+            "request_id": "4613f73d-38c4-418f-93f7-62dcdf0911d2",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "a3d5b4a9-6a3b-4618-8ac6-253d51252548",
+          "ParentID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:23:27.564286Z",
+          "EndTime": "2026-04-18T09:25:44.18754Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "dd24acf8-0c20-4255-8458-4d98ef9b33d2",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "b3a792b5-e137-4afd-b6fa-6bab01c78508",
+          "ParentID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:25:44.187657Z",
+          "EndTime": "2026-04-18T09:25:49.999734Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "e2c341cb-0cdd-4a9b-89a4-2019b3ca9ad6",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "5d5e8c06-20a3-4413-8cec-26527a063cc7",
+          "ParentID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:25:49.999853Z",
+          "EndTime": "2026-04-18T09:25:53.700218Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "bc6f2a14-fe5f-4967-8c5c-67560fdf8662",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "f850c274-8577-4541-ba1d-65d27afd881e",
+          "ParentID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:25:53.700346Z",
+          "EndTime": "2026-04-18T09:25:59.053522Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "efe40152-6f64-48f3-a9bc-1dcdde260e81",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "51ffe03a-29bc-490f-b4f5-9ce132aee9c3",
+          "ParentID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "Operation": "lead:tool:spawn_teammate",
+          "StartTime": "2026-04-18T09:25:59.053639Z",
+          "EndTime": "2026-04-18T09:25:59.054361Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:spawn_teammate",
+            "request_id": "dacc7244-d2d3-4be1-84a1-6cdff27a8461",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "41ec4b91-0563-4403-a98f-a0dce4d72cd6",
+          "ParentID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:25:59.054403Z",
+          "EndTime": "2026-04-18T09:26:07.214585Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "f3d17063-f94a-4964-80aa-86715ee4af83",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "06633508-1e24-42b0-a251-ef32842684e9",
+          "ParentID": "51ffe03a-29bc-490f-b4f5-9ce132aee9c3",
+          "Operation": "planner:llm_call",
+          "StartTime": "2026-04-18T09:25:59.056111Z",
+          "EndTime": "2026-04-18T09:26:14.653954Z",
+          "Tags": {
+            "actor": "planner",
+            "node": "llm_call",
+            "request_id": "456044cd-6d64-4f9b-8570-052af410bebf",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "abb5b6b4-773d-4010-9c12-9c20a9ba71b0",
+          "ParentID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "Operation": "lead:tool:delegate_task",
+          "StartTime": "2026-04-18T09:26:07.214797Z",
+          "EndTime": "2026-04-18T09:27:06.043596Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:delegate_task",
+            "request_id": "494944eb-1aa5-49d3-a5b3-524316aff9ee",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "00e0cad8-f1dc-4840-bc1c-c61e3e139313",
+          "ParentID": "51ffe03a-29bc-490f-b4f5-9ce132aee9c3",
+          "Operation": "planner:tool:list_tasks",
+          "StartTime": "2026-04-18T09:26:14.654023Z",
+          "EndTime": "2026-04-18T09:26:14.654082Z",
+          "Tags": {
+            "actor": "planner",
+            "node": "tool:list_tasks",
+            "request_id": "1cca860d-ac7e-4f81-8017-d518de0a18d6",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "b0107c45-6c84-42a6-964a-6ac09087baf5",
+          "ParentID": "51ffe03a-29bc-490f-b4f5-9ce132aee9c3",
+          "Operation": "planner:tool:read_inbox",
+          "StartTime": "2026-04-18T09:26:14.654095Z",
+          "EndTime": "2026-04-18T09:26:14.654112Z",
+          "Tags": {
+            "actor": "planner",
+            "node": "tool:read_inbox",
+            "request_id": "0a5f3dce-f1ae-4b27-95c1-4aa46b199ba4",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "8892ed95-3be3-4eda-9bbb-eef9d15dae31",
+          "ParentID": "51ffe03a-29bc-490f-b4f5-9ce132aee9c3",
+          "Operation": "planner:tool:list_teammates",
+          "StartTime": "2026-04-18T09:26:14.654121Z",
+          "EndTime": "2026-04-18T09:26:14.654135Z",
+          "Tags": {
+            "actor": "planner",
+            "node": "tool:list_teammates",
+            "request_id": "13089c6d-833c-4d40-ba6f-93a29c5c9dc6",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "c95f8a64-36ec-453d-8505-3f9def815f7c",
+          "ParentID": "51ffe03a-29bc-490f-b4f5-9ce132aee9c3",
+          "Operation": "planner:llm_call",
+          "StartTime": "2026-04-18T09:26:14.654153Z",
+          "EndTime": "2026-04-18T09:26:26.977347Z",
+          "Tags": {
+            "actor": "planner",
+            "node": "llm_call",
+            "request_id": "596b3a53-a34c-4c36-a646-8bb7012f268f",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "2c70821e-0fd3-4d2f-9826-bcd74fc025a4",
+          "ParentID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:27:06.043677Z",
+          "EndTime": "2026-04-18T09:27:24.45281Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "521a794d-76b9-4086-bb78-e3b4166b20d3",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "f9b7b471-1fc5-44f5-a568-f1b30297d8e1",
+          "ParentID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-18T09:27:24.452912Z",
+          "EndTime": "2026-04-18T09:27:24.453874Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "592c4a88-3d33-4523-a4aa-602d18d5e5df",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "62390091-0e75-4dfa-b3b1-e75a4d8ddc8e",
+          "ParentID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-18T09:27:24.453888Z",
+          "EndTime": "2026-04-18T09:27:24.454164Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "995ea6be-1c67-4b02-8506-73c4692f5b5d",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "6abf3216-f6df-4534-aaca-3d5262e172b0",
+          "ParentID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-18T09:27:24.454189Z",
+          "EndTime": "2026-04-18T09:27:24.454445Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "6b9746df-d507-40aa-8fa2-6a462f1bd9ef",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+          "SpanID": "1325d766-e184-43c6-b18a-1395f6017b6b",
+          "ParentID": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:27:24.454531Z",
+          "EndTime": "2026-04-18T09:27:30.293991Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "57d02072-bf7e-42c9-a2e7-fc76b027a8da",
+            "sandbox_run": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+            "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "quick scope continuity manual validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "711d162f-c65f-4cca-b812-0875fa78b5d6",
+        "root_span_id": "7999fb8e-50af-4fc0-88b2-d2e7ea6cf097",
+        "operation": "lead:request:user_turn",
+        "start_time": "2026-04-18T09:23:27.563191Z",
+        "end_time": "2026-04-18T09:28:27.99277Z",
+        "status": "ok",
+        "span_count": 18,
+        "request_id": "4613f73d-38c4-418f-93f7-62dcdf0911d2",
+        "run_label": "scope-continuity-quick/workstream-scope-continuity-quick-tester-quick-scope-continuity-manual-validatio",
+        "scope": "workstream:scope-continuity-quick:tester:quick-scope-continuity-manual-validation",
+        "workstream": "quick scope continuity manual validation",
+        "scope_decision": "explicit_workstream"
+      }
+    }
+  ],
+  "updated_at": "2026-04-18T09:28:27.993326Z"
+}

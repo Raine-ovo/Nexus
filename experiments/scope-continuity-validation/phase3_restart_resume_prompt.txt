@@ -2,7 +2,7 @@
 
 要求：
 1. 不要重新开一个不相关的新工作线。
-2. 继续沿用 `.runs/scope-continuity-validation/.outputs/scope_continuity_run/`。
+2. 继续沿用 `.runs/scope-continuity-validation-lite/.outputs/scope_continuity_run/`。
 3. 明确说明这次是在“重启之后继续上次实验”。
 4. 检查 debug scopes、trace detail、dashboard，并判断当前 continuation 是否真的回到了同一 scope/workstream。
 5. 至少生成这些补充文件：
@@ -12,6 +12,11 @@
    - 已验证事实
    - 失败/阻塞
    - 仍存在的不确定性
+
+额外要求：
+
+- 不要重复创建新 teammate，优先复用既有工作线。
+- 不要再补无关任务；只围绕“跨重启 continuation 是否成功”收敛结论。
 
 最后只输出简短摘要：
 - 是否成功跨重启承接同一工作线

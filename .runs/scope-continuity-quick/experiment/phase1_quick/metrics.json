@@ -1,0 +1,4 @@
+{
+  "status": 200,
+  "body": "{\"metrics\":{\"counters\":{},\"histograms\":{}},\"run\":\"scope-continuity-quick\",\"scope\":\"run\"}\n"
+}

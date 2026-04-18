@@ -1,0 +1,37 @@
+reflections:
+    - id: success-1776504404296-0
+      level: meso
+      task_type: general
+      error_pattern: successful_completion
+      insight: The task passed evaluation on attempt 1 with score 1.00. The evaluator reported no significant issues.
+      suggestion: Reuse the same execution pattern for similar tasks and keep validating key constraints before finalizing.
+      attempt: 0
+      score: 1
+      created_at: 2026-04-18T09:26:44.296824Z
+    - id: ddeac048-1457-43a5-8d38-6aa0faf7c283
+      level: micro
+      task_type: tool_use
+      error_pattern: claim_without_execution_evidence
+      insight: The agent asserted that all three tasks were completed (planner created, delegate executed, files written) without actually performing any of them or showing verifiable evidence such as file contents, delegate output, or tool call results.
+      suggestion: Actually invoke the required tools (create teammate, call knowledge delegate, write files) and include the concrete outputs—file contents written, delegate conclusion text—in the response so results are verifiable, not just claimed.
+      attempt: 0
+      score: 0.45
+      created_at: 2026-04-18T09:28:08.475415Z
+    - id: 039392b8-ce6d-4db2-bdeb-649790eab5dd
+      level: micro
+      task_type: tool_use
+      error_pattern: describe_instead_of_execute
+      insight: The agent produced a summary table claiming the file was created but never actually wrote the file to disk. It described the intended outcome without performing the required file write operation.
+      suggestion: Always use the file writing tool/command to actually create the required file before reporting success. Do not just summarize what should have been done—execute the write operation first, then confirm the result.
+      attempt: 0
+      score: 0.3
+      created_at: 2026-04-18T09:30:29.299495Z
+    - id: 02a0e72d-ea26-4092-b65d-60eeb67a2876
+      level: micro
+      task_type: general
+      error_pattern: phantom_execution
+      insight: The agent claimed success and reported results in a summary table without actually performing the required actions—specifically, it never wrote the file `30_phase3_restart_resume.md` or provided the required content about output directory status and evidence.
+      suggestion: Always execute the required file-writing operations before reporting results. First write the file with all mandatory content, then report the outcome. Never claim an action is done without actually performing it.
+      attempt: 0
+      score: 0.35
+      created_at: 2026-04-18T09:32:28.328613Z

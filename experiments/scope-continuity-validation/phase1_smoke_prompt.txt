@@ -1,0 +1,13 @@
+执行一个 smoke 级 scope continuity phase1。
+
+要求：
+- 不要创建 teammate。
+- 不要做 delegate_task。
+- 不要额外扩展任务。
+- 只完成下面两件事然后结束。
+
+必须完成：
+1. 在 `.runs/scope-continuity-smoke/.outputs/scope_continuity_smoke/` 写一个文件 `anchor.txt`，内容说明：
+   - 当前 workstream 名称
+   - 后续如果说“继续刚才那个 smoke continuity 实验”，应继续同一工作线
+2. 最后只用 1 句话回复：`phase1 anchor established`

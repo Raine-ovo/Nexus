@@ -1,0 +1,3 @@
+workstream: scope-continuity-smoke
+phase: 2
+continuity: 承接 phase1 anchor.txt 同一工作线 (scope-continuity-smoke)，未新开工作线。

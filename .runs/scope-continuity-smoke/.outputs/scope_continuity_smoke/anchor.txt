@@ -1,0 +1,2 @@
+workstream: scope-continuity-smoke
+continuity-note: If instructed to "继续刚才那个 smoke continuity 实验", resume this same workstream. All subsequent phases belong to the scope-continuity-smoke line.

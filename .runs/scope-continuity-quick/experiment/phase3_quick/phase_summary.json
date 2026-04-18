@@ -1,0 +1,17 @@
+{
+  "phase": "phase3_quick",
+  "sandbox": "/Users/bytedance/rainea/nexus/.runs/scope-continuity-quick",
+  "run_name": "scope-continuity-quick",
+  "started_at": "2026-04-18T09:30:40.906040+00:00",
+  "warnings": [
+    "no_trace_found"
+  ],
+  "session_id": "6713e7c3-a54d-4bef-bf5d-9270b2a99200",
+  "session_scope": "",
+  "session_workstream": "",
+  "job_id": "1ea93013-ca30-4ff3-8794-55fe1bb19a08",
+  "job_status": "succeeded",
+  "job_error": "",
+  "final_output_excerpt": "---\n\n**结果：**\n\n| 项目 | 结果 |\n|------|------|\n| 是否成功跨重启承接同一工作线 | ✅ 成功 |\n| 新增文件 | `30_phase3_restart_resume.md` |",
+  "finished_at": "2026-04-18T09:32:39.194768+00:00"
+}

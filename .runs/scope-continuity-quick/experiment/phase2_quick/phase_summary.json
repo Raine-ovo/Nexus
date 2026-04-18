@@ -1,0 +1,17 @@
+{
+  "phase": "phase2_quick",
+  "sandbox": "/Users/bytedance/rainea/nexus/.runs/scope-continuity-quick",
+  "run_name": "scope-continuity-quick",
+  "started_at": "2026-04-18T09:28:28.455452+00:00",
+  "warnings": [
+    "no_trace_found"
+  ],
+  "session_id": "7657089a-cf67-470a-9b5d-b29d9471cb6f",
+  "session_scope": "",
+  "session_workstream": "",
+  "job_id": "3fd829bf-e51b-4ca5-8866-3611c9a6b3a6",
+  "job_status": "succeeded",
+  "job_error": "",
+  "final_output_excerpt": "---\n\n**结果：**\n\n| 项目 | 结果 |\n|------|------|\n| 是否成功承接上一轮 workstream | ✅ 承接 `scope-continuity-quick` |\n| 新增文件 | `20_phase2_continuation.md` |",
+  "finished_at": "2026-04-18T09:30:40.759188+00:00"
+}

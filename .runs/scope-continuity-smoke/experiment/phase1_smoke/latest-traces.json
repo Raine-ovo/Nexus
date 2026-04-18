@@ -1,0 +1,234 @@
+{
+  "metrics": {
+    "counters": {
+      "callbacks_on_end": 1,
+      "callbacks_on_llm_end": 2,
+      "callbacks_on_llm_start": 2,
+      "callbacks_on_tool_end": 1,
+      "callbacks_on_tool_start": 1,
+      "callbacks_user_turn": 1,
+      "llm_calls_active": 0,
+      "runs_active": 0,
+      "tools_active": 0
+    },
+    "histograms": {
+      "callback_duration_seconds": {
+        "Count": 1,
+        "Sum": 27.496973042,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "llm_duration_seconds": {
+        "Count": 2,
+        "Sum": 14.758586832999999,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0
+        ]
+      },
+      "tool_duration_seconds": {
+        "Count": 1,
+        "Sum": 0.00111875,
+        "Buckets": [
+          0.0005,
+          0.001,
+          0.005,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1,
+          2.5,
+          5,
+          10,
+          30,
+          60
+        ],
+        "Counts": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+  "trace_count": 1,
+  "traces": [
+    {
+      "spans": [
+        {
+          "TraceID": "bfa3a872-7504-47a4-b202-8b7c12dc2505",
+          "SpanID": "b03a253b-14ca-4a2f-99c7-ef7775fb3286",
+          "ParentID": "",
+          "Operation": "lead:request:user_turn",
+          "StartTime": "2026-04-18T09:34:55.604999Z",
+          "EndTime": "2026-04-18T09:35:23.101747Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "request:user_turn",
+            "request_id": "f0012685-805d-4542-a72d-98712768fdca",
+            "sandbox_run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "bfa3a872-7504-47a4-b202-8b7c12dc2505",
+          "SpanID": "46c171ce-e1d0-49ca-a4e1-3884e7d59522",
+          "ParentID": "b03a253b-14ca-4a2f-99c7-ef7775fb3286",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:34:55.608853Z",
+          "EndTime": "2026-04-18T09:35:05.243486Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "e588ba49-fbb3-4d3d-87ef-605462e4f243",
+            "sandbox_run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "bfa3a872-7504-47a4-b202-8b7c12dc2505",
+          "SpanID": "25480195-de15-41c3-947e-bd4160c83e35",
+          "ParentID": "b03a253b-14ca-4a2f-99c7-ef7775fb3286",
+          "Operation": "lead:tool:write_file",
+          "StartTime": "2026-04-18T09:35:05.243544Z",
+          "EndTime": "2026-04-18T09:35:05.244676Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "tool:write_file",
+            "request_id": "833af334-eb9e-440e-9c57-0d4a37c129e1",
+            "sandbox_run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        },
+        {
+          "TraceID": "bfa3a872-7504-47a4-b202-8b7c12dc2505",
+          "SpanID": "7ad05d08-31f0-43e8-8f08-7871b9fcc578",
+          "ParentID": "b03a253b-14ca-4a2f-99c7-ef7775fb3286",
+          "Operation": "lead:llm_call",
+          "StartTime": "2026-04-18T09:35:05.244723Z",
+          "EndTime": "2026-04-18T09:35:10.368574Z",
+          "Tags": {
+            "actor": "lead",
+            "node": "llm_call",
+            "request_id": "53b0dac3-dacf-4b7c-975f-1e4ddcb86f1b",
+            "sandbox_run": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+            "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+            "scope_decision": "explicit_workstream",
+            "scope_reason": "session provided an explicit workstream",
+            "workstream": "smoke scope continuity validation"
+          },
+          "Events": null,
+          "Status": "ok"
+        }
+      ],
+      "summary": {
+        "trace_id": "bfa3a872-7504-47a4-b202-8b7c12dc2505",
+        "root_span_id": "b03a253b-14ca-4a2f-99c7-ef7775fb3286",
+        "operation": "lead:request:user_turn",
+        "start_time": "2026-04-18T09:34:55.604999Z",
+        "end_time": "2026-04-18T09:35:23.101747Z",
+        "status": "ok",
+        "span_count": 4,
+        "request_id": "f0012685-805d-4542-a72d-98712768fdca",
+        "run_label": "scope-continuity-smoke/workstream-scope-continuity-smoke-tester-smoke-scope-continuity-validation",
+        "scope": "workstream:scope-continuity-smoke:tester:smoke-scope-continuity-validation",
+        "workstream": "smoke scope continuity validation",
+        "scope_decision": "explicit_workstream"
+      }
+    }
+  ],
+  "updated_at": "2026-04-18T09:35:23.101997Z"
+}

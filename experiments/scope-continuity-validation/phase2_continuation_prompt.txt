@@ -2,7 +2,7 @@
 
 你的目标是：
 - 明确承接上一轮已经建立的同一实验 workstream
-- 继续使用 `.runs/scope-continuity-validation/.outputs/scope_continuity_run/` 作为输出目录
+- 继续使用 `.runs/scope-continuity-validation-lite/.outputs/scope_continuity_run/` 作为输出目录
 - 补充 cross-session continuation 的证据
 
 这次至少要做这些事：
@@ -13,6 +13,12 @@
    - `41_cross_session_continuation.md`
    - `42_scope_trace_quality.md`
 5. 在文件里明确写出：如果后续再次说“继续刚才那个 scope continuity 实验”，仍然应该继续这条工作线。
+
+额外要求：
+
+- 不要再创建新的 persistent teammate，优先复用已有 team。
+- 不要重复做 knowledge/code_reviewer delegate。
+- 重点是证明“这是同一条工作线”，不是再次做大而全任务。
 
 最后只输出简短摘要：
 - 是否成功承接上一轮实验

@@ -78,3 +78,84 @@ ConnectionResetError: [Errno 54] Connection reset by peer
 127.0.0.1 - - [18/Apr/2026 16:37:25] "POST /mcp/rpc HTTP/1.1" 200 -
 127.0.0.1 - - [18/Apr/2026 16:42:56] "POST /mcp/rpc HTTP/1.1" 200 -
 127.0.0.1 - - [18/Apr/2026 16:42:56] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 16:49:52] "GET /mcp/sse HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 63773)
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 318, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 349, in process_request
+    self.finish_request(request, client_address)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/http/server.py", line 442, in handle
+    self.handle_one_request()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/http/server.py", line 408, in handle_one_request
+    self.raw_requestline = self.rfile.readline(65537)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 54] Connection reset by peer
+----------------------------------------
+127.0.0.1 - - [18/Apr/2026 16:49:53] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 16:49:53] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 16:49:53] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 16:50:10] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 17:10:56] "GET /mcp/sse HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 58391)
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 318, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 349, in process_request
+    self.finish_request(request, client_address)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/http/server.py", line 442, in handle
+    self.handle_one_request()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/http/server.py", line 408, in handle_one_request
+    self.raw_requestline = self.rfile.readline(65537)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 54] Connection reset by peer
+----------------------------------------
+127.0.0.1 - - [18/Apr/2026 17:10:57] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 17:10:57] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 17:10:57] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 17:12:24] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 17:12:24] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 17:23:26] "GET /mcp/sse HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 64909)
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 318, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 349, in process_request
+    self.finish_request(request, client_address)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/http/server.py", line 442, in handle
+    self.handle_one_request()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/http/server.py", line 408, in handle_one_request
+    self.raw_requestline = self.rfile.readline(65537)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 54] Connection reset by peer
+----------------------------------------
+127.0.0.1 - - [18/Apr/2026 17:23:26] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 17:23:26] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 17:23:26] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 17:30:41] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 17:30:41] "POST /mcp/rpc HTTP/1.1" 200 -
+127.0.0.1 - - [18/Apr/2026 17:30:41] "POST /mcp/rpc HTTP/1.1" 200 -

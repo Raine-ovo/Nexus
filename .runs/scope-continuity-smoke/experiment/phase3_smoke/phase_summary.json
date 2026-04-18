@@ -1,0 +1,17 @@
+{
+  "phase": "phase3_smoke",
+  "sandbox": "/Users/bytedance/rainea/nexus/.runs/scope-continuity-smoke",
+  "run_name": "scope-continuity-smoke",
+  "started_at": "2026-04-18T09:35:56.205635+00:00",
+  "warnings": [
+    "no_trace_found"
+  ],
+  "session_id": "7c5e672e-bd2f-4600-bfd1-1c7335d27cc9",
+  "session_scope": "",
+  "session_workstream": "",
+  "job_id": "0105cd9b-8797-424e-8733-e42b9f684481",
+  "job_status": "succeeded",
+  "job_error": "",
+  "final_output_excerpt": "phase3 resumed after restart",
+  "finished_at": "2026-04-18T09:36:28.289264+00:00"
+}

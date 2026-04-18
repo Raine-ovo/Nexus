@@ -1,90 +1,73 @@
-你现在要执行一次“scope continuity + full feature validation”实验。
+你现在要执行一次“scope continuity verification”实验。注意：这是一套验证版，不追求覆盖全部功能，首要目标是让后续 phase2 / phase3 能稳定验证 continuation。
 
-目标有两层：
-1. 尽可能触发 Nexus 当前已经接入主链路的关键功能。
-2. 为后续跨 session / 跨重启 continuation 验证打好上下文基础，让后续新 session 说“继续刚才那个实验”时，你可以在同一条 workstream 下继续推进，而不是重新开一个不相关的新任务。
+## 最高优先级目标
 
-## 这次主实验必须尽量触发的能力
+1. 建立一条清晰、可续接的 workstream。
+2. 让后续新 session 说“继续刚才那个实验”时，能够回到同一条工作线。
+3. 为跨重启 continuation 提供足够证据。
+
+## 只要求验证这些关键能力
 
 - Lead 调度
 - dispatch_profile
-- spawn_teammate
-- send_message
-- read_inbox
-- claim_task
-- delegate_task
-- create_plan / list_tasks / update_task / execute_task / monitor_progress
 - planner persistent teammate
 - devops persistent teammate
-- knowledge delegate_task
-- code_reviewer delegate_task
+- 至少一次 knowledge delegate_task
+- 至少一次 code_reviewer delegate_task
+- 至少一次 task board 操作（create_plan / list_tasks / update_task 中任意组合）
+- trace / metrics / debug scopes / dashboard
 - reflection
-- semantic memory 持久化
-- trace / metrics / latest-traces.json
-- dashboard / debug scopes / trace detail
-- run sandbox 落盘
-- MCP server / MCP client
-- WebSocket follow-up 的准备工作
 
-## 角色要求
+## 严格收敛要求
 
-- 必须至少创建两个 persistent teammates：
-  - 一个 planner
-  - 一个 devops
-- knowledge 必须至少执行 1 次 delegate_task
-- code_reviewer 必须至少执行 1 次 delegate_task
-- 如果有必要，可以额外创建其他 teammate，但不是硬性要求
+- 不要为了“尽量多覆盖”而无限追加任务。
+- 每个 persistent teammate 最多只进行 1 次明确工作指派，必要时最多 1 次 follow-up。
+- knowledge / code_reviewer 各只做 1 次 delegate_task，不要重复。
+- 如果某个动作失败，记录失败即可，不要围绕失败反复尝试超过 1 次。
+- 目标是“尽快完成 phase1 并留下 continuity 证据”，不是做一轮长时间自治运行。
 
 ## 输出目录
 
 统一写到：
-- `.runs/scope-continuity-validation/.outputs/scope_continuity_run/`
+- `.runs/scope-continuity-validation-lite/.outputs/scope_continuity_run/`
 
-至少产出这些文件：
+只要求产出这些文件：
 - `00_mission.md`
 - `01_dispatch.md`
 - `02_team_roster.md`
-- `10_task_plan.md`
-- `11_task_board.md`
-- `20_mcp_and_rag.md`
-- `21_delegate_results.md`
-- `22_team_messages.md`
-- `23_claim_progress.md`
-- `30_runtime_and_observability.md`
-- `31_permission_and_risk.md`
-- `32_state_persistence.md`
-- `40_evidence_index.md`
+- `10_task_board.md`
+- `20_delegate_results.md`
+- `30_runtime_observability.md`
+- `40_continuity_anchor.md`
 - `99_final_report.md`
 
-## continuity 特别要求
+## 必做事项
 
-- 你必须在本轮任务中显式记录：
-  - 当前实验的目标是什么
-  - 后续 continuation 应该继续哪条工作线
-  - 后续如果用户说“继续刚才那个 scope continuity 实验”，应该在哪个输出目录上继续补充材料
-- 在 `40_evidence_index.md` 或 `99_final_report.md` 里明确写出：
-  - 后续 continuation 输出仍应落在 `.runs/scope-continuity-validation/.outputs/scope_continuity_run/`
-
-## 执行要求
-
-1. planner teammate 必须创建任务板，并推动至少一个任务进入执行或完成状态。
-2. devops teammate 必须检查至少两个地址：
+1. 创建两个 persistent teammates：
+   - 一个 planner
+   - 一个 devops
+2. planner 至少完成一次 task board 操作，并把结果写入 `10_task_board.md`。
+3. devops 至少检查两个地址，并把真实结果或失败写入 `30_runtime_observability.md`：
    - `http://127.0.0.1:18224/api/health`
-   - `http://127.0.0.1:18224/debug/dashboard?run=scope-continuity-validation`
-   - `http://127.0.0.1:18224/api/debug/metrics?run=scope-continuity-validation`
-3. knowledge delegate 必须 ingest `docs/architecture.md` 或 `docs/features.md`，然后完成至少一次搜索回答。
-4. code_reviewer delegate 必须至少检查以下一个文件：
-   - `internal/team/registry.go`
-   - `internal/gateway/debug.go`
-   - `internal/team/runtime.go`
-5. 如果可见 `mcp_repo_probe`，必须调用并记录结果。
-6. 如果任何步骤失败，必须如实写进产物，不允许假装成功。
+   - `http://127.0.0.1:18224/api/debug/scopes`
+   - `http://127.0.0.1:18224/debug/dashboard?run=scope-continuity-validation-lite`
+4. knowledge delegate 只做一次：围绕 `docs/features.md` 或 `docs/architecture.md` 给出一个简短结论。
+5. code_reviewer delegate 只做一次：检查 `internal/team/registry.go` 或 `internal/gateway/debug.go`。
+6. 如果可见 `mcp_repo_probe`，调用一次并记录结果。
 
-## 输出要求
+## continuity 锚点要求
 
-最后请用简短摘要汇报：
+你必须在 `40_continuity_anchor.md` 和 `99_final_report.md` 里明确写出：
+
+- 当前 workstream 的名称
+- 后续如果用户说“继续刚才那个 scope continuity 实验”，应该继续这条工作线
+- 后续 continuation 仍应写入 `.runs/scope-continuity-validation-lite/.outputs/scope_continuity_run/`
+- 本轮最关键的 3 条 scope/trace 证据
+
+## 最终输出
+
+最后只输出简短摘要：
 - 创建了哪些 persistent teammates
-- 哪些 delegate_task 真正运行了
-- 哪些能力已经验证，哪些失败
-- 已落盘了哪些关键文件
-- 对 continuation / scope 复用最关键的 5 条事实
+- 哪两个 delegate_task 已运行
+- phase1 是否已经为后续 continuation 建好锚点
+- 已写入哪些关键文件

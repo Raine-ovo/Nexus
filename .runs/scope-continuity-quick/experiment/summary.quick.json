@@ -1,0 +1,58 @@
+{
+  "phase1": {
+    "phase": "phase1_quick",
+    "sandbox": "/Users/bytedance/rainea/nexus/.runs/scope-continuity-quick",
+    "run_name": "scope-continuity-quick",
+    "started_at": "2026-04-18T09:23:27.554769+00:00",
+    "warnings": [
+      "no_trace_found"
+    ],
+    "session_id": "9781cce9-0f49-4d8d-8220-a05d6ac8ef15",
+    "session_scope": "",
+    "session_workstream": "quick scope continuity manual validation",
+    "job_id": "3cca240f-e814-47a2-b629-2cdace4b09a9",
+    "job_status": "succeeded",
+    "job_error": "",
+    "final_output_excerpt": "---\n\n**Phase 1 验证结果：**\n\n| 项目 | 结果 |\n|------|------|\n| Planner persistent teammate 创建 | ✅ 已创建 |\n| Knowledge delegate 执行 | ✅ 已执行，获得一句 scope 结论 |\n| Phase1 锚点文件建立 | ✅ 三个文件已写入 `.runs/scope-continuity-quick/.outputs/scope_continuity_run/` |\n\n**Workstream**: `scope-continuity-quick`  \n**续行口令**: \"继续刚才那个 quick scope continuity 实验\"  \n**续行路径**: `.runs/scope-continuity-quick/.outputs/scope_continuity_run/`\n\n本轮结束。",
+    "finished_at": "2026-04-18T09:28:28.294466+00:00"
+  },
+  "phase2": {
+    "phase": "phase2_quick",
+    "sandbox": "/Users/bytedance/rainea/nexus/.runs/scope-continuity-quick",
+    "run_name": "scope-continuity-quick",
+    "started_at": "2026-04-18T09:28:28.455452+00:00",
+    "warnings": [
+      "no_trace_found"
+    ],
+    "session_id": "7657089a-cf67-470a-9b5d-b29d9471cb6f",
+    "session_scope": "",
+    "session_workstream": "",
+    "job_id": "3fd829bf-e51b-4ca5-8866-3611c9a6b3a6",
+    "job_status": "succeeded",
+    "job_error": "",
+    "final_output_excerpt": "---\n\n**结果：**\n\n| 项目 | 结果 |\n|------|------|\n| 是否成功承接上一轮 workstream | ✅ 承接 `scope-continuity-quick` |\n| 新增文件 | `20_phase2_continuation.md` |",
+    "finished_at": "2026-04-18T09:30:40.759188+00:00"
+  },
+  "phase3": {
+    "phase": "phase3_quick",
+    "sandbox": "/Users/bytedance/rainea/nexus/.runs/scope-continuity-quick",
+    "run_name": "scope-continuity-quick",
+    "started_at": "2026-04-18T09:30:40.906040+00:00",
+    "warnings": [
+      "no_trace_found"
+    ],
+    "session_id": "6713e7c3-a54d-4bef-bf5d-9270b2a99200",
+    "session_scope": "",
+    "session_workstream": "",
+    "job_id": "1ea93013-ca30-4ff3-8794-55fe1bb19a08",
+    "job_status": "succeeded",
+    "job_error": "",
+    "final_output_excerpt": "---\n\n**结果：**\n\n| 项目 | 结果 |\n|------|------|\n| 是否成功跨重启承接同一工作线 | ✅ 成功 |\n| 新增文件 | `30_phase3_restart_resume.md` |",
+    "finished_at": "2026-04-18T09:32:39.194768+00:00"
+  },
+  "phase2_reused_scope": false,
+  "phase3_reused_scope": false,
+  "phase2_decision": null,
+  "phase3_decision": null,
+  "continuity_passed": false
+}

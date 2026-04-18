@@ -1,0 +1,13 @@
+entries:
+    - category: project
+      key: scope_continuity_quick_workstream
+      value: Workstream 'scope-continuity-quick' outputs at .runs/scope-continuity-quick/.outputs/scope_continuity_run/
+      created_at: 2026-04-18T09:28:27.988148Z
+    - category: reference
+      key: scope_continuity_continuation_keyword
+      value: 'Continuation phrase: ''继续刚才那个 quick scope continuity 实验'' resumes the scope-continuity-quick workstream'
+      created_at: 2026-04-18T09:28:27.990392Z
+    - category: preference
+      key: continuation_workflow
+      value: When continuing previous work, do not create new teammates or repeat delegate_task; focus on proving continuity on the same workstream
+      created_at: 2026-04-18T09:30:39.164394Z

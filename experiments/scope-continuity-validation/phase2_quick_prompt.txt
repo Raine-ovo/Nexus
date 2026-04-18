@@ -1,0 +1,18 @@
+请继续刚才那个 quick scope continuity 实验，不要新开无关工作线。
+
+严格要求：
+- 不要创建新的 teammate。
+- 不要重复做 delegate_task。
+- 重点是证明你回到了同一条工作线。
+
+必须完成：
+1. 说明你承接的是上一轮哪个 workstream。
+2. 在 `.runs/scope-continuity-quick/.outputs/scope_continuity_run/` 下写入：
+   - `20_phase2_continuation.md`
+3. 文件里必须写出：
+   - 当前沿用的输出目录
+   - 你认为本轮 continuation 命中同一工作线的证据
+
+最后只输出：
+- 是否成功承接上一轮 workstream
+- 新增了哪个文件

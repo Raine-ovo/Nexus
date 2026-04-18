@@ -1,0 +1,17 @@
+nexus 2026/04/18 17:30:41.024113 INFO nexus starting config=/Users/bytedance/rainea/nexus/experiments/scope-continuity-validation/config.quick.yaml
+nexus 2026/04/18 17:30:41.024389 INFO run sandbox enabled sandbox_dir=.runs/scope-continuity-quick task_dir=.runs/scope-continuity-quick/.tasks output_dir=.runs/scope-continuity-quick/.outputs semantic_file=.runs/scope-continuity-quick/.memory/semantic.yaml reflection_file=.runs/scope-continuity-quick/.memory/reflections.yaml team_dir=.team-scope-continuity-quick
+nexus 2026/04/18 17:30:41.024416 INFO tool system initialized builtin_count=8
+nexus 2026/04/18 17:30:41.024436 INFO memory system initialized
+nexus 2026/04/18 17:30:41.024455 INFO RAG engine initialized knowledge_dir=.knowledge vector_backend=memory
+nexus 2026/04/18 17:30:41.025013 INFO planning system initialized task_dir=.runs/scope-continuity-quick/.tasks
+nexus 2026/04/18 17:30:41.025033 INFO intelligence system initialized skills=0
+nexus 2026/04/18 17:30:41.025045 INFO chat model initialized provider=openai model=glm-5.1 max_concurrency=1 min_request_interval_ms=5000
+nexus 2026/04/18 17:30:41.025053 INFO team runtime initialized reflection_enabled=true run_label=scope-continuity-quick
+nexus 2026/04/18 17:30:41.027891 INFO mcp client registered client=mock-activation-server base_url=http://127.0.0.1:18110
+nexus 2026/04/18 17:30:41.029209 INFO team system initialized templates=[code_reviewer knowledge devops planner] base_team_dir=.team-scope-continuity-quick
+nexus 2026/04/18 17:30:41.029247 INFO mcp server mounted rpc_path=/mcp/rpc sse_path=/mcp/sse
+nexus 2026/04/18 17:30:41.029764 INFO nexus ready http=:18224 ws=:18225
+nexus 2026/04/18 17:30:41.029863 INFO gateway websocket listening addr=:18225
+nexus 2026/04/18 17:30:41.029872 INFO gateway listening addr=:18224
+2026/04/18 17:30:41 gateway error: listen tcp :18225: bind: address already in use
+exit status 1

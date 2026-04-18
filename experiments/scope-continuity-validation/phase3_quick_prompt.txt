@@ -1,0 +1,18 @@
+请继续刚才那个 quick scope continuity 实验。注意：服务刚刚重启过，你现在要验证的是跨重启后是否还能回到同一条工作线。
+
+严格要求：
+- 不要创建新的 teammate。
+- 不要重复做 delegate_task。
+- 只围绕“跨重启 continuation 是否成功”给出结论。
+
+必须完成：
+1. 说明这次是在重启后继续上一轮实验。
+2. 在 `.runs/scope-continuity-quick/.outputs/scope_continuity_run/` 下写入：
+   - `30_phase3_restart_resume.md`
+3. 文件里必须写出：
+   - 是否仍沿用同一输出目录
+   - 你认为跨重启 continuation 成功或失败的证据
+
+最后只输出：
+- 是否成功跨重启承接同一工作线
+- 新增了哪个文件
