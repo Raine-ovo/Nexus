@@ -40,16 +40,20 @@ type ScopedSupervisor interface {
 
 // ScopeDebugInfo is a user-facing debug view of one persisted workstream scope.
 type ScopeDebugInfo struct {
-	Scope          string    `json:"scope"`
-	Channel        string    `json:"channel,omitempty"`
-	User           string    `json:"user,omitempty"`
-	Workstream     string    `json:"workstream,omitempty"`
-	Summary        string    `json:"summary,omitempty"`
-	Keywords       []string  `json:"keywords,omitempty"`
-	Recent         []string  `json:"recent,omitempty"`
-	UpdatedAt      time.Time `json:"updated_at"`
-	ManagerRunning bool      `json:"manager_running"`
-	TeamDir        string    `json:"team_dir,omitempty"`
+	Scope             string    `json:"scope"`
+	ScopeKind         string    `json:"scope_kind,omitempty"`
+	StorageBucket     string    `json:"storage_bucket,omitempty"`
+	Lifecycle         string    `json:"lifecycle,omitempty"`
+	Channel           string    `json:"channel,omitempty"`
+	User              string    `json:"user,omitempty"`
+	Workstream        string    `json:"workstream,omitempty"`
+	Summary           string    `json:"summary,omitempty"`
+	Keywords          []string  `json:"keywords,omitempty"`
+	Recent            []string  `json:"recent,omitempty"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	ManagerRunning    bool      `json:"manager_running"`
+	ManagerLastUsedAt time.Time `json:"manager_last_used_at,omitempty"`
+	TeamDir           string    `json:"team_dir,omitempty"`
 }
 
 // ScopeDebugger exposes scoped team/workstream state for debug endpoints.

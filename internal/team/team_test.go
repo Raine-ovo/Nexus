@@ -1008,13 +1008,12 @@ func TestRegistry_ReusesExplicitScopeAcrossSessions(t *testing.T) {
 	if s1.Scope != s2.Scope {
 		t.Fatalf("expected sessions to share resolved scope, got %q vs %q", s1.Scope, s2.Scope)
 	}
-	scopeRoot := filepath.Join(dir, ".team", "scopes")
-	entries, err := os.ReadDir(scopeRoot)
-	if err != nil {
-		t.Fatal(err)
+	scopeDir := reg.scopeDir(s1.Scope)
+	if _, err := os.Stat(scopeDir); err != nil {
+		t.Fatalf("expected scoped team directory at %s: %v", scopeDir, err)
 	}
-	if len(entries) != 1 {
-		t.Fatalf("expected 1 scoped team directory, got %d", len(entries))
+	if !strings.Contains(scopeDir, filepath.Join(".team", "scopes", "custom")) {
+		t.Fatalf("expected grouped scope directory layout, got %s", scopeDir)
 	}
 }
 
@@ -1108,6 +1107,61 @@ func TestRegistry_PersistsScopeIndexAcrossRestart(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(dir, ".team", "index", "scopes.json")); err != nil {
 		t.Fatalf("expected persisted scope index file: %v", err)
+	}
+}
+
+func TestRegistry_ReapsIdleScopedManagers(t *testing.T) {
+	dir := tmpDir(t)
+	taskDir := filepath.Join(dir, "tasks")
+	tm, _ := planning.NewTaskManager(taskDir)
+	model := &stubModel{
+		responses: []core.ChatModelResponse{
+			{Content: "first", FinishReason: "stop"},
+			{Content: "second", FinishReason: "stop"},
+		},
+	}
+
+	reg := NewRegistry(RegistryConfig{
+		BaseManagerConfig: ManagerConfig{
+			TeamDir:          filepath.Join(dir, ".team"),
+			Model:            model,
+			Deps:             &core.AgentDependencies{},
+			TaskManager:      tm,
+			LeadSystemPrompt: "Lead.",
+		},
+		MemoryConfig: configs.MemoryConfig{
+			ConversationWindow: 20,
+			MaxSemanticEntries: 20,
+			SemanticFile:       filepath.Join(dir, "semantic.yaml"),
+		},
+		ManagerTTL: 50 * time.Millisecond,
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	defer reg.Shutdown(ctx)
+
+	s1 := &gateway.Session{ID: "s1", Channel: "cli", User: "demo", Scope: "alpha"}
+	if _, err := reg.HandleScopedRequest(ctx, s1, "first request"); err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(80 * time.Millisecond)
+
+	s2 := &gateway.Session{ID: "s2", Channel: "cli", User: "demo", Scope: "beta"}
+	if _, err := reg.HandleScopedRequest(ctx, s2, "second request"); err != nil {
+		t.Fatal(err)
+	}
+
+	debugScopes := reg.DebugScopes()
+	stateByScope := make(map[string]gateway.ScopeDebugInfo, len(debugScopes))
+	for _, item := range debugScopes {
+		stateByScope[item.Scope] = item
+	}
+	if stateByScope["alpha"].ManagerRunning {
+		t.Fatalf("expected alpha manager to be reaped, got %+v", stateByScope["alpha"])
+	}
+	if !stateByScope["beta"].ManagerRunning {
+		t.Fatalf("expected beta manager to stay running, got %+v", stateByScope["beta"])
 	}
 }
 

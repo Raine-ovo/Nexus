@@ -391,11 +391,14 @@ var debugDashboardTemplate = template.Must(template.New("debug_dashboard").Parse
       <thead>
         <tr>
           <th>Scope</th>
+          <th>Kind</th>
+          <th>Lifecycle</th>
           <th>Workstream</th>
           <th>User</th>
           <th>Channel</th>
           <th>Updated</th>
           <th>Manager</th>
+          <th>Directory</th>
         </tr>
       </thead>
       <tbody id="scopes-body"></tbody>
@@ -632,13 +635,17 @@ var debugDashboardTemplate = template.Must(template.New("debug_dashboard").Parse
         for (const item of scopeItems) {
           const row = document.createElement("tr");
           const status = item.manager_running ? "<span class='pill ok'>running</span>" : "<span class='pill'>idle</span>";
+          const lifecycle = item.lifecycle ? "<span class='pill'>" + esc(item.lifecycle) + "</span>" : "<span class='muted'>n/a</span>";
           row.innerHTML =
             "<td><code>" + esc(item.scope || "") + "</code><br><span class='muted'>" + esc(item.summary || "") + "</span></td>" +
+            "<td>" + esc(item.scope_kind || "") + "<br><span class='muted'>bucket: " + esc(item.storage_bucket || "") + "</span></td>" +
+            "<td>" + lifecycle + "</td>" +
             "<td>" + esc(item.workstream || "") + "<br><span class='muted'>" + esc((item.keywords || []).join(', ')) + "</span></td>" +
             "<td>" + esc(item.user || "") + "</td>" +
             "<td>" + esc(item.channel || "") + "</td>" +
             "<td>" + esc(item.updated_at || "") + "</td>" +
-            "<td>" + status + "</td>";
+            "<td>" + status + "<br><span class='muted'>" + esc(item.manager_last_used_at || "") + "</span></td>" +
+            "<td><code>" + esc(item.team_dir || "") + "</code></td>";
           scopesBody.appendChild(row);
         }
         if (items.length > 0 && items[0].trace_id) {

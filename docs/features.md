@@ -62,6 +62,14 @@ Teammate 空闲时按优先级轮询：**收件箱消息 > 任务板自动认领
 ### 2.9 Scope / Workstream Continuity
 Team 不再只按当前进程里的单个 manager 运转，而是通过 `Registry` 按 `scope/workstream` 复用不同团队。新请求既可以在建 session 时显式指定 `scope` / `workstream`，也可以在后续 continuation 请求中基于 continuation cue、最近工作线摘要、关键词重合和阈值打分命中旧 team。每条工作线拥有独立的 team 目录、semantic memory、reflection memory 和持久化索引，因此不仅支持跨 session 续接，也支持服务重启后的 continuation 恢复。
 
+### 2.10 Team Scope 管理机制
+在 continuity 之上，当前版本进一步补齐了 Team 管理层：
+- 区分 `team.dir` 与 `scope`：根目录下多个 `.team-*` 通常代表不同实验或运行配置，而不是单个 scope 创建了多个 Team。
+- 单个 `team.dir` 内，scope 状态统一组织到 `index/scopes.json` 和 `scopes/<scope_kind>/<bucket>/<slug>/`，避免所有 Team 平铺在一个目录。
+- 新增 `team.scope_manager_ttl`，允许长时间未访问的 scope manager 从内存中自动驱逐，但保留磁盘状态并支持按需 rehydrate。
+- `GET /api/debug/scopes` 增加 `scope_kind`、`storage_bucket`、`lifecycle`、`manager_running`、`manager_last_used_at`、`team_dir` 等字段，使 Team 管理从“看目录猜状态”升级为可观测运行时。
+- 详见 `docs/team_scope_management.md`。
+
 ---
 
 ## 3. 四个专业 Agent (`internal/agents/`)

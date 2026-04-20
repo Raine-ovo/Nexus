@@ -118,6 +118,9 @@ type TeamConfig struct {
 	PollInterval time.Duration `yaml:"poll_interval"`
 	// IdleTimeout controls how long a persistent teammate may stay idle before shutdown.
 	IdleTimeout time.Duration `yaml:"idle_timeout"`
+	// ScopeManagerTTL controls how long an inactive scope manager stays resident in memory.
+	// Scope data on disk remains intact; a later request simply rehydrates the manager on demand.
+	ScopeManagerTTL time.Duration `yaml:"scope_manager_ttl"`
 }
 
 type RunConfig struct {
@@ -353,6 +356,9 @@ func applyDefaults(cfg *Config) {
 	}
 	if cfg.Team.IdleTimeout == 0 {
 		cfg.Team.IdleTimeout = 20 * time.Minute
+	}
+	if cfg.Team.ScopeManagerTTL == 0 {
+		cfg.Team.ScopeManagerTTL = 45 * time.Minute
 	}
 	if cfg.Gateway.Lanes == nil {
 		cfg.Gateway.Lanes = map[string]LaneConfig{

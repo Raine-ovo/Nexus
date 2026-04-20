@@ -222,6 +222,81 @@ Scope 决策被透传进 context，并在 span tags 中记录：
 
 这使 continuation 能力从“内部逻辑”变成了“可直接观察的治理能力”。
 
+### 5. 从“能续接”走向“能管理”
+
+在 continuity 主链路跑通之后，另一个实际问题会立刻出现：
+
+- scope 多了以后，Team 状态如何管理？
+
+这次补齐了 continuity 之后的管理层，而不只是命中逻辑本身。
+
+#### A. 区分 `team.dir` 和 `scope`
+
+仓库根目录下出现多个 `.team-*` 并不意味着：
+
+- 一个 scope 创建了多个 Team
+
+更常见的真实含义是：
+
+- 不同实验或运行配置，把 `team.dir` 指到了不同的 Team Runtime 根目录
+
+而在单个 `team.dir` 内部，仍然保持：
+
+- 一个 scope 对应一个 `Manager`
+
+#### B. 单个 `team.dir` 内部改为分层目录
+
+现在一个 Team 根目录内部会统一组织为：
+
+- `index/scopes.json`
+- `scopes/<scope_kind>/<bucket>/<slug>/`
+
+这意味着：
+
+- scope 不再平铺在一个目录里
+- Team 多起来以后仍然可浏览、可排查
+
+#### C. 引入 scope manager 生命周期管理
+
+为了避免 scope 越多、内存里常驻 manager 越多，本次新增：
+
+- `team.scope_manager_ttl`
+
+当某个 scope 长时间未访问时：
+
+- 内存中的 manager 会被驱逐
+- 磁盘上的 Team 状态会保留
+- 后续再次命中时按需 rehydrate
+
+这让系统具备：
+
+- 磁盘长期记忆
+- 内存弹性驻留
+
+#### D. 把管理状态暴露到 Debug API
+
+`GET /api/debug/scopes` 新增了：
+
+- `scope_kind`
+- `storage_bucket`
+- `lifecycle`
+- `manager_running`
+- `manager_last_used_at`
+- `team_dir`
+
+因此现在不只能回答：
+
+- 这次 continuation 命中了哪个 scope
+
+也能回答：
+
+- 这个 scope 属于哪类工作线
+- 它存在哪个 Team 根目录下
+- 它当前是热的还是冷的
+- 它现在是否仍有 manager 驻留在内存里
+
+这一步非常关键，因为它把 continuity 从“可命中”推进到了“可管理”。
+
 ## 为什么这是亮点，而不只是一个路由小优化
 
 ### 亮点 1：把“有状态团队”真正做成了长期工作线运行时

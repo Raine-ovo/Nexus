@@ -359,3 +359,6 @@ nexus/callback 2026/04/18 03:07:07.094651 [on_llm_start] node=lead:llm_call run=
 nexus/callback 2026/04/18 03:07:18.906522 [on_llm_end] node=llm_call run=full-activation-throttled/ parent= dur=11.811657166s data=map[error:]
 nexus 2026/04/18 03:07:30.261602 INFO reflection/engine: attempt evaluated attempt=1 score=0.97 pass=true reason=good — all requested elements (agents, files, mechanisms) are covered concisely and clearly; minor uncertainty on factual accuracy of specific counts/calls since they depend on the actual experiment run
 nexus/callback 2026/04/18 03:07:41.701360 [on_end] node=request:user_turn run=full-activation-throttled/ parent= dur=34.608541541s data=map[error:]
+nexus 2026/04/18 20:32:04.009904 INFO shutdown signal received signal=interrupt
+2026/04/18 20:32:04 gateway error: context canceled
+exit status 1

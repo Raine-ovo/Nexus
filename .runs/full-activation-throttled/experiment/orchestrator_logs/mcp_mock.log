@@ -159,3 +159,6 @@ ConnectionResetError: [Errno 54] Connection reset by peer
 127.0.0.1 - - [18/Apr/2026 17:30:41] "POST /mcp/rpc HTTP/1.1" 200 -
 127.0.0.1 - - [18/Apr/2026 17:30:41] "POST /mcp/rpc HTTP/1.1" 200 -
 127.0.0.1 - - [18/Apr/2026 17:30:41] "POST /mcp/rpc HTTP/1.1" 200 -
+mcp mock server listening on http://127.0.0.1:18110
+Traceback (most recent call last):
+  File "/Users/bytedance/rainea/nexus/experiments/all-features/mcp_mock_server.py", line 150, in <module>

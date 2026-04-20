@@ -429,6 +429,69 @@ run:
 
 - `.team`
 
+这里需要特别区分两层概念：
+
+- `team.dir`：一个 Team Runtime 的根目录，例如 `.team`、`.team-exp`、`.team-scope-continuity-quick`
+- `scope`：这个根目录内部再划分出来的长期工作线
+
+也就是说，仓库根目录下出现多个 `.team-*`，通常不是“一个 scope 创建了多个 team”，而是：
+
+- 不同实验或运行配置把 `team.dir` 指到了不同的根目录
+
+只有在同一个 `team.dir` 内部，`Registry` 才会继续按 `scope/workstream` 复用或新建具体 `team.Manager`。
+
+### Team Root 与 Scope 目录布局
+
+当前版本中，一个 `team.dir` 内部的 scope 状态会统一落在：
+
+- `<team.dir>/index/scopes.json`
+- `<team.dir>/scopes/<scope_kind>/<bucket>/<slug>/`
+
+例如：
+
+```text
+.team/
+├── index/
+│   └── scopes.json
+└── scopes/
+    ├── workstream/
+    │   ├── wo/
+    │   │   ├── workstream-cli-alice-doc-refactor/
+    │   │   └── workstream-cli-alice-governance-dashboard/
+    │   └── re/
+    │       └── workstream-slack-release-review/
+    ├── session/
+    │   └── se/
+    │       ├── session-s001/
+    │       └── session-s002/
+    └── custom/
+        ├── ne/
+        │   └── nexus-team/
+        └── sc/
+            └── scope-manual-debug/
+```
+
+各层含义：
+
+- `index/scopes.json`：scope 台账，保存 `scope`、`workstream`、`summary`、`keywords`、`updated_at` 等元数据
+- `scopes/workstream|session|custom/`：scope 类型分组
+- `wo`、`re`、`se` 等 bucket：通常取 slug 前两个字符，用于避免单目录下堆积过多 Team
+- 最内层 `slug/`：一个具体 scope 对应的持久化 Team 目录
+
+单个 scope 目录内部通常包含：
+
+- `config.json`：roster/成员配置
+- `inbox/`：lead 和 teammates 的 JSONL 收件箱
+- `requests/`：协议请求追踪
+- `claim_events.jsonl`：认领事件日志
+- `memory/semantic.yaml`：该 scope 独立语义记忆
+- `memory/reflections.yaml`：该 scope 独立反思记忆（启用 reflection 时）
+
+兼容性说明：
+
+- 历史目录若仍位于旧路径 `<team.dir>/scopes/<slug>/`，运行时会优先继续使用旧路径
+- 新创建的 scope 会进入新的分层布局
+
 ## 目录与运行时产物
 
 运行过程中会自动创建或使用以下目录：
@@ -450,6 +513,50 @@ run:
 - `.runs/<run-name>/.tasks`
 
 查看。
+
+### Scope Manager 生命周期
+
+scope 的磁盘目录和内存中的 `Manager` 不是同一回事：
+
+- 磁盘目录负责保存长期状态，重启后仍可恢复
+- 内存中的 `Manager` 只是当前进程里驻留的运行实例
+
+当前版本新增了 `team.scope_manager_ttl`：
+
+```yaml
+team:
+  dir: ".team"
+  scope_manager_ttl: 45m
+```
+
+它的语义是：
+
+- 某个 scope 长时间未被访问时，其内存中的 `Manager` 会被自动驱逐
+- 对应的磁盘状态不会删除
+- 下次请求再次命中该 scope 时，会基于磁盘状态重新拉起
+
+因此：
+
+- “目录里有很多 scope Team” 不等于 “进程里同时活着很多 manager”
+- 这是一种“磁盘长期保留 + 内存按需驻留”的管理策略
+
+### Debug Scopes 可见性
+
+`GET /api/debug/scopes` 现在会直接返回 scope 管理所需的关键字段，例如：
+
+- `scope`
+- `scope_kind`
+- `storage_bucket`
+- `lifecycle`
+- `manager_running`
+- `manager_last_used_at`
+- `team_dir`
+
+你可以据此区分：
+
+- 这个 scope 属于哪一类
+- 它在磁盘上的落点
+- 当前只是冷数据，还是仍有活跃 manager 在运行
 
 ## 常见问题
 

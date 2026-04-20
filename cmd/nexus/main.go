@@ -218,6 +218,7 @@ Available roles for delegate_task and spawn_teammate:
 		ReflectionConfig: cfg.Reflection,
 		RunLabel:         runLabel,
 		SandboxDir:       cfg.Run.SandboxDir,
+		ManagerTTL:       cfg.Team.ScopeManagerTTL,
 	})
 
 	// Register agent templates so the lead can spawn role-specialized teammates.

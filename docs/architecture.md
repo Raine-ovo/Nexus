@@ -261,6 +261,76 @@ idlePhase (最多 maxIdlePolls 轮，默认 40 轮 × 3s ≈ 2 分钟)
 
 **核心差异**：Nexus 的 Team 层实现了**持久化的异步团队**——Teammate 有独立生命周期和累积上下文，不像传统 Supervisor 那样「路由完即丢弃」；同时通过 Delegate 保留了上下文隔离能力。
 
+### 3.9 Scope Registry 与 Team 管理分层
+
+随着 scope/workstream continuity 落到主链路，Team 层需要进一步解决两个管理问题：
+
+- 单个 `team.dir` 内 scope 多起来后，目录如何避免平铺失控
+- 进程里驻留的 scope manager 如何避免无限增长
+
+当前实现将 Team 管理明确拆成三层：
+
+1. `team.dir`
+   - 一套 Team Runtime 的根目录
+   - 不同实验或配置可以使用不同根目录，例如 `.team`、`.team-exp`、`.team-scope-continuity-quick`
+2. `scope`
+   - 这个根目录内部的一条长期工作线
+   - 由显式 `scope/workstream` 或 continuation 匹配解析得到
+3. `manager`
+   - 当前进程中为该 scope 驻留的运行实例
+   - 存在则复用，不存在则按需创建
+
+因此，仓库根目录出现多个 `.team-*`，本质上是**多套 Team Runtime 隔离**，而不是“一个 scope 对应多个 Team”。
+
+#### 磁盘布局
+
+单个 `team.dir` 内部，scope 状态统一组织为：
+
+```text
+<team.dir>/
+├── index/
+│   └── scopes.json
+└── scopes/
+    └── <scope_kind>/
+        └── <bucket>/
+            └── <slug>/
+```
+
+语义解释：
+
+- `index/scopes.json`：scope 台账，用于 continuation、重启恢复和 debug 可视化
+- `<scope_kind>`：如 `workstream`、`session`、`custom`
+- `<bucket>`：通常取 slug 前两个字符，避免大量 Team 平铺在单目录
+- `<slug>`：某条具体工作线的持久化 Team 空间
+
+#### 内存生命周期
+
+磁盘 Team 和内存 manager 是分离的：
+
+- 磁盘目录保留长期状态
+- 内存 manager 只代表当前进程中的活跃运行实例
+
+本次新增 `team.scope_manager_ttl` 后：
+
+- 长时间未访问的 scope manager 会被自动回收
+- 对应磁盘目录不会删除
+- 后续命中该 scope 时再重新拉起
+
+这让系统获得了“**磁盘长期保留，内存按需驻留**”的运行时特性。
+
+#### 治理可见性
+
+`GET /api/debug/scopes` 不再只返回 scope 摘要，而是同时暴露管理字段：
+
+- `scope_kind`
+- `storage_bucket`
+- `lifecycle`
+- `manager_running`
+- `manager_last_used_at`
+- `team_dir`
+
+这样目录布局、索引台账、运行态驻留和调试面终于对齐，Team 管理也从“靠猜”变成“可解释的治理能力”。
+
 ---
 
 ## 4. RAG 系统

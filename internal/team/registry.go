@@ -30,10 +30,13 @@ type RegistryConfig struct {
 	ReflectionConfig  configs.ReflectionConfig
 	RunLabel          string
 	SandboxDir        string
+	ManagerTTL        time.Duration
 }
 
 type scopeState struct {
 	Scope      string
+	Slug       string
+	ScopeKind  string
 	Channel    string
 	User       string
 	Workstream string
@@ -69,6 +72,7 @@ type Registry struct {
 
 	mu             sync.Mutex
 	managers       map[string]*Manager
+	managerAccess  map[string]time.Time
 	states         map[string]*scopeState
 	sessionBinding map[string]string
 	templates      map[string]AgentTemplate
@@ -79,6 +83,7 @@ func NewRegistry(cfg RegistryConfig) *Registry {
 	r := &Registry{
 		cfg:            cfg,
 		managers:       make(map[string]*Manager),
+		managerAccess:  make(map[string]time.Time),
 		states:         make(map[string]*scopeState),
 		sessionBinding: make(map[string]string),
 		templates:      make(map[string]AgentTemplate),
@@ -100,6 +105,7 @@ func (r *Registry) HandleScopedRequest(ctx context.Context, session *gateway.Ses
 		session = &gateway.Session{}
 	}
 	scope, resolution := r.resolveScope(session, input)
+	r.reapIdleManagers(ctx, scope)
 	manager, err := r.getOrCreateManager(ctx, scope)
 	if err != nil {
 		return "", err
@@ -353,10 +359,11 @@ func (r *Registry) recordScope(scope string, session *gateway.Session, input str
 func (r *Registry) getOrCreateManager(ctx context.Context, scope string) (*Manager, error) {
 	r.mu.Lock()
 	if mgr := r.managers[scope]; mgr != nil {
+		r.managerAccess[scope] = time.Now().UTC()
 		r.mu.Unlock()
 		return mgr, nil
 	}
-	scopeDir := filepath.Join(r.cfg.BaseManagerConfig.TeamDir, "scopes", slugify(scope))
+	scopeDir := r.scopeDir(scope)
 	deps, err := r.buildScopedDeps(scopeDir)
 	if err != nil {
 		r.mu.Unlock()
@@ -396,6 +403,7 @@ func (r *Registry) getOrCreateManager(ctx context.Context, scope string) (*Manag
 		mgr.RegisterTemplate(role, tmpl)
 	}
 	r.managers[scope] = mgr
+	r.managerAccess[scope] = time.Now().UTC()
 	r.mu.Unlock()
 	return mgr, nil
 }
@@ -421,17 +429,22 @@ func (r *Registry) DebugScopes() []gateway.ScopeDebugInfo {
 	defer r.mu.Unlock()
 	out := make([]gateway.ScopeDebugInfo, 0, len(r.states))
 	for _, state := range r.snapshotStatesLocked() {
+		teamDir := r.scopeDir(state.Scope)
 		info := gateway.ScopeDebugInfo{
-			Scope:          state.Scope,
-			Channel:        state.Channel,
-			User:           state.User,
-			Workstream:     state.Workstream,
-			Summary:        state.Summary,
-			Keywords:       append([]string(nil), state.Keywords...),
-			Recent:         append([]string(nil), state.Recent...),
-			UpdatedAt:      state.UpdatedAt,
-			ManagerRunning: r.managers[state.Scope] != nil,
-			TeamDir:        filepath.Join(r.cfg.BaseManagerConfig.TeamDir, "scopes", slugify(state.Scope)),
+			Scope:             state.Scope,
+			ScopeKind:         state.ScopeKind,
+			StorageBucket:     scopeStorageBucket(state.Slug),
+			Lifecycle:         scopeLifecycle(state.UpdatedAt, r.managers[state.Scope] != nil),
+			Channel:           state.Channel,
+			User:              state.User,
+			Workstream:        state.Workstream,
+			Summary:           state.Summary,
+			Keywords:          append([]string(nil), state.Keywords...),
+			Recent:            append([]string(nil), state.Recent...),
+			UpdatedAt:         state.UpdatedAt,
+			ManagerRunning:    r.managers[state.Scope] != nil,
+			ManagerLastUsedAt: r.managerAccess[state.Scope],
+			TeamDir:           teamDir,
 		}
 		out = append(out, info)
 	}
@@ -569,6 +582,9 @@ func (s *scopeState) refreshDerivedFields() {
 	if s == nil {
 		return
 	}
+	s.Scope = normalizeScopeKey(s.Scope)
+	s.Slug = slugify(s.Scope)
+	s.ScopeKind = detectScopeKind(s.Scope)
 	if strings.TrimSpace(s.Workstream) == "" && len(s.Recent) > 0 {
 		s.Workstream = deriveWorkstreamTitle(s.Recent[0])
 	}
@@ -745,4 +761,137 @@ func slugify(s string) string {
 		return out[:80]
 	}
 	return out
+}
+
+func (r *Registry) scopeDir(scope string) string {
+	legacy := r.legacyScopeDir(scope)
+	grouped := r.groupedScopeDir(scope)
+	if pathExists(legacy) && !pathExists(grouped) {
+		return legacy
+	}
+	return grouped
+}
+
+func (r *Registry) legacyScopeDir(scope string) string {
+	return filepath.Join(r.scopeRootDir(), slugify(scope))
+}
+
+func (r *Registry) groupedScopeDir(scope string) string {
+	slug := slugify(scope)
+	return filepath.Join(r.scopeRootDir(), detectScopeKind(scope), scopeStorageBucket(slug), slug)
+}
+
+func (r *Registry) scopeRootDir() string {
+	base := strings.TrimSpace(r.cfg.BaseManagerConfig.TeamDir)
+	if base == "" {
+		base = ".team"
+	}
+	return filepath.Join(base, "scopes")
+}
+
+func detectScopeKind(scope string) string {
+	scope = strings.TrimSpace(scope)
+	if scope == "" {
+		return "custom"
+	}
+	if idx := strings.Index(scope, ":"); idx > 0 {
+		if kind := slugify(scope[:idx]); kind != "" && kind != "default" {
+			return kind
+		}
+	}
+	return "custom"
+}
+
+func scopeStorageBucket(slug string) string {
+	slug = strings.TrimSpace(slug)
+	switch len(slug) {
+	case 0:
+		return "de"
+	case 1:
+		return slug + "0"
+	default:
+		return slug[:2]
+	}
+}
+
+func scopeLifecycle(updatedAt time.Time, managerRunning bool) string {
+	if managerRunning {
+		return "active"
+	}
+	if updatedAt.IsZero() {
+		return "unknown"
+	}
+	age := time.Since(updatedAt)
+	switch {
+	case age <= 6*time.Hour:
+		return "warm"
+	case age <= 72*time.Hour:
+		return "cool"
+	default:
+		return "cold"
+	}
+}
+
+func (r *Registry) managerTTL() time.Duration {
+	if r == nil {
+		return 0
+	}
+	if r.cfg.ManagerTTL > 0 {
+		return r.cfg.ManagerTTL
+	}
+	if r.cfg.BaseManagerConfig.IdleTimeout > 0 {
+		ttl := 2 * r.cfg.BaseManagerConfig.IdleTimeout
+		if ttl < 15*time.Minute {
+			return 15 * time.Minute
+		}
+		return ttl
+	}
+	return 45 * time.Minute
+}
+
+func (r *Registry) reapIdleManagers(ctx context.Context, keepScope string) {
+	ttl := r.managerTTL()
+	if ttl <= 0 {
+		return
+	}
+	type idleManager struct {
+		scope string
+		mgr   *Manager
+	}
+	now := time.Now().UTC()
+	var idle []idleManager
+
+	r.mu.Lock()
+	for scope, mgr := range r.managers {
+		if mgr == nil || scope == keepScope {
+			continue
+		}
+		lastUsed := r.managerAccess[scope]
+		if lastUsed.IsZero() || now.Sub(lastUsed) < ttl {
+			continue
+		}
+		idle = append(idle, idleManager{scope: scope, mgr: mgr})
+		delete(r.managers, scope)
+		delete(r.managerAccess, scope)
+	}
+	r.mu.Unlock()
+
+	for _, item := range idle {
+		item.mgr.Shutdown(ctx)
+		if r.cfg.BaseManagerConfig.Observer != nil {
+			r.cfg.BaseManagerConfig.Observer.Info(
+				"team registry evicted idle scoped manager",
+				"scope", item.scope,
+				"ttl", ttl.String(),
+			)
+		}
+	}
+}
+
+func pathExists(path string) bool {
+	if strings.TrimSpace(path) == "" {
+		return false
+	}
+	_, err := os.Stat(path)
+	return err == nil
 }
