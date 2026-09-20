@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <!-- ===== 顶栏 ===== -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button id="sidebar-toggle" class="icon-btn" title="折叠侧栏" aria-label="折叠侧栏">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="logo">
+          <svg class="logo-mark" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l2.4 6.2L21 9l-5 4.5 1.5 7.5L12 17.5 6.5 21 8 13.5 3 9l6.6-.8z"/></svg>
+          <span class="logo-name">Nexus</span>
+          <span id="version-badge" class="badge badge-version">v0.1.0</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span id="model-badge" class="badge badge-model">模型加载中…</span>
+        <div id="status-pill" class="status-pill bad" title="连接状态">
+          <span id="status-dot" class="dot dot-off"></span>
+          <span id="status-text">未连接</span>
+        </div>
+        <button id="approval-badge-btn" class="badge-btn" title="查看审批">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 12l2 2 4-4"/><path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z"/></svg>
+          <span>审批</span>
+          <span id="approval-badge" class="badge-count hidden">0</span>
+        </button>
+        <button id="debug-btn" class="icon-btn" title="调试" aria-label="调试">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="14" r="5"/><path d="M12 9V6M8 6h8M3 14H2M22 14h-2M5.5 12L4 10.5M18.5 12L20 10.5M5.5 16L4 17.5M18.5 16L20 17.5"/></svg>
+        </button>
+        <button id="settings-btn" class="icon-btn" title="设置" aria-label="设置">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9M4 12h16"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="main">
+      <!-- ===== 左侧栏 ===== -->
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-head">
+          <button id="new-session-btn" class="btn-primary new-session-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span>新建会话</span>
+          </button>
+        </div>
+        <div id="session-list" class="session-list"></div>
+        <div class="sidebar-foot">
+          <span id="session-count" class="muted">0 个会话</span>
+        </div>
+      </aside>
+
+      <!-- ===== 主聊天区 ===== -->
+      <section class="chat">
+        <div id="chat-scroll" class="chat-scroll">
+          <div id="messages" class="messages"></div>
+          <div id="empty-state" class="empty-state">
+            <svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2l2.4 6.2L21 9l-5 4.5 1.5 7.5L12 17.5 6.5 21 8 13.5 3 9l6.6-.8z"/></svg>
+            <p class="empty-title">开始新的对话</p>
+            <p class="empty-hint">输入消息后按 Enter 发送，Shift+Enter 换行。<br>支持 Markdown、代码高亮与流式输出。</p>
+          </div>
+          <div id="thinking" class="thinking hidden">
+            <span class="thinking-dots"><span></span><span></span><span></span></span>
+            <span class="thinking-text">正在思考…</span>
+            <span id="thinking-time" class="thinking-time">0s</span>
+            <button id="stop-btn" class="stop-btn" title="停止生成">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+              <span>停止</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="composer-area">
+          <div class="workstream-bar">
+            <button id="workstream-toggle" class="link-btn">
+              <svg class="chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+              <span>工作线</span>
+            </button>
+            <div id="workstream-fields" class="workstream-fields hidden">
+              <label class="ws-field">
+                <span>Scope</span>
+                <input id="scope-input" type="text" placeholder="可选：作用域 / 目录" spellcheck="false">
+              </label>
+              <label class="ws-field">
+                <span>Workstream</span>
+                <input id="workstream-input" type="text" placeholder="可选：工作流标识" spellcheck="false">
+              </label>
+            </div>
+          </div>
+          <div class="composer">
+            <textarea id="composer" rows="1" placeholder="输入消息，Enter 发送，Shift+Enter 换行"></textarea>
+            <button id="send-btn" class="btn-send" title="发送" aria-label="发送">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+            </button>
+          </div>
+          <div class="composer-hint muted">Nexus 可能会出错，请核对重要信息。</div>
+        </div>
+      </section>
+
+      <!-- ===== 右侧栏 ===== -->
+      <aside id="right-panel" class="right-panel hidden">
+        <div class="right-panel-head">
+          <div class="tabs">
+            <button class="tab active" data-tab="approvals">审批</button>
+            <button class="tab" data-tab="debug">调试</button>
+          </div>
+          <button id="right-panel-close" class="icon-btn" title="关闭" aria-label="关闭">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+
+        <div id="tab-approvals" class="tab-panel">
+          <div class="panel-toolbar">
+            <span class="panel-title">待审批</span>
+            <button id="approvals-refresh" class="link-btn">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 11-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+              <span>刷新</span>
+            </button>
+          </div>
+          <div id="approvals-list" class="approvals-list"></div>
+          <div id="approvals-empty" class="empty-state small hidden">
+            <p class="empty-hint">暂无待审批</p>
+          </div>
+        </div>
+
+        <div id="tab-debug" class="tab-panel hidden">
+          <div class="panel-toolbar">
+            <span class="panel-title">调试</span>
+            <button id="debug-refresh" class="link-btn">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 11-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+              <span>刷新</span>
+            </button>
+          </div>
+          <div id="debug-body" class="debug-body">
+            <div class="muted pad">打开后自动加载调试数据。</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ===== 设置弹窗 ===== -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>设置</h2>
+        <button class="icon-btn" data-close-modal title="关闭" aria-label="关闭">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="settings-mode-hint" class="hint"></div>
+
+        <label class="field">
+          <span>模型名</span>
+          <input id="set-model" type="text" placeholder="glm-5.1" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Base URL</span>
+          <input id="set-base-url" type="text" placeholder="https://api.example.com/v1" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>API Key</span>
+          <input id="set-api-key" type="password" placeholder="sk-…" spellcheck="false" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>工作目录</span>
+          <div class="field-row">
+            <input id="set-workspace" type="text" readonly placeholder="." spellcheck="false">
+            <button id="select-workspace-btn" class="btn-secondary hidden">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              <span>选择目录</span>
+            </button>
+          </div>
+        </label>
+
+        <div id="electron-info" class="electron-info"></div>
+
+        <div class="log-section">
+          <button id="log-toggle" class="link-btn">
+            <svg class="chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+            <span>服务日志</span>
+          </button>
+          <div id="log-panel" class="log-panel hidden">
+            <pre id="log-output"></pre>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <span id="settings-msg" class="muted"></span>
+        <button id="settings-cancel" class="btn-secondary" data-close-modal>取消</button>
+        <button id="settings-save" class="btn-primary">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

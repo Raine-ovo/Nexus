@@ -339,6 +339,15 @@ Available roles for delegate_task and spawn_teammate:
 	if approvalMgr != nil {
 		gw.SetApprovalManager(approvalMgr)
 	}
+	gw.SetMeta(gateway.MetaInfo{
+		Name:             "nexus",
+		Version:          gateway.Version,
+		Model:            cfg.Model.ModelName,
+		Mode:             cfg.Permission.Mode,
+		ApprovalEnabled:  cfg.Approval.Enabled,
+		WorkspaceRoot:    cfg.Permission.WorkspaceRoot,
+		APIKeyConfigured: strings.TrimSpace(cfg.Model.APIKey) != "",
+	})
 	if cfg.MCP.ServerEnabled {
 		mcpServer := mcp.NewServer(
 			toolRegistry,

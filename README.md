@@ -84,6 +84,37 @@ nexus/
 - Milvus / Elasticsearch：默认不会启用，只有切换对应后端时才需要外部依赖
 - 生产级权限策略：当前默认规则偏向本地开发可用，生产环境建议继续细化
 
+## 桌面客户端 (Desktop)
+
+Nexus 提供开箱即用的桌面客户端（Electron 壳 + 内置 `nexus-server` + 中文 Web UI），
+类似 Codex 的本地体验：一个可双击的安装包，自动拉起本地服务并打开聊天界面。
+
+- **界面**：会话管理、SSE 流式聊天、markdown 渲染、Human-in-the-loop 审批中心、调试面板（Traces/Scopes/Metrics）、内置设置（模型 / Base URL / API Key / 工作目录）。
+- **UI 内嵌**：Web UI 通过 `go:embed` 编译进 `nexus-server` 二进制（`internal/webui/`），服务启动后由网关在 `/` 直接提供，无需单独部署前端。
+- **打包**：`desktop/` 目录用 electron-builder 产出安装包，服务端二进制按平台交叉编译后打进 `extraResources`。
+
+### 下载 Release
+
+在仓库的 [Releases](../../releases) 页面下载对应平台安装包：
+
+| 平台 | 产物 |
+|------|------|
+| Windows | `Nexus-*-setup.exe` (NSIS 安装器) |
+| macOS | `Nexus-*.dmg` / `Nexus-*.zip` (Apple Silicon + Intel) |
+| Linux | `Nexus-*.AppImage` / `Nexus-*.deb` |
+
+发布由 GitHub Actions 在推送 `v*` tag 时自动构建（`.github/workflows/release.yml`）。
+
+### 本地构建桌面版
+
+```bash
+cd desktop
+npm install
+npm run dist      # 当前平台安装包；dist:win / dist:mac / dist:linux 指定平台
+```
+
+更多见 [desktop/README.md](desktop/README.md)。
+
 ## 快速开始
 
 ### 1. 准备环境

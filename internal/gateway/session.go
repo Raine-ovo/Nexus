@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"sort"
 	"sync"
 	"time"
 
@@ -110,6 +111,23 @@ func (m *SessionManager) Cleanup() int {
 		}
 	}
 	return n
+}
+
+// List returns all non-expired sessions, most recently active first.
+func (m *SessionManager) List() []*Session {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	out := make([]*Session, 0, len(m.sessions))
+	for _, s := range m.sessions {
+		if m.isExpiredLocked(s) {
+			continue
+		}
+		out = append(out, s)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].LastActive.After(out[j].LastActive)
+	})
+	return out
 }
 
 // Count returns the number of non-expired sessions.

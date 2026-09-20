@@ -14,6 +14,7 @@ import (
 	"github.com/rainea/nexus/internal/approval"
 	"github.com/rainea/nexus/internal/gateway/middleware"
 	"github.com/rainea/nexus/internal/observability"
+	"github.com/rainea/nexus/internal/webui"
 )
 
 // Gateway is the multi-channel entry point.
@@ -29,6 +30,7 @@ type Gateway struct {
 	runCtx     context.Context
 	mcpHandler http.Handler
 	approvals  *approval.Manager
+	meta       MetaInfo
 }
 
 // Supervisor is the interface that the orchestrator must implement.
@@ -230,8 +232,12 @@ func (g *Gateway) newPrimaryMux() *http.ServeMux {
 		mux.Handle("/mcp/", g.mcpHandler)
 	}
 	mux.HandleFunc("GET /api/health", g.handleHealth)
+	mux.HandleFunc("GET /api/meta", g.handleMeta)
 	mux.HandleFunc("POST /api/sessions", g.handleCreateSession)
+	mux.HandleFunc("GET /api/sessions", g.handleListSessions)
+	mux.HandleFunc("DELETE /api/sessions/{id}", g.handleDeleteSession)
 	mux.HandleFunc("POST /api/chat", g.handleChat)
+	mux.HandleFunc("POST /api/chat/stream", g.handleChatStream)
 	mux.HandleFunc("POST /api/chat/jobs", g.handleCreateChatJob)
 	mux.HandleFunc("GET /api/chat/jobs", g.handleListChatJobs)
 	mux.HandleFunc("GET /api/chat/jobs/{id}", g.handleGetChatJob)
@@ -248,13 +254,16 @@ func (g *Gateway) newPrimaryMux() *http.ServeMux {
 	mux.HandleFunc("POST /api/approvals/{id}/approve", g.handleApproveApproval)
 	mux.HandleFunc("POST /api/approvals/{id}/deny", g.handleDenyApproval)
 	mux.HandleFunc("POST /v1/chat/completions", g.handleOpenAIChatCompletions)
+	// Static single-page app served at the root (catch-all). More specific
+	// /api/*, /debug/*, /mcp/* and /v1/* patterns registered above win.
+	mux.Handle("/", webui.Handler())
 	return mux
 }
 
 func (g *Gateway) wrapPrimaryHandler(mux http.Handler) http.Handler {
 	private := middleware.NewAuthWithRoles(g.cfg.Auth.APIKeys, g.cfg.Auth.ReadonlyKeys, g.cfg.Auth.JWTSecret).Wrap(mux)
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if isPublicDebugOrHealthRoute(r) {
+		if isPublicRoute(r) {
 			mux.ServeHTTP(w, r)
 			return
 		}
@@ -271,13 +280,23 @@ func (g *Gateway) wrapPrimaryHandler(mux http.Handler) http.Handler {
 	return handler
 }
 
-func isPublicDebugOrHealthRoute(r *http.Request) bool {
+func isPublicRoute(r *http.Request) bool {
 	if r == nil {
 		return false
 	}
-	// Only the liveness probe is public. Debug endpoints (traces, scopes, metrics,
-	// dashboard) expose internal state and must go through the auth middleware.
-	return r.URL.Path == "/api/health"
+	p := r.URL.Path
+	// Liveness and the non-sensitive server summary are public.
+	if p == "/api/health" || p == "/api/meta" {
+		return true
+	}
+	// The static UI shell and its assets are public; the API surface behind it
+	// (sessions, chat, approvals, debug) stays behind the auth middleware.
+	for _, prefix := range []string{"/api/", "/v1/", "/debug/", "/mcp/"} {
+		if strings.HasPrefix(p, prefix) {
+			return false
+		}
+	}
+	return true
 }
 
 func (g *Gateway) newWebSocketServer() *http.Server {
@@ -341,6 +360,69 @@ func (g *Gateway) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 		Scope:      s.Scope,
 		Workstream: s.Workstream,
 	})
+}
+
+type sessionDTO struct {
+	ID         string    `json:"id"`
+	Channel    string    `json:"channel"`
+	User       string    `json:"user"`
+	Scope      string    `json:"scope"`
+	Workstream string    `json:"workstream"`
+	CreatedAt  time.Time `json:"created_at"`
+	LastActive time.Time `json:"last_active"`
+}
+
+func sessionToDTO(s *Session) sessionDTO {
+	if s == nil {
+		return sessionDTO{}
+	}
+	return sessionDTO{
+		ID:         s.ID,
+		Channel:    s.Channel,
+		User:       s.User,
+		Scope:      s.Scope,
+		Workstream: s.Workstream,
+		CreatedAt:  s.CreatedAt,
+		LastActive: s.LastActive,
+	}
+}
+
+func (g *Gateway) handleListSessions(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	sessions := g.sessions.List()
+	items := make([]sessionDTO, 0, len(sessions))
+	for _, s := range sessions {
+		items = append(items, sessionToDTO(s))
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"count":    len(items),
+		"sessions": items,
+	})
+}
+
+func (g *Gateway) handleDeleteSession(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	id := strings.TrimSpace(r.PathValue("id"))
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "session id required"})
+		return
+	}
+	if _, ok := g.sessions.Get(id); !ok {
+		w.WriteHeader(http.StatusNotFound)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "unknown session"})
+		return
+	}
+	g.sessions.Delete(id)
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "deleted", "id": id})
 }
 
 type chatReq struct {

@@ -6,6 +6,13 @@
 *.test
 build.err
 buildlog.txt
+.gocache/
+
+# --- Desktop build outputs ---
+desktop/node_modules/
+desktop/dist/
+desktop/out/
+desktop/bin/
 
 # --- Runtime state (agent outputs, runs, team, memory, knowledge, tasks, jobs) ---
 .runs/
