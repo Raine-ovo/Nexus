@@ -95,7 +95,25 @@ func main() {
 	}
 	obs.Info("memory system initialized")
 
-	ragEngine, err := rag.NewEngine(cfg.RAG, nil)
+	var embedder rag.Embedder
+	if strings.EqualFold(strings.TrimSpace(cfg.RAG.Embedding.Provider), "openai") {
+		apiKey := cfg.RAG.Embedding.APIKey
+		if apiKey == "" {
+			apiKey = cfg.Model.APIKey
+		}
+		baseURL := cfg.RAG.Embedding.BaseURL
+		if baseURL == "" {
+			baseURL = cfg.Model.BaseURL
+		}
+		dim := cfg.RAG.Embedding.Dimensions
+		if dim <= 0 {
+			dim = cfg.RAG.EmbeddingDim
+		}
+		embedder = rag.NewOpenAIEmbedder(apiKey, baseURL, cfg.RAG.Embedding.Model, dim)
+		obs.Info("RAG embedder configured", "provider", "openai", "model", cfg.RAG.Embedding.Model)
+	}
+
+	ragEngine, err := rag.NewEngine(cfg.RAG, embedder)
 	if err != nil {
 		log.Fatalf("failed to initialize RAG engine: %v", err)
 	}

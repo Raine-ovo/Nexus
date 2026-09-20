@@ -71,6 +71,20 @@ type RAGConfig struct {
 	// KeywordBackend selects the keyword store: "memory" (default, TF-IDF) or "elasticsearch" (BM25).
 	KeywordBackend string             `yaml:"keyword_backend"`
 	Elasticsearch  ElasticsearchStore `yaml:"elasticsearch"`
+
+	// Embedding configures the text embedder. Provider "openai" uses a real
+	// OpenAI-compatible /embeddings endpoint; empty provider uses the
+	// deterministic HashEmbedder (test/offline only).
+	Embedding EmbeddingConfig `yaml:"embedding"`
+}
+
+// EmbeddingConfig configures the semantic text embedder.
+type EmbeddingConfig struct {
+	Provider   string `yaml:"provider"` // "" (hash) or "openai"
+	Model      string `yaml:"model"`
+	BaseURL    string `yaml:"base_url"` // defaults to model.base_url when empty
+	APIKey     string `yaml:"api_key"`  // defaults to model.api_key when empty
+	Dimensions int    `yaml:"dimensions"`
 }
 
 // ElasticsearchStore holds Elasticsearch-specific configuration for BM25 keyword retrieval.

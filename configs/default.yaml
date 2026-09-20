@@ -30,6 +30,14 @@ rag:
   top_k: 5
   rerank_top_k: 3
   knowledge_dir: ".knowledge"
+  # Embedding provider: "openai" for real semantic embeddings (uses model api
+  # credentials by default), or empty for the deterministic HashEmbedder.
+  embedding:
+    provider: "openai"
+    model: "text-embedding-3-small"
+    # base_url: ""   # defaults to model.base_url
+    # api_key: ""    # defaults to model.api_key
+    # dimensions: 1536
   # vector_backend: "memory" or "milvus"
   vector_backend: "memory"
   # keyword_backend: "memory" (TF-IDF) or "elasticsearch" (BM25)

@@ -359,7 +359,14 @@ func formatContext(chunks []retrieval.ScoredChunk) string {
 		if i > 0 {
 			b.WriteString("\n\n---\n\n")
 		}
-		b.WriteString(fmt.Sprintf("[#%d score=%.4f]\n", i+1, ch.Score))
+		header := fmt.Sprintf("[#%d score=%.4f]", i+1, ch.Score)
+		if ch.Metadata != nil {
+			if src, ok := ch.Metadata["source"].(string); ok && strings.TrimSpace(src) != "" {
+				header += fmt.Sprintf(" source=%s", src)
+			}
+		}
+		b.WriteString(header)
+		b.WriteString("\n")
 		b.WriteString(strings.TrimSpace(ch.Content))
 	}
 	return b.String()
