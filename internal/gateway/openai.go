@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rainea/nexus/internal/core"
 	"github.com/rainea/nexus/pkg/utils"
 )
 
@@ -82,19 +83,21 @@ func (g *Gateway) handleOpenAIChatCompletions(w http.ResponseWriter, r *http.Req
 	}
 
 	s := g.sessions.CreateWithOptions("openai", "openai", "", "")
-	out, err := g.lanes.Submit(r.Context(), "main", func(ctx context.Context) (string, error) {
+	run := func(ctx context.Context) (string, error) {
 		if scoped, ok := g.supervisor.(ScopedSupervisor); ok {
 			return scoped.HandleScopedRequest(ctx, s, input)
 		}
 		return g.supervisor.HandleRequest(ctx, s.ID, input)
-	})
-	if err != nil {
-		writeOpenAIError(w, http.StatusInternalServerError, err.Error())
-		return
 	}
 
 	if req.Stream {
-		g.streamOpenAIResponse(w, model, out)
+		g.streamOpenAIResponse(w, r, model, run)
+		return
+	}
+
+	out, err := g.lanes.Submit(r.Context(), "main", run)
+	if err != nil {
+		writeOpenAIError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	writeOpenAIResponse(w, model, out)
@@ -140,10 +143,15 @@ func writeOpenAIResponse(w http.ResponseWriter, model, content string) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-func (g *Gateway) streamOpenAIResponse(w http.ResponseWriter, model, content string) {
+func (g *Gateway) streamOpenAIResponse(w http.ResponseWriter, r *http.Request, model string, run func(context.Context) (string, error)) {
 	fl, ok := w.(http.Flusher)
 	if !ok {
-		writeOpenAIResponse(w, model, content)
+		out, err := g.lanes.Submit(r.Context(), "main", run)
+		if err != nil {
+			writeOpenAIError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		writeOpenAIResponse(w, model, out)
 		return
 	}
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -154,17 +162,35 @@ func (g *Gateway) streamOpenAIResponse(w http.ResponseWriter, model, content str
 	created := time.Now().Unix()
 
 	writeOpenAIChunk(w, fl, id, model, created, openAIDelta{Role: "assistant"}, nil)
-	const chunkRunes = 64
-	runes := []rune(content)
-	for i := 0; i < len(runes); i += chunkRunes {
-		j := i + chunkRunes
-		if j > len(runes) {
-			j = len(runes)
-		}
-		writeOpenAIChunk(w, fl, id, model, created, openAIDelta{Content: string(runes[i:j])}, nil)
+
+	// Emit true token deltas via the model's streaming path (when supported).
+	streamed := false
+	sink := func(delta string) error {
+		streamed = true
+		writeOpenAIChunk(w, fl, id, model, created, openAIDelta{Content: delta}, nil)
+		return nil
 	}
-	stop := "stop"
-	writeOpenAIChunk(w, fl, id, model, created, openAIDelta{}, &stop)
+	ctx := core.WithStreamSink(r.Context(), sink)
+	out, err := g.lanes.Submit(ctx, "main", run)
+
+	// Fallback for models without streaming support: chunk the final output.
+	if !streamed && out != "" {
+		const chunkRunes = 64
+		runes := []rune(out)
+		for i := 0; i < len(runes); i += chunkRunes {
+			j := i + chunkRunes
+			if j > len(runes) {
+				j = len(runes)
+			}
+			writeOpenAIChunk(w, fl, id, model, created, openAIDelta{Content: string(runes[i:j])}, nil)
+		}
+	}
+
+	finish := "stop"
+	if err != nil {
+		finish = "error"
+	}
+	writeOpenAIChunk(w, fl, id, model, created, openAIDelta{}, &finish)
 	_, _ = w.Write([]byte("data: [DONE]\n\n"))
 	fl.Flush()
 }

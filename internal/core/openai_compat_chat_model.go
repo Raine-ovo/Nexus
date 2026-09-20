@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -49,6 +50,10 @@ func (m *OpenAICompatibleChatModel) Generate(ctx context.Context, system string,
 	}
 	if strings.TrimSpace(m.cfg.APIKey) == "" {
 		return nil, fmt.Errorf("core: model api_key is empty")
+	}
+
+	if sink := StreamSinkFromContext(ctx); sink != nil {
+		return m.generateStreaming(ctx, system, messages, tools, sink)
 	}
 
 	reqBody, err := m.buildRequestBody(system, messages, tools)
@@ -138,6 +143,132 @@ func (m *OpenAICompatibleChatModel) Generate(ctx context.Context, system string,
 			Name:      tc.Function.Name,
 			Arguments: args,
 		})
+	}
+	return out, nil
+}
+
+// generateStreaming issues a single streaming chat-completion request and emits
+// token deltas to sink while assembling the full response (content + tool calls).
+func (m *OpenAICompatibleChatModel) generateStreaming(ctx context.Context, system string, messages []types.Message, tools []types.ToolDefinition, sink StreamDeltaFunc) (*ChatModelResponse, error) {
+	reqBody, err := m.buildRequestBody(system, messages, tools)
+	if err != nil {
+		return nil, err
+	}
+	reqBody["stream"] = true
+	payload, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("core: marshal chat request: %w", err)
+	}
+
+	endpoint := openAICompatibleChatCompletionsURL(m.cfg.BaseURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(payload))
+	if err != nil {
+		return nil, fmt.Errorf("core: build request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(m.cfg.APIKey))
+
+	doer := m.httpDo
+	if doer == nil {
+		doer = http.DefaultClient.Do
+	}
+	resp, err := doer(req)
+	if err != nil {
+		return nil, fmt.Errorf("core: http request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
+		return nil, fmt.Errorf("core: chat completion status %d: %s", resp.StatusCode, truncateForErr(body, 1024))
+	}
+
+	out := &ChatModelResponse{}
+	var content strings.Builder
+	type toolAcc struct {
+		id   string
+		name string
+		args strings.Builder
+	}
+	toolCalls := map[int]*toolAcc{}
+	var finishReason string
+
+	scanner := bufio.NewScanner(resp.Body)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1<<20)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !strings.HasPrefix(line, "data:") {
+			continue
+		}
+		data := strings.TrimSpace(strings.TrimPrefix(line, "data:"))
+		if data == "[DONE]" {
+			break
+		}
+		var chunk struct {
+			Choices []struct {
+				Delta struct {
+					Content   string `json:"content"`
+					ToolCalls []struct {
+						Index    int    `json:"index"`
+						ID       string `json:"id"`
+						Function struct {
+							Name      string `json:"name"`
+							Arguments string `json:"arguments"`
+						} `json:"function"`
+					} `json:"tool_calls"`
+				} `json:"delta"`
+				FinishReason *string `json:"finish_reason"`
+			} `json:"choices"`
+		}
+		if err := json.Unmarshal([]byte(data), &chunk); err != nil {
+			continue
+		}
+		if len(chunk.Choices) == 0 {
+			continue
+		}
+		c := chunk.Choices[0]
+		if c.Delta.Content != "" {
+			content.WriteString(c.Delta.Content)
+			if sink != nil {
+				if err := sink(c.Delta.Content); err != nil {
+					return nil, fmt.Errorf("core: stream sink: %w", err)
+				}
+			}
+		}
+		for _, tc := range c.Delta.ToolCalls {
+			acc := toolCalls[tc.Index]
+			if acc == nil {
+				acc = &toolAcc{}
+				toolCalls[tc.Index] = acc
+			}
+			if tc.ID != "" {
+				acc.id = tc.ID
+			}
+			if tc.Function.Name != "" {
+				acc.name = tc.Function.Name
+			}
+			acc.args.WriteString(tc.Function.Arguments)
+		}
+		if c.FinishReason != nil {
+			finishReason = *c.FinishReason
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("core: read stream: %w", err)
+	}
+
+	out.Content = content.String()
+	out.FinishReason = finishReason
+	for i := 0; i < len(toolCalls); i++ {
+		acc, ok := toolCalls[i]
+		if !ok || acc == nil {
+			continue
+		}
+		args, err := parseToolArguments(acc.args.String())
+		if err != nil {
+			return nil, fmt.Errorf("core: parse streamed tool arguments for %q: %w", acc.name, err)
+		}
+		out.ToolCalls = append(out.ToolCalls, types.ToolCall{ID: acc.id, Name: acc.name, Arguments: args})
 	}
 	return out, nil
 }
