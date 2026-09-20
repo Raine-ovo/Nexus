@@ -223,6 +223,7 @@ func (g *Gateway) newPrimaryMux() *http.ServeMux {
 	mux.HandleFunc("GET /api/approvals/{id}", g.handleGetApproval)
 	mux.HandleFunc("POST /api/approvals/{id}/approve", g.handleApproveApproval)
 	mux.HandleFunc("POST /api/approvals/{id}/deny", g.handleDenyApproval)
+	mux.HandleFunc("POST /v1/chat/completions", g.handleOpenAIChatCompletions)
 	return mux
 }
 

@@ -223,6 +223,19 @@ wscat -c ws://127.0.0.1:8081/api/ws
 
 待审批记录超过 `approval.ttl` 会自动过期。审批 API 与业务接口一样经过 `gateway.auth` 鉴权。
 
+### 10. OpenAI 兼容 API
+
+`POST /v1/chat/completions` 提供 OpenAI 兼容的接入层，将 `messages` 转发给多智能体团队并返回标准
+`chat.completion` 响应；`"stream": true` 时以 SSE 输出 `chat.completion.chunk` 增量并以 `data: [DONE]` 结束：
+
+```bash
+curl -X POST http://127.0.0.1:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"nexus","messages":[{"role":"user","content":"帮我列出仓库结构"}],"stream":false}'
+```
+
+该接口与业务接口一样经过 `gateway.auth` 鉴权。
+
 ## 使用文档
 
 更完整的运行说明、权限模式、smoke test 和常见问题见：
