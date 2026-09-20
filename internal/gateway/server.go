@@ -252,7 +252,7 @@ func (g *Gateway) newPrimaryMux() *http.ServeMux {
 }
 
 func (g *Gateway) wrapPrimaryHandler(mux http.Handler) http.Handler {
-	private := middleware.NewAuthWithJWT(g.cfg.Auth.APIKeys, g.cfg.Auth.JWTSecret).Wrap(mux)
+	private := middleware.NewAuthWithRoles(g.cfg.Auth.APIKeys, g.cfg.Auth.ReadonlyKeys, g.cfg.Auth.JWTSecret).Wrap(mux)
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if isPublicDebugOrHealthRoute(r) {
 			mux.ServeHTTP(w, r)

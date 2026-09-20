@@ -14,6 +14,7 @@ import (
 // AuthMiddleware validates API keys, opaque Bearer tokens in the allowlist, and optionally HS256 JWTs.
 type AuthMiddleware struct {
 	apiKeys       map[string]bool
+	readonlyKeys  map[string]bool
 	jwtHMACSecret []byte // when non-empty, Bearer tokens with three JWT segments are verified as HS256
 }
 
@@ -26,12 +27,25 @@ func NewAuth(validKeys []string) *AuthMiddleware {
 			m[k] = true
 		}
 	}
-	return &AuthMiddleware{apiKeys: m}
+	return &AuthMiddleware{apiKeys: m, readonlyKeys: make(map[string]bool)}
 }
 
 // NewAuthWithJWT is like NewAuth but also accepts Bearer JWTs signed with HS256 using jwtSecret.
 func NewAuthWithJWT(validKeys []string, jwtHMACSecret string) *AuthMiddleware {
+	return NewAuthWithRoles(validKeys, nil, jwtHMACSecret)
+}
+
+// NewAuthWithRoles builds middleware where readonlyKeys may authenticate but are
+// restricted to read-only methods (GET/HEAD).
+func NewAuthWithRoles(validKeys, readonlyKeys []string, jwtHMACSecret string) *AuthMiddleware {
 	a := NewAuth(validKeys)
+	for _, k := range readonlyKeys {
+		k = strings.TrimSpace(k)
+		if k != "" {
+			a.apiKeys[k] = true
+			a.readonlyKeys[k] = true
+		}
+	}
 	s := strings.TrimSpace(jwtHMACSecret)
 	if s != "" {
 		a.jwtHMACSecret = []byte(s)
@@ -58,17 +72,35 @@ func (a *AuthMiddleware) Wrap(next http.Handler) http.Handler {
 			return
 		}
 		if a.apiKeys[token] {
+			if a.readonlyKeys[token] && !isReadMethod(r.Method) {
+				http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
+				return
+			}
 			next.ServeHTTP(w, r)
 			return
 		}
 		if len(a.jwtHMACSecret) > 0 && strings.Count(token, ".") == 2 {
 			if claims, err := verifyHS256JWT(token, a.jwtHMACSecret); err == nil && jwtClaimsValid(claims) {
+				if readonlyClaim(claims) && !isReadMethod(r.Method) {
+					http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
+					return
+				}
 				next.ServeHTTP(w, r)
 				return
 			}
 		}
 		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
 	})
+}
+
+func isReadMethod(method string) bool {
+	return method == http.MethodGet || method == http.MethodHead
+}
+
+func readonlyClaim(claims map[string]interface{}) bool {
+	v, ok := claims["readonly"]
+	b, ok := v.(bool)
+	return ok && b
 }
 
 func verifyHS256JWT(token string, secret []byte) (map[string]interface{}, error) {

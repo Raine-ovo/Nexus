@@ -161,8 +161,11 @@ type LaneConfig struct {
 }
 
 type GatewayAuthConfig struct {
-	APIKeys   []string `yaml:"api_keys"`
-	JWTSecret string   `yaml:"jwt_secret"`
+	APIKeys []string `yaml:"api_keys"`
+	// ReadonlyKeys may authenticate but are restricted to read-only methods
+	// (GET/HEAD). This is a minimal RBAC role split (readonly vs full access).
+	ReadonlyKeys []string `yaml:"readonly_keys"`
+	JWTSecret    string   `yaml:"jwt_secret"`
 }
 
 type RateLimitConfig struct {

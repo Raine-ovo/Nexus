@@ -29,7 +29,9 @@ requests). Please keep these boundaries in mind:
 
 1. **Authentication.** The gateway refuses to start with empty auth on a
    non-loopback bind address. Always configure `gateway.auth.api_keys` or
-   `gateway.auth.jwt_secret` before exposing it beyond `127.0.0.1`.
+   `gateway.auth.jwt_secret` before exposing it beyond `127.0.0.1`. Use
+   `gateway.auth.readonly_keys` to issue keys restricted to read-only
+   (GET/HEAD) access.
 2. **Tool permissions.** Every tool execution path (agents, delegates,
    teammates, MCP, cron) is routed through the permission pipeline. Review
    `permission.mode` and the allow/deny rules before enabling `full_auto`.

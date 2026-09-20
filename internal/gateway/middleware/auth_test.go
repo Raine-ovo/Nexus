@@ -58,3 +58,37 @@ func TestVerifyHS256JWT_BadSig(t *testing.T) {
 		t.Fatal("expected error for garbage token")
 	}
 }
+
+func TestAuthMiddleware_ReadonlyKey(t *testing.T) {
+	a := NewAuthWithRoles([]string{"full-key"}, []string{"read-key"}, "")
+	h := a.Wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTeapot)
+	}))
+
+	// Readonly key: GET allowed.
+	get := httptest.NewRequest(http.MethodGet, "/", nil)
+	get.Header.Set("X-API-Key", "read-key")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, get)
+	if rec.Code != http.StatusTeapot {
+		t.Fatalf("readonly GET: got %d", rec.Code)
+	}
+
+	// Readonly key: POST forbidden.
+	post := httptest.NewRequest(http.MethodPost, "/", nil)
+	post.Header.Set("X-API-Key", "read-key")
+	rec2 := httptest.NewRecorder()
+	h.ServeHTTP(rec2, post)
+	if rec2.Code != http.StatusForbidden {
+		t.Fatalf("readonly POST: got %d, want 403", rec2.Code)
+	}
+
+	// Full key: POST allowed.
+	postFull := httptest.NewRequest(http.MethodPost, "/", nil)
+	postFull.Header.Set("X-API-Key", "full-key")
+	rec3 := httptest.NewRecorder()
+	h.ServeHTTP(rec3, postFull)
+	if rec3.Code != http.StatusTeapot {
+		t.Fatalf("full POST: got %d", rec3.Code)
+	}
+}

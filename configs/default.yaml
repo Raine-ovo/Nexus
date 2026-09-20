@@ -90,6 +90,8 @@ gateway:
       max_concurrency: 3
   auth:
     api_keys: []
+    # Readonly keys authenticate but are limited to GET/HEAD (minimal RBAC).
+    readonly_keys: []
     jwt_secret: ""
   rate_limit:
     enabled: true
