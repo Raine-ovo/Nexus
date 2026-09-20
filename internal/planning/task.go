@@ -568,6 +568,22 @@ func (m *TaskManager) ListTasks() []Task {
 	return m.List(nil)
 }
 
+// CreateTask creates a task; convenience wrapper matching the gateway
+// TaskController interface.
+func (m *TaskManager) CreateTask(title, desc string, blockedBy []int) (*Task, error) {
+	return m.Create(title, desc, blockedBy)
+}
+
+// ClaimTask claims a task on behalf of an agent ("manual" source).
+func (m *TaskManager) ClaimTask(id int, agentName, agentRole string) (*Task, error) {
+	return m.Claim(id, agentName, agentRole, "manual")
+}
+
+// UpdateTask sets a task's status; convenience wrapper for the gateway.
+func (m *TaskManager) UpdateTask(id int, status string) error {
+	return m.Update(id, status)
+}
+
 // GetUnclaimed returns pending tasks that are unclaimed and executable.
 func (m *TaskManager) GetUnclaimed() []Task {
 	m.mu.Lock()

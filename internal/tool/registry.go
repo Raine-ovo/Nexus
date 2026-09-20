@@ -104,6 +104,12 @@ func (r *Registry) List() []*types.ToolMeta {
 	return out
 }
 
+// ListTools returns a snapshot of all registered tools sorted by name.
+// Convenience wrapper for the gateway's /api/tools endpoint.
+func (r *Registry) ListTools() []*types.ToolMeta {
+	return r.List()
+}
+
 // ListNames returns sorted tool names (snapshot).
 func (r *Registry) ListNames() []string {
 	r.mu.RLock()

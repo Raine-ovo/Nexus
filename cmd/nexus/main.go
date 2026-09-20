@@ -339,7 +339,8 @@ Available roles for delegate_task and spawn_teammate:
 	if approvalMgr != nil {
 		gw.SetApprovalManager(approvalMgr)
 	}
-	gw.SetTaskProvider(taskManager)
+	gw.SetTaskController(taskManager)
+	gw.SetToolProvider(toolRegistry)
 	gw.SetMeta(gateway.MetaInfo{
 		Name:             "nexus",
 		Version:          gateway.Version,

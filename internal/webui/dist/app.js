@@ -215,7 +215,8 @@
     tracePolling: null,
     teamData: null,
     teamScope: null,
-    tasksLoaded: false
+    tasksLoaded: false,
+    traceView: 'tree'
   };
   var renderTimers = {};
 
@@ -227,15 +228,16 @@
   function cacheEls() {
     var ids = [
       'version-badge', 'model-badge', 'status-dot', 'status-text', 'status-pill',
-      'approval-badge', 'approval-badge-btn', 'debug-btn', 'trace-btn', 'team-btn', 'tasks-btn', 'export-btn', 'settings-btn', 'sidebar-toggle',
-      'sidebar', 'new-session-btn', 'session-list', 'session-count',
+      'approval-badge', 'approval-badge-btn', 'debug-btn', 'trace-btn', 'team-btn', 'tasks-btn', 'export-btn', 'theme-btn', 'settings-btn', 'sidebar-toggle',
+      'sidebar', 'new-session-btn', 'session-list', 'session-count', 'session-search', 'copy-convo-btn',
       'messages', 'empty-state', 'thinking', 'thinking-text', 'thinking-time', 'stop-btn', 'chat-scroll',
       'workstream-toggle', 'workstream-fields', 'scope-input', 'workstream-input',
       'composer', 'send-btn', 'right-panel', 'right-panel-close',
-      'tab-approvals', 'tab-debug', 'tab-trace', 'tab-team', 'tab-tasks', 'approvals-list', 'approvals-empty', 'approvals-refresh',
-      'debug-body', 'debug-refresh', 'trace-stage', 'trace-body', 'trace-refresh',
-      'team-scope', 'team-scope-select', 'team-members', 'team-refresh', 'team-new-name', 'team-new-role', 'team-new-prompt', 'team-spawn-btn',
-      'tasks-body', 'tasks-refresh',
+      'tab-approvals', 'tab-debug', 'tab-trace', 'tab-team', 'tab-tasks', 'tab-tools', 'approvals-list', 'approvals-empty', 'approvals-refresh',
+      'debug-body', 'debug-refresh', 'trace-stage', 'trace-body', 'trace-refresh', 'trace-view-btn', 'trace-view-label',
+      'team-scope', 'team-scope-select', 'team-topology', 'team-members', 'team-refresh', 'team-new-name', 'team-new-role', 'team-new-prompt', 'team-spawn-btn',
+      'tasks-body', 'tasks-refresh', 'task-new-title', 'task-new-desc', 'task-new-blocked', 'task-create-btn',
+      'tools-body', 'tools-refresh',
       'settings-modal', 'set-model', 'set-base-url',
       'set-api-key', 'set-workspace', 'select-workspace-btn', 'settings-mode-hint',
       'electron-info', 'log-toggle', 'log-panel', 'log-output', 'settings-msg',
@@ -321,12 +323,20 @@
   /* ---------------- 会话 ---------------- */
   function renderSessionList() {
     els.sessionList.innerHTML = '';
-    if (!state.sessions.length) {
-      els.sessionList.innerHTML = '<div class="session-empty muted">暂无会话</div>';
-      els.sessionCount.textContent = '0 个会话';
+    var q = '';
+    try { q = (els.sessionSearch && els.sessionSearch.value || '').trim().toLowerCase(); } catch (e) { /* 忽略 */ }
+    var list = state.sessions.filter(function (s) {
+      if (!q) return true;
+      var msgs = (s.messages || []).map(function (m) { return m.content || ''; }).join(' ');
+      var hay = ((s.title || '') + ' ' + (s.workstream || '') + ' ' + (s.scope || '') + ' ' + msgs).toLowerCase();
+      return hay.indexOf(q) !== -1;
+    });
+    if (!list.length) {
+      els.sessionList.innerHTML = '<div class="session-empty muted">' + (q ? '没有匹配的会话' : '暂无会话') + '</div>';
+      els.sessionCount.textContent = state.sessions.length + ' 个会话';
       return;
     }
-    state.sessions.forEach(function (s) {
+    list.forEach(function (s) {
       var item = document.createElement('div');
       item.className = 'session-item' + (s.id === state.currentSessionId ? ' active' : '');
       item.dataset.id = s.id;
@@ -353,6 +363,32 @@
       els.sessionList.appendChild(item);
     });
     els.sessionCount.textContent = state.sessions.length + ' 个会话';
+  }
+
+  function startRename(sessionId) {
+    var item = document.querySelector('.session-item[data-id="' + sessionId + '"]');
+    if (!item) return;
+    var s = getSession(sessionId);
+    if (!s) return;
+    var titleEl = item.querySelector('.session-title');
+    if (!titleEl) return;
+    var input = document.createElement('input');
+    input.className = 'session-rename-input';
+    input.value = s.title || '';
+    titleEl.replaceWith(input);
+    input.focus();
+    input.select();
+    var commit = function () {
+      var v = input.value.trim();
+      if (v) s.title = v;
+      saveSessions();
+      renderSessionList();
+    };
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      else if (e.key === 'Escape') { input.value = s.title || ''; input.blur(); }
+    });
   }
 
   function switchSession(id) {
@@ -462,6 +498,11 @@
     div.appendChild(bubble);
 
     if (m.role === 'assistant') {
+      var meta = document.createElement('div');
+      meta.className = 'msg-meta';
+      meta.textContent = msgMetaText(m);
+      div.appendChild(meta);
+
       var actions = document.createElement('div');
       actions.className = 'msg-actions';
       var btn = document.createElement('button');
@@ -521,6 +562,17 @@
     return m;
   }
 
+  function msgMetaText(m) {
+    var bits = [];
+    if (m && m.startedAt && m.endedAt) {
+      var dur = (m.endedAt - m.startedAt) / 1000;
+      bits.push('耗时 ' + (dur < 1 ? (dur * 1000).toFixed(0) + 'ms' : dur.toFixed(1) + 's'));
+    }
+    var tokens = Math.max(1, Math.ceil(((m && m.content) || '').length / 4));
+    bits.push('~' + tokens + ' tokens');
+    return bits.join(' · ');
+  }
+
   function updateBubble(msgId) {
     var el = document.querySelector('[data-msg-id="' + msgId + '"]');
     if (!el) return;
@@ -534,6 +586,8 @@
       bubble.classList.remove('error');
       bubble.innerHTML = renderMarkdown(m.content);
     }
+    var meta = el.querySelector('.msg-meta');
+    if (meta) meta.textContent = msgMetaText(m);
   }
 
   function scrollToBottom() {
@@ -701,7 +755,7 @@
     if (!session) { toast('请先创建会话'); return; }
 
     var rid = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : genId('req');
-    var assistantMsg = addMessage('assistant', '', { requestId: rid });
+    var assistantMsg = addMessage('assistant', '', { requestId: rid, startedAt: Date.now() });
 
     state.streaming = true;
     state.lastRequestId = rid;
@@ -748,6 +802,8 @@
       if (state.lastRequestId) {
         await loadTrace(state.lastRequestId);
       }
+      assistantMsg.endedAt = Date.now();
+      updateBubble(assistantMsg.id);
       saveSessions();
       scrollToBottom();
     }
@@ -1089,11 +1145,73 @@
     return node;
   }
 
+  function toggleTraceView() {
+    state.traceView = state.traceView === 'tree' ? 'timeline' : 'tree';
+    els.traceViewLabel.textContent = state.traceView === 'tree' ? '时序' : '树形';
+    renderTrace();
+  }
+
+  function renderTraceTimeline(spans) {
+    var container = document.createElement('div');
+    container.className = 'trace-timeline';
+    var now = Date.now();
+    var starts = spans.map(function (s) { return new Date(s.start_time).getTime(); });
+    var ends = spans.map(function (s) { return spanEnded(s) ? new Date(s.end_time).getTime() : now; });
+    var t0 = Math.min.apply(null, starts);
+    var t1 = Math.max.apply(null, ends);
+    var total = (t1 - t0) || 1;
+
+    var byId = {}; var children = {}; var roots = [];
+    spans.forEach(function (s) { if (s.span_id) byId[s.span_id] = s; });
+    spans.forEach(function (s) {
+      var pid = s.parent_id;
+      if (pid && byId[pid]) (children[pid] = children[pid] || []).push(s);
+      else roots.push(s);
+    });
+    function byStart(a, b) { return new Date(a.start_time).getTime() - new Date(b.start_time).getTime(); }
+    roots.sort(byStart);
+    Object.keys(children).forEach(function (k) { children[k].sort(byStart); });
+
+    function walk(list, depth) {
+      list.forEach(function (s) {
+        var st = new Date(s.start_time).getTime();
+        var en = spanEnded(s) ? new Date(s.end_time).getTime() : now;
+        var left = ((st - t0) / total * 100).toFixed(2);
+        var width = Math.max(((en - st) / total * 100).toFixed(2), 0.6);
+        var row = document.createElement('div');
+        row.className = 'tl-row';
+        row.style.paddingLeft = (depth * 12) + 'px';
+        var label = document.createElement('div');
+        label.className = 'tl-label';
+        label.textContent = spanLabel(s);
+        var track = document.createElement('div');
+        track.className = 'tl-track';
+        var bar = document.createElement('div');
+        bar.className = 'tl-bar ' + (span.status === 'error' ? 'tl-err' : 'tl-ok') + ' ' + actorBadgeClass(spanActor(s));
+        bar.style.left = left + '%';
+        bar.style.width = width + '%';
+        bar.title = spanLabel(s) + ' · ' + formatDuration(spanDuration(s));
+        track.appendChild(bar);
+        row.appendChild(label);
+        row.appendChild(track);
+        container.appendChild(row);
+        walk(children[s.span_id] || [], depth + 1);
+      });
+    }
+    walk(roots, 0);
+    return container;
+  }
+
   function renderTrace() {
     var spans = state.traceSpans || [];
     els.traceStage.textContent = deriveStage(spans);
     if (!spans.length) {
       els.traceBody.innerHTML = '<div class="muted pad">暂无运行轨迹。发送消息后这里会实时显示执行过程。</div>';
+      return;
+    }
+    els.traceBody.innerHTML = '';
+    if (state.traceView === 'timeline') {
+      els.traceBody.appendChild(renderTraceTimeline(spans));
       return;
     }
     var byId = {};
@@ -1109,7 +1227,6 @@
     roots.sort(byStart);
     Object.keys(children).forEach(function (k) { children[k].sort(byStart); });
 
-    els.traceBody.innerHTML = '';
     roots.forEach(function (r) { els.traceBody.appendChild(buildTraceNode(r, children, 0)); });
   }
 
@@ -1242,7 +1359,66 @@
         els.teamMembers.appendChild(hint);
       }
     }
+    renderTeamTopology(members);
     fillRoleSelect(data.roles || []);
+  }
+
+  // 团队拓扑图：Lead 居中，teammate 环绕连接（SVG）。
+  function renderTeamTopology(members) {
+    var wrap = els.teamTopology;
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    members = members || [];
+    if (!members.length) return;
+
+    var ns = 'http://www.w3.org/2000/svg';
+    var lead = null, others = [];
+    members.forEach(function (m) {
+      if (m.role === 'lead' && !lead) lead = m;
+      else others.push(m);
+    });
+    if (!lead) lead = { name: 'lead', role: 'lead', status: 'idle' };
+
+    var W = 340, H = Math.max(120, 70 + others.length * 44);
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', H);
+    svg.setAttribute('class', 'topo-svg');
+
+    var lx = 60, ly = H / 2;
+    svg.appendChild(topoNode(ns, lx, ly, lead));
+
+    others.forEach(function (m, i) {
+      var y = 30 + i * 44;
+      var x = W - 90;
+      var line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', lx + 34);
+      line.setAttribute('y1', ly);
+      line.setAttribute('x2', x - 6);
+      line.setAttribute('y2', y + 16);
+      line.setAttribute('class', 'topo-edge');
+      svg.appendChild(line);
+      svg.appendChild(topoNode(ns, x, y, m));
+    });
+    wrap.appendChild(svg);
+  }
+
+  function topoNode(ns, x, y, m) {
+    var g = document.createElementNS(ns, 'g');
+    var circle = document.createElementNS(ns, 'circle');
+    circle.setAttribute('cx', x + 16);
+    circle.setAttribute('cy', y + 16);
+    circle.setAttribute('r', 16);
+    circle.setAttribute('class', 'topo-node ' + (m.status === 'working' ? 'topo-working' : m.status === 'shutdown' ? 'topo-shutdown' : 'topo-idle'));
+    var text = document.createElementNS(ns, 'text');
+    text.setAttribute('x', x + 16);
+    text.setAttribute('y', y + 20);
+    text.setAttribute('class', 'topo-text');
+    text.textContent = (m.role === 'lead' ? 'Lead' : (m.name || ''));
+    g.appendChild(circle);
+    g.appendChild(text);
+    return g;
   }
 
   function buildMemberCard(m) {
@@ -1449,7 +1625,74 @@
       });
       card.appendChild(deps);
     }
+
+    if (t.status !== 'completed' && t.status !== 'cancelled') {
+      var acts = document.createElement('div');
+      acts.className = 'task-actions';
+      if (t.status !== 'in_progress') {
+        var claimBtn = document.createElement('button');
+        claimBtn.className = 'btn-secondary';
+        claimBtn.textContent = '认领';
+        claimBtn.dataset.taskAct = 'claim';
+        claimBtn.dataset.taskId = t.id;
+        acts.appendChild(claimBtn);
+      }
+      var doneBtn = document.createElement('button');
+      doneBtn.className = 'btn-primary';
+      doneBtn.textContent = '完成';
+      doneBtn.dataset.taskAct = 'complete';
+      doneBtn.dataset.taskId = t.id;
+      acts.appendChild(doneBtn);
+      var cancelBtn = document.createElement('button');
+      cancelBtn.className = 'btn-secondary';
+      cancelBtn.textContent = '取消';
+      cancelBtn.dataset.taskAct = 'cancel';
+      cancelBtn.dataset.taskId = t.id;
+      acts.appendChild(cancelBtn);
+      card.appendChild(acts);
+    }
     return card;
+  }
+
+  async function createTask() {
+    var title = els.taskNewTitle.value.trim();
+    if (!title) { toast('请填写任务标题'); return; }
+    var blockedRaw = els.taskNewBlocked.value.trim();
+    var blockedBy = [];
+    if (blockedRaw) {
+      blockedBy = blockedRaw.split(',').map(function (s) { return parseInt(s.trim(), 10); }).filter(function (n) { return n > 0; });
+    }
+    try {
+      await apiPost('/api/tasks', { title: title, description: els.taskNewDesc.value.trim(), blocked_by: blockedBy });
+      toast('已创建任务');
+      els.taskNewTitle.value = '';
+      els.taskNewDesc.value = '';
+      els.taskNewBlocked.value = '';
+      loadTasks();
+    } catch (e) {
+      toast('创建失败：' + (e.message || e));
+    }
+  }
+
+  async function taskAction(id, action) {
+    var url;
+    if (action === 'claim') {
+      url = '/api/tasks/' + id + '/claim';
+    } else if (action === 'complete') {
+      url = '/api/tasks/' + id + '/complete';
+    } else if (action === 'cancel') {
+      url = '/api/tasks/' + id + '/cancel';
+    } else {
+      return;
+    }
+    try {
+      var body = action === 'claim' ? { agent_name: 'lead', agent_role: 'lead' } : {};
+      await apiPost(url, body);
+      toast(action === 'claim' ? '已认领' : action === 'complete' ? '已完成' : '已取消');
+      loadTasks();
+    } catch (e) {
+      toast('操作失败：' + (e.message || e));
+    }
   }
 
   /* ---------------- 导出 Markdown ---------------- */
@@ -1485,6 +1728,74 @@
     }
   }
 
+  /* ---------------- 工具列表 ---------------- */
+  async function loadTools() {
+    try {
+      var data = await apiGet('/api/tools');
+      renderTools(data.tools || []);
+    } catch (e) {
+      els.toolsBody.innerHTML = '<div class="muted pad">加载工具失败：' + escapeHtml(e.message || e) + '</div>';
+    }
+  }
+
+  function renderTools(tools) {
+    els.toolsBody.innerHTML = '';
+    if (!tools.length) {
+      els.toolsBody.innerHTML = '<div class="muted pad">暂无已注册工具。</div>';
+      return;
+    }
+    tools.forEach(function (t) {
+      var item = document.createElement('div');
+      item.className = 'tool-item';
+      var name = document.createElement('div');
+      name.className = 'tool-name';
+      name.textContent = t.name || '';
+      var src = document.createElement('span');
+      src.className = 'tool-source tool-source-' + (t.source || 'builtin');
+      src.textContent = t.source || 'builtin';
+      name.appendChild(src);
+      var perm = document.createElement('span');
+      perm.className = 'status-chip status-' + (t.permission === 'execute' ? 'blocked' : t.permission === 'write' ? 'in_progress' : 'pending');
+      perm.textContent = t.permission || 'read';
+      name.appendChild(perm);
+      var desc = document.createElement('div');
+      desc.className = 'tool-desc muted';
+      desc.textContent = t.description || '';
+      item.appendChild(name);
+      item.appendChild(desc);
+      els.toolsBody.appendChild(item);
+    });
+  }
+
+  /* ---------------- 复制会话 ---------------- */
+  function copyConversation() {
+    var s = currentSession();
+    if (!s || !s.messages || !s.messages.length) { toast('当前会话没有内容'); return; }
+    var lines = [];
+    s.messages.forEach(function (m) {
+      lines.push((m.role === 'user' ? '用户' : 'Nexus') + ': ' + (m.content || ''));
+    });
+    copyText(lines.join('\n'));
+  }
+
+  /* ---------------- 主题切换 ---------------- */
+  function initTheme() {
+    var saved = null;
+    try { saved = localStorage.getItem('nexus.theme'); } catch (e) { /* 忽略 */ }
+    if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    else document.documentElement.removeAttribute('data-theme');
+  }
+  function toggleTheme() {
+    var light = document.documentElement.getAttribute('data-theme') === 'light';
+    if (light) {
+      document.documentElement.removeAttribute('data-theme');
+      try { localStorage.setItem('nexus.theme', 'dark'); } catch (e) { /* 忽略 */ }
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      try { localStorage.setItem('nexus.theme', 'light'); } catch (e) { /* 忽略 */ }
+    }
+  }
+
   /* ---------------- 右侧栏 ---------------- */
   function setActiveTab(tab) {
     state.rightPanelTab = tab;
@@ -1494,6 +1805,7 @@
     els.tabTrace.classList.toggle('hidden', tab !== 'trace');
     els.tabTeam.classList.toggle('hidden', tab !== 'team');
     els.tabTasks.classList.toggle('hidden', tab !== 'tasks');
+    els.tabTools.classList.toggle('hidden', tab !== 'tools');
   }
   function openRightPanel(tab) {
     state.rightPanelOpen = true;
@@ -1511,6 +1823,8 @@
       loadTeam();
     } else if (tab === 'tasks') {
       loadTasks();
+    } else if (tab === 'tools') {
+      loadTools();
     }
   }
   function closeRightPanel() {
@@ -1675,6 +1989,19 @@
       if (state.streamAbort) state.streamAbort.abort();
     });
 
+    // 会话搜索 + 双击重命名
+    els.sessionSearch.addEventListener('input', renderSessionList);
+    els.sessionList.addEventListener('dblclick', function (e) {
+      var titleEl = e.target.closest('.session-title');
+      if (!titleEl) return;
+      var item = titleEl.closest('.session-item');
+      if (item) startRename(item.dataset.id);
+    });
+
+    // 主题切换
+    els.themeBtn.addEventListener('click', toggleTheme);
+    els.copyConvoBtn.addEventListener('click', copyConversation);
+
     // 工作线折叠 + scope/workstream 变更
     els.workstreamToggle.addEventListener('click', function () {
       els.workstreamFields.classList.toggle('hidden');
@@ -1760,8 +2087,16 @@
       if (state.lastRequestId) loadTrace(state.lastRequestId);
       else renderTrace();
     });
+    els.traceViewBtn.addEventListener('click', toggleTraceView);
     els.teamRefresh.addEventListener('click', loadTeam);
     els.tasksRefresh.addEventListener('click', loadTasks);
+    els.toolsRefresh.addEventListener('click', loadTools);
+    els.taskCreateBtn.addEventListener('click', createTask);
+    els.tasksBody.addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-task-act]');
+      if (!btn) return;
+      taskAction(parseInt(btn.dataset.taskId, 10), btn.dataset.taskAct);
+    });
     els.teamScopeSelect.addEventListener('change', function () {
       var v = els.teamScopeSelect.value;
       state.teamScope = (v === '__current__' || !v) ? null : v;
@@ -1846,6 +2181,7 @@
   async function init() {
     cacheEls();
     bindEvents();
+    initTheme();
     renderSessionList();
 
     // 加载会话（localStorage 优先）

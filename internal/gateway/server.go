@@ -19,19 +19,20 @@ import (
 
 // Gateway is the multi-channel entry point.
 type Gateway struct {
-	cfg          configs.GatewayConfig
-	serverCfg    configs.ServerConfig
-	supervisor   Supervisor
-	sessions     *SessionManager
-	lanes        *LaneManager
-	jobs         *JobManager
-	router       *BindingRouter
-	observer     Observer
-	runCtx       context.Context
-	mcpHandler   http.Handler
-	approvals    *approval.Manager
-	meta         MetaInfo
-	taskProvider TaskProvider
+	cfg            configs.GatewayConfig
+	serverCfg      configs.ServerConfig
+	supervisor     Supervisor
+	sessions       *SessionManager
+	lanes          *LaneManager
+	jobs           *JobManager
+	router         *BindingRouter
+	observer       Observer
+	runCtx         context.Context
+	mcpHandler     http.Handler
+	approvals      *approval.Manager
+	meta           MetaInfo
+	taskController TaskController
+	toolProvider   ToolProvider
 }
 
 // Supervisor is the interface that the orchestrator must implement.
@@ -253,6 +254,11 @@ func (g *Gateway) newPrimaryMux() *http.ServeMux {
 	mux.HandleFunc("POST /api/team/teammates", g.handleSpawnTeammate)
 	mux.HandleFunc("POST /api/team/teammates/{name}/shutdown", g.handleShutdownTeammate)
 	mux.HandleFunc("GET /api/tasks", g.handleListTasks)
+	mux.HandleFunc("POST /api/tasks", g.handleCreateTask)
+	mux.HandleFunc("POST /api/tasks/{id}/claim", g.handleClaimTask)
+	mux.HandleFunc("POST /api/tasks/{id}/complete", g.handleUpdateTask)
+	mux.HandleFunc("POST /api/tasks/{id}/cancel", g.handleUpdateTask)
+	mux.HandleFunc("GET /api/tools", g.handleListTools)
 	mux.HandleFunc("GET /debug/dashboard", g.handleDebugDashboard)
 	mux.HandleFunc("GET /debug/approvals", g.handleDebugApprovals)
 	mux.HandleFunc("GET /api/ws", g.handleWebSocket)
