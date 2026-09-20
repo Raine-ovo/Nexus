@@ -183,7 +183,7 @@ run:
 在发布机或 CI 上构建：
 
 ```bash
-cd /Users/bytedance/rainea/nexus
+cd /path/to/nexus
 go build -o nexus-server ./cmd/nexus
 ```
 
@@ -559,6 +559,6 @@ model:
 
 ## 相关文档
 
-- [README.md](file:///Users/bytedance/rainea/nexus/README.md)
-- [usage.md](file:///Users/bytedance/rainea/nexus/docs/usage.md)
-- [architecture.md](file:///Users/bytedance/rainea/nexus/docs/architecture.md)
+- [README.md](../README.md)
+- [usage.md](../docs/usage.md)
+- [architecture.md](../docs/architecture.md)

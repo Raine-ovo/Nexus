@@ -353,20 +353,20 @@
 
 ## 相关代码
 
-- [task.go](file:///Users/bytedance/rainea/nexus/internal/planning/task.go)
-- [task_test.go](file:///Users/bytedance/rainea/nexus/internal/planning/task_test.go)
-- [tools.go](file:///Users/bytedance/rainea/nexus/internal/team/tools.go)
-- [teammate.go](file:///Users/bytedance/rainea/nexus/internal/team/teammate.go)
-- [roster.go](file:///Users/bytedance/rainea/nexus/internal/team/roster.go)
-- [lead.go](file:///Users/bytedance/rainea/nexus/internal/team/lead.go)
-- [agent.go](file:///Users/bytedance/rainea/nexus/internal/agents/planner/agent.go)
+- [task.go](../internal/planning/task.go)
+- [task_test.go](../internal/planning/task_test.go)
+- [tools.go](../internal/team/tools.go)
+- [teammate.go](../internal/team/teammate.go)
+- [roster.go](../internal/team/roster.go)
+- [lead.go](../internal/team/lead.go)
+- [agent.go](../internal/agents/planner/agent.go)
 
 ## 相关文档
 
-- [dispatch_highlight.md](file:///Users/bytedance/rainea/nexus/docs/dispatch_highlight.md)
-- [dispatch_policy.md](file:///Users/bytedance/rainea/nexus/docs/dispatch_policy.md)
-- [scope_continuity_highlight.md](file:///Users/bytedance/rainea/nexus/docs/scope_continuity_highlight.md)
-- [team_resilience_highlight.md](file:///Users/bytedance/rainea/nexus/docs/team_resilience_highlight.md)
+- [dispatch_highlight.md](../docs/dispatch_highlight.md)
+- [dispatch_policy.md](../docs/dispatch_policy.md)
+- [scope_continuity_highlight.md](../docs/scope_continuity_highlight.md)
+- [team_resilience_highlight.md](../docs/team_resilience_highlight.md)
 
 ## 一句话总结
 

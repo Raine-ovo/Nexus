@@ -18,7 +18,7 @@
 
 如果你想看这套 dispatch 机制是如何进一步落到 task board、claim 和 teammate 状态层，形成“调度意图 -> 任务指派 -> 认领门禁 -> roster 活动状态”闭环，见：
 
-- [task_dispatch_highlight.md](file:///Users/bytedance/rainea/nexus/docs/task_dispatch_highlight.md)
+- [task_dispatch_highlight.md](../docs/task_dispatch_highlight.md)
 
 ## 为什么这是亮点
 
@@ -229,14 +229,14 @@ OpenAI 兼容模型 client 现在支持：
 
 ## 相关代码
 
-- [lead.go](file:///Users/bytedance/rainea/nexus/internal/team/lead.go)
-- [dispatch_profile.go](file:///Users/bytedance/rainea/nexus/internal/team/dispatch_profile.go)
-- [openai_compat_chat_model.go](file:///Users/bytedance/rainea/nexus/internal/core/openai_compat_chat_model.go)
-- [team_test.go](file:///Users/bytedance/rainea/nexus/internal/team/team_test.go)
-- [openai_compat_chat_model_test.go](file:///Users/bytedance/rainea/nexus/internal/core/openai_compat_chat_model_test.go)
+- [lead.go](../internal/team/lead.go)
+- [dispatch_profile.go](../internal/team/dispatch_profile.go)
+- [openai_compat_chat_model.go](../internal/core/openai_compat_chat_model.go)
+- [team_test.go](../internal/team/team_test.go)
+- [openai_compat_chat_model_test.go](../internal/core/openai_compat_chat_model_test.go)
 
 ## 相关文档
 
-- [dispatch_policy.md](file:///Users/bytedance/rainea/nexus/docs/dispatch_policy.md)
-- [usage.md](file:///Users/bytedance/rainea/nexus/docs/usage.md)
-- [production.md](file:///Users/bytedance/rainea/nexus/docs/production.md)
+- [dispatch_policy.md](../docs/dispatch_policy.md)
+- [usage.md](../docs/usage.md)
+- [production.md](../docs/production.md)

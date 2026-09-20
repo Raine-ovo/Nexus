@@ -127,10 +127,13 @@ go build -o nexus-server ./cmd/nexus
 ./nexus-server -config configs/default.yaml
 ```
 
-默认端口：
+默认端口（loopback，仅本机可访问）：
 
-- HTTP: `:8080`
-- WebSocket: `:8081`
+- HTTP: `127.0.0.1:8080`
+- WebSocket: `127.0.0.1:8081`
+
+> 默认不配置鉴权，因此仅监听 loopback。若需对外提供（监听 `0.0.0.0`/非 loopback），
+> 必须先配置 `gateway.auth.api_keys` 或 `gateway.auth.jwt_secret`，否则进程会拒绝启动。
 
 默认节流建议：
 
@@ -203,7 +206,7 @@ wscat -c ws://127.0.0.1:8081/api/ws
 
 说明：
 
-- `/api/health`、`/debug/dashboard` 与 `/api/debug/*` 默认视为**公共调试入口**，即使业务接口启用了 auth，也不会要求额外 header。
+- 仅 `/api/health` 是**公共健康检查入口**；`/debug/dashboard` 与 `/api/debug/*` 会经过鉴权中间件，配置了 `gateway.auth` 时需携带凭证。
 - 业务接口如 `/api/chat`、`/api/chat/jobs`、`/api/ws` 是否鉴权，取决于 `gateway.auth` 配置。
 - 每个 run 的目录下会自动生成 `README.md` 与 `latest-traces.json`，便于离线分析。
 
@@ -211,11 +214,11 @@ wscat -c ws://127.0.0.1:8081/api/ws
 
 更完整的运行说明、权限模式、smoke test 和常见问题见：
 
-- [docs/usage.md](file:///Users/bytedance/rainea/nexus/docs/usage.md)
-- [docs/production.md](file:///Users/bytedance/rainea/nexus/docs/production.md)
-- [docs/dispatch_policy.md](file:///Users/bytedance/rainea/nexus/docs/dispatch_policy.md)
-- [docs/dispatch_highlight.md](file:///Users/bytedance/rainea/nexus/docs/dispatch_highlight.md)
-- [docs/scope_continuity_highlight.md](file:///Users/bytedance/rainea/nexus/docs/scope_continuity_highlight.md)
+- [docs/usage.md](docs/usage.md)
+- [docs/production.md](docs/production.md)
+- [docs/dispatch_policy.md](docs/dispatch_policy.md)
+- [docs/dispatch_highlight.md](docs/dispatch_highlight.md)
+- [docs/scope_continuity_highlight.md](docs/scope_continuity_highlight.md)
 
 ## 工程亮点
 

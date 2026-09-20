@@ -35,7 +35,7 @@
 ```bash
 python3 experiments/scope-continuity-validation/orchestrate_experiment.py \
   --config experiments/scope-continuity-validation/config.yaml \
-  --sandbox /Users/bytedance/rainea/nexus/.runs/scope-continuity-validation \
+  --sandbox .runs/scope-continuity-validation \
   --base-url http://127.0.0.1:18224 \
   --ws-url ws://127.0.0.1:18225/api/ws \
   --api-key nexus-local-dev-key \
@@ -47,7 +47,7 @@ python3 experiments/scope-continuity-validation/orchestrate_experiment.py \
 ```bash
 python3 experiments/scope-continuity-validation/orchestrate_experiment.py \
   --config experiments/scope-continuity-validation/config.yaml \
-  --sandbox /Users/bytedance/rainea/nexus/.runs/scope-continuity-validation \
+  --sandbox .runs/scope-continuity-validation \
   --base-url http://127.0.0.1:18224 \
   --ws-url ws://127.0.0.1:18225/api/ws \
   --api-key nexus-local-dev-key \

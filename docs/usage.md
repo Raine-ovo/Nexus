@@ -22,27 +22,27 @@
 
 如果你准备上线或长期运行，部署、日志和反向代理建议见：
 
-- [production.md](file:///Users/bytedance/rainea/nexus/docs/production.md)
+- [production.md](../docs/production.md)
 
 如果你准备继续增强 `lead` 的组织能力、区分 teammate 和 subagent 的适用边界，调度策略见：
 
-- [dispatch_policy.md](file:///Users/bytedance/rainea/nexus/docs/dispatch_policy.md)
+- [dispatch_policy.md](../docs/dispatch_policy.md)
 
 如果你想快速理解这次 dispatch 增强为什么是当前版本的核心亮点，见：
 
-- [dispatch_highlight.md](file:///Users/bytedance/rainea/nexus/docs/dispatch_highlight.md)
+- [dispatch_highlight.md](../docs/dispatch_highlight.md)
 
 如果你想看这次针对 `planner/devops` 任务认领错配、`working/idle` 状态语义不清等问题的系统性修复，以及为什么它把 task board 从“自由抢单”推进成“遵循调度意图的分配面”，见：
 
-- [task_dispatch_highlight.md](file:///Users/bytedance/rainea/nexus/docs/task_dispatch_highlight.md)
+- [task_dispatch_highlight.md](../docs/task_dispatch_highlight.md)
 
 如果你想理解为什么这次 memory / reflection 修复是“主链路激活”而不只是“模块存在”，见：
 
-- [memory_reflection_highlight.md](file:///Users/bytedance/rainea/nexus/docs/memory_reflection_highlight.md)
+- [memory_reflection_highlight.md](../docs/memory_reflection_highlight.md)
 
 如果你想理解为什么这次 `scope/workstream` 增强是把 Team Runtime 从“单次任务执行器”推进到“长期工作线运行时”的关键一步，见：
 
-- [scope_continuity_highlight.md](file:///Users/bytedance/rainea/nexus/docs/scope_continuity_highlight.md)
+- [scope_continuity_highlight.md](../docs/scope_continuity_highlight.md)
 
 ## 前置要求
 

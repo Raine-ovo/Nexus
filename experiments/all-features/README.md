@@ -44,11 +44,11 @@ go run ./cmd/nexus -config configs/full-activation-throttled.yaml
 ```bash
 python3 experiments/all-features/orchestrate_experiment.py \
   --config configs/full-activation-throttled.yaml \
-  --sandbox /Users/bytedance/rainea/nexus/.runs/full-activation-throttled \
+  --sandbox .runs/full-activation-throttled \
   --base-url http://127.0.0.1:18214 \
   --ws-url ws://127.0.0.1:18215/api/ws \
   --api-key nexus-local-dev-key \
-  --prompt /Users/bytedance/rainea/nexus/experiments/all-features/full-activation-throttled_prompt.txt \
+  --prompt experiments/all-features/full-activation-throttled_prompt.txt \
   --run-name full-activation-throttled \
   --keep-nexus-alive
 ```

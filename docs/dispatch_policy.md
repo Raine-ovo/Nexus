@@ -61,10 +61,10 @@
 
 相关位置：
 
-- [main.go](file:///Users/bytedance/rainea/nexus/cmd/nexus/main.go#L128-L190)
-- [tools.go](file:///Users/bytedance/rainea/nexus/internal/team/tools.go#L24-L33)
-- [delegate.go](file:///Users/bytedance/rainea/nexus/internal/team/delegate.go#L16-L26)
-- [manager.go](file:///Users/bytedance/rainea/nexus/internal/team/manager.go#L138-L209)
+- [main.go](../cmd/nexus/main.go#L128-L190)
+- [tools.go](../internal/team/tools.go#L24-L33)
+- [delegate.go](../internal/team/delegate.go#L16-L26)
+- [manager.go](../internal/team/manager.go#L138-L209)
 
 ### 当前已内置的规则
 
@@ -78,8 +78,8 @@
 
 相关位置：
 
-- [main.go](file:///Users/bytedance/rainea/nexus/cmd/nexus/main.go#L134-L154)
-- [buildScheduledAgentTurnPrompt](file:///Users/bytedance/rainea/nexus/cmd/nexus/main.go#L290-L317)
+- [main.go](../cmd/nexus/main.go#L134-L154)
+- [buildScheduledAgentTurnPrompt](../cmd/nexus/main.go#L290-L317)
 
 这是一个好的开始，但它目前主要覆盖了 **cron/scheduled task**，对普通用户请求的 dispatch policy 仍然偏弱。
 
@@ -349,15 +349,15 @@
 
 ## 相关代码
 
-- [main.go](file:///Users/bytedance/rainea/nexus/cmd/nexus/main.go#L134-L154)
-- [buildScheduledAgentTurnPrompt](file:///Users/bytedance/rainea/nexus/cmd/nexus/main.go#L290-L317)
-- [tools.go](file:///Users/bytedance/rainea/nexus/internal/team/tools.go#L24-L33)
-- [delegate.go](file:///Users/bytedance/rainea/nexus/internal/team/delegate.go#L16-L26)
-- [manager.go](file:///Users/bytedance/rainea/nexus/internal/team/manager.go#L138-L209)
-- [teammate.go](file:///Users/bytedance/rainea/nexus/internal/team/teammate.go#L39-L63)
+- [main.go](../cmd/nexus/main.go#L134-L154)
+- [buildScheduledAgentTurnPrompt](../cmd/nexus/main.go#L290-L317)
+- [tools.go](../internal/team/tools.go#L24-L33)
+- [delegate.go](../internal/team/delegate.go#L16-L26)
+- [manager.go](../internal/team/manager.go#L138-L209)
+- [teammate.go](../internal/team/teammate.go#L39-L63)
 
 ## 相关文档
 
-- [architecture.md](file:///Users/bytedance/rainea/nexus/docs/architecture.md)
-- [usage.md](file:///Users/bytedance/rainea/nexus/docs/usage.md)
-- [production.md](file:///Users/bytedance/rainea/nexus/docs/production.md)
+- [architecture.md](../docs/architecture.md)
+- [usage.md](../docs/usage.md)
+- [production.md](../docs/production.md)
