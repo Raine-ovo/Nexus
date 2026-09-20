@@ -132,6 +132,14 @@ type GatewayConfig struct {
 	Lanes     map[string]LaneConfig `yaml:"lanes"`
 	Auth      GatewayAuthConfig     `yaml:"auth"`
 	RateLimit RateLimitConfig       `yaml:"rate_limit"`
+	Jobs      JobsConfig            `yaml:"jobs"`
+}
+
+// JobsConfig configures the async job store.
+type JobsConfig struct {
+	Dir     string        `yaml:"dir"`
+	MaxJobs int           `yaml:"max_jobs"`
+	TTL     time.Duration `yaml:"ttl"`
 }
 
 type LaneConfig struct {
@@ -380,6 +388,12 @@ func applyDefaults(cfg *Config) {
 	if !cfg.Gateway.RateLimit.Enabled {
 		cfg.Gateway.RateLimit.RPS = 0
 		cfg.Gateway.RateLimit.Burst = 0
+	}
+	if cfg.Gateway.Jobs.MaxJobs == 0 {
+		cfg.Gateway.Jobs.MaxJobs = 1000
+	}
+	if cfg.Gateway.Jobs.TTL == 0 {
+		cfg.Gateway.Jobs.TTL = 24 * time.Hour
 	}
 	if cfg.MCP.RPCPath == "" {
 		cfg.MCP.RPCPath = "/mcp/rpc"

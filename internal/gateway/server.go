@@ -112,13 +112,19 @@ func New(cfg configs.GatewayConfig, serverCfg configs.ServerConfig, sup Supervis
 	if obs == nil {
 		obs = noopObserver{}
 	}
+	var jobs *JobManager
+	if strings.TrimSpace(cfg.Jobs.Dir) != "" {
+		jobs = NewPersistentJobManager(cfg.Jobs.Dir, cfg.Jobs.MaxJobs, cfg.Jobs.TTL)
+	} else {
+		jobs = NewJobManager()
+	}
 	return &Gateway{
 		cfg:        cfg,
 		serverCfg:  serverCfg,
 		supervisor: sup,
 		sessions:   NewSessionManager(24 * time.Hour),
 		lanes:      NewLaneManager(cfg),
-		jobs:       NewJobManager(),
+		jobs:       jobs,
 		router:     NewBindingRouter(),
 		observer:   obs,
 	}
@@ -212,7 +218,9 @@ func (g *Gateway) newPrimaryMux() *http.ServeMux {
 	mux.HandleFunc("POST /api/sessions", g.handleCreateSession)
 	mux.HandleFunc("POST /api/chat", g.handleChat)
 	mux.HandleFunc("POST /api/chat/jobs", g.handleCreateChatJob)
+	mux.HandleFunc("GET /api/chat/jobs", g.handleListChatJobs)
 	mux.HandleFunc("GET /api/chat/jobs/{id}", g.handleGetChatJob)
+	mux.HandleFunc("POST /api/chat/jobs/{id}/cancel", g.handleCancelChatJob)
 	mux.HandleFunc("GET /api/debug/metrics", g.handleDebugMetrics)
 	mux.HandleFunc("GET /api/debug/scopes", g.handleDebugScopes)
 	mux.HandleFunc("GET /api/debug/traces", g.handleDebugTraces)
@@ -320,9 +328,10 @@ func (g *Gateway) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 }
 
 type chatReq struct {
-	SessionID string `json:"session_id"`
-	Input     string `json:"input"`
-	Lane      string `json:"lane"`
+	SessionID      string `json:"session_id"`
+	Input          string `json:"input"`
+	Lane           string `json:"lane"`
+	IdempotencyKey string `json:"idempotency_key,omitempty"`
 }
 
 type chatResp struct {
@@ -393,7 +402,7 @@ func (g *Gateway) handleCreateChatJob(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	job := g.jobs.Create(sess.ID, lane, req.Input)
+	job := g.jobs.CreateWithKey(sess.ID, lane, req.Input, strings.TrimSpace(req.IdempotencyKey))
 	baseCtx := g.runCtx
 	if baseCtx == nil {
 		baseCtx = context.Background()
@@ -433,6 +442,39 @@ func (g *Gateway) handleGetChatJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = json.NewEncoder(w).Encode(job)
+}
+
+func (g *Gateway) handleListChatJobs(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	jobs := g.jobs.List()
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"count": len(jobs),
+		"jobs":  jobs,
+	})
+}
+
+func (g *Gateway) handleCancelChatJob(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	id := strings.TrimSpace(r.PathValue("id"))
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "job id required"})
+		return
+	}
+	if !g.jobs.Cancel(id) {
+		w.WriteHeader(http.StatusNotFound)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "job not cancellable"})
+		return
+	}
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "cancelled", "job_id": id})
 }
 
 func (g *Gateway) parseChatRequest(w http.ResponseWriter, r *http.Request) (chatReq, *Session, string, bool) {

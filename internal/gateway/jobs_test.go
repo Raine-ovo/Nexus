@@ -113,6 +113,79 @@ func TestJobManager_RunLifecycle(t *testing.T) {
 	}
 }
 
+func TestJobManager_Persistence(t *testing.T) {
+	dir := t.TempDir()
+	jm := NewPersistentJobManager(dir, 10, time.Hour)
+	job := jm.Create("s1", "main", "hello")
+	jm.markDone(job.ID, "done", "", JobSucceeded)
+
+	jm2 := NewPersistentJobManager(dir, 10, time.Hour)
+	got, ok := jm2.Get(job.ID)
+	if !ok {
+		t.Fatalf("expected persisted job to be reloaded")
+	}
+	if got.Status != JobSucceeded || got.Output != "done" {
+		t.Fatalf("reloaded job = %+v", got)
+	}
+}
+
+func TestJobManager_PersistenceMarksRunningFailed(t *testing.T) {
+	dir := t.TempDir()
+	jm := NewPersistentJobManager(dir, 10, time.Hour)
+	job := jm.Create("s1", "main", "hello")
+	jm.markRunning(job.ID)
+
+	jm2 := NewPersistentJobManager(dir, 10, time.Hour)
+	got, _ := jm2.Get(job.ID)
+	if got.Status != JobFailed || !strings.Contains(got.Error, "restart") {
+		t.Fatalf("orphaned running job should be failed, got %+v", got)
+	}
+}
+
+func TestJobManager_IdempotencyKey(t *testing.T) {
+	jm := NewJobManager()
+	j1 := jm.CreateWithKey("s1", "main", "hello", "key-1")
+	j2 := jm.CreateWithKey("s1", "main", "hello", "key-1")
+	if j1.ID != j2.ID {
+		t.Fatalf("same key should return same job: %s vs %s", j1.ID, j2.ID)
+	}
+	j3 := jm.CreateWithKey("s1", "main", "hello", "key-2")
+	if j1.ID == j3.ID {
+		t.Fatalf("different key should create a new job")
+	}
+}
+
+func TestJobManager_CancelRunning(t *testing.T) {
+	jm := NewJobManager()
+	job := jm.Create("s1", "main", "hello")
+	started := make(chan struct{})
+	jm.Run(context.Background(), job.ID, func(ctx context.Context) (string, error) {
+		close(started)
+		<-ctx.Done()
+		return "", ctx.Err()
+	})
+	<-started
+	if !jm.Cancel(job.ID) {
+		t.Fatalf("cancel should succeed")
+	}
+	time.Sleep(100 * time.Millisecond)
+	got, _ := jm.Get(job.ID)
+	if got.Status != JobCancelled {
+		t.Fatalf("status = %s, want cancelled", got.Status)
+	}
+}
+
+func TestJobManager_MaxJobs(t *testing.T) {
+	jm := NewPersistentJobManager(t.TempDir(), 2, time.Hour)
+	for i := 0; i < 5; i++ {
+		j := jm.Create("s", "main", "x")
+		jm.markDone(j.ID, "out", "", JobSucceeded)
+	}
+	if got := len(jm.List()); got != 2 {
+		t.Fatalf("jobs = %d, want 2", got)
+	}
+}
+
 func TestGateway_ChatJobEndpoints(t *testing.T) {
 	g := New(configs.GatewayConfig{
 		Lanes: map[string]configs.LaneConfig{

@@ -236,6 +236,15 @@ curl -X POST http://127.0.0.1:8080/v1/chat/completions \
 
 该接口与业务接口一样经过 `gateway.auth` 鉴权。
 
+### 11. 持久化 Job 存储
+
+异步任务（`POST /api/chat/jobs`）支持磁盘持久化、幂等键、取消与有界保留：
+
+- 配置 `gateway.jobs.dir` 后，任务以 JSON 形式落到该目录，进程重启后可恢复（重启时在途任务标记为 `failed`）。
+- 请求体可带 `idempotency_key`，相同 key 复用同一条任务，避免重复提交。
+- `POST /api/chat/jobs/{id}/cancel` 取消在途/待执行任务；`GET /api/chat/jobs` 列出全部任务。
+- `gateway.jobs.max_jobs` 与 `gateway.jobs.ttl` 限制终态任务的内存/磁盘占用。
+
 ## 使用文档
 
 更完整的运行说明、权限模式、smoke test 和常见问题见：

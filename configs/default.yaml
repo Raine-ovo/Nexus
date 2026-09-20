@@ -90,6 +90,11 @@ gateway:
     # Only trust X-Forwarded-For from these peer addresses. Leave empty to ignore
     # X-Forwarded-For entirely (prevents client-IP spoofing).
     trusted_proxies: []
+  # Async job store. Set dir to persist jobs across restarts (empty = in-memory).
+  jobs:
+    dir: ".jobs"
+    max_jobs: 1000
+    ttl: 24h
 
 mcp:
   server_enabled: true

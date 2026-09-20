@@ -7,7 +7,7 @@
 build.err
 buildlog.txt
 
-# --- Runtime state (agent outputs, runs, team, memory, knowledge, tasks) ---
+# --- Runtime state (agent outputs, runs, team, memory, knowledge, tasks, jobs) ---
 .runs/
 .outputs/
 .team/
@@ -15,6 +15,7 @@ buildlog.txt
 .memory/
 .knowledge/
 .tasks/
+.jobs/
 
 # --- Logs ---
 *.log
