@@ -353,6 +353,12 @@ func (m *Manager) Shutdown(ctx context.Context) {
 
 	if m.lead != nil {
 		m.lead.Stop()
+		// Wait for the lead goroutine to fully exit so its final roster write
+		// completes before callers (e.g. tests) remove the team directory.
+		select {
+		case <-m.lead.Done():
+		case <-ctx.Done():
+		}
 	}
 }
 
