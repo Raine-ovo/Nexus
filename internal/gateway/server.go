@@ -19,18 +19,19 @@ import (
 
 // Gateway is the multi-channel entry point.
 type Gateway struct {
-	cfg        configs.GatewayConfig
-	serverCfg  configs.ServerConfig
-	supervisor Supervisor
-	sessions   *SessionManager
-	lanes      *LaneManager
-	jobs       *JobManager
-	router     *BindingRouter
-	observer   Observer
-	runCtx     context.Context
-	mcpHandler http.Handler
-	approvals  *approval.Manager
-	meta       MetaInfo
+	cfg          configs.GatewayConfig
+	serverCfg    configs.ServerConfig
+	supervisor   Supervisor
+	sessions     *SessionManager
+	lanes        *LaneManager
+	jobs         *JobManager
+	router       *BindingRouter
+	observer     Observer
+	runCtx       context.Context
+	mcpHandler   http.Handler
+	approvals    *approval.Manager
+	meta         MetaInfo
+	taskProvider TaskProvider
 }
 
 // Supervisor is the interface that the orchestrator must implement.
@@ -251,6 +252,7 @@ func (g *Gateway) newPrimaryMux() *http.ServeMux {
 	mux.HandleFunc("GET /api/team", g.handleTeamInfo)
 	mux.HandleFunc("POST /api/team/teammates", g.handleSpawnTeammate)
 	mux.HandleFunc("POST /api/team/teammates/{name}/shutdown", g.handleShutdownTeammate)
+	mux.HandleFunc("GET /api/tasks", g.handleListTasks)
 	mux.HandleFunc("GET /debug/dashboard", g.handleDebugDashboard)
 	mux.HandleFunc("GET /debug/approvals", g.handleDebugApprovals)
 	mux.HandleFunc("GET /api/ws", g.handleWebSocket)

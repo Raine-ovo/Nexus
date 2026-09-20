@@ -18,31 +18,28 @@ import (
 // background context for team/teammate lifecycle instead, mirroring that
 // lifetime and avoiding the request context cancelling freshly spawned workers.
 
-// resolveManagerForSession resolves the session's scope and returns (or lazily
-// creates) the scoped team manager.
-func (r *Registry) resolveManagerForSession(ctx context.Context, session *gateway.Session) (*Manager, string, error) {
+// ResolveScope returns the scope key for a session (creating a stable
+// session-scoped key if no explicit scope/workstream is set).
+func (r *Registry) ResolveScope(session *gateway.Session) string {
 	if session == nil {
 		session = &gateway.Session{}
 	}
 	scope, _ := r.resolveScope(session, "")
-	mgr, err := r.getOrCreateManager(ctx, scope)
-	if err != nil {
-		return nil, scope, err
-	}
-	return mgr, scope, nil
+	return scope
 }
 
-// existingManagerForSession returns the scoped manager only if it already
-// exists; it never creates one.
-func (r *Registry) existingManagerForSession(session *gateway.Session) (*Manager, string, bool) {
-	if session == nil {
-		session = &gateway.Session{}
+func (r *Registry) resolveManagerForScope(ctx context.Context, scope string) (*Manager, error) {
+	if scope == "" {
+		return nil, fmt.Errorf("team: scope required")
 	}
-	scope, _ := r.resolveScope(session, "")
+	return r.getOrCreateManager(ctx, scope)
+}
+
+func (r *Registry) existingManagerForScope(scope string) (*Manager, bool) {
 	r.mu.Lock()
 	mgr := r.managers[scope]
 	r.mu.Unlock()
-	return mgr, scope, mgr != nil
+	return mgr, mgr != nil
 }
 
 func (r *Registry) roleNames() []string {
@@ -56,10 +53,10 @@ func (r *Registry) roleNames() []string {
 	return roles
 }
 
-// TeamInfo returns the roster + role templates for the session's scope.
-func (r *Registry) TeamInfo(session *gateway.Session) gateway.TeamInfo {
+// TeamInfoByScope returns the roster + role templates for a scope.
+func (r *Registry) TeamInfoByScope(scope string) gateway.TeamInfo {
 	ctx := context.Background()
-	mgr, scope, err := r.resolveManagerForSession(ctx, session)
+	mgr, err := r.resolveManagerForScope(ctx, scope)
 	roles := r.roleNames()
 	if err != nil || mgr == nil {
 		return gateway.TeamInfo{Scope: scope, Roles: roles}
@@ -91,9 +88,9 @@ func (r *Registry) TeamInfo(session *gateway.Session) gateway.TeamInfo {
 	}
 }
 
-// SpawnTeammate creates and starts a persistent teammate in the session's scope.
-func (r *Registry) SpawnTeammate(ctx context.Context, session *gateway.Session, name, role, prompt string) error {
-	mgr, _, err := r.resolveManagerForSession(context.Background(), session)
+// SpawnTeammate creates and starts a persistent teammate in the given scope.
+func (r *Registry) SpawnTeammate(ctx context.Context, scope, name, role, prompt string) error {
+	mgr, err := r.resolveManagerForScope(context.Background(), scope)
 	if err != nil {
 		return err
 	}
@@ -101,10 +98,10 @@ func (r *Registry) SpawnTeammate(ctx context.Context, session *gateway.Session, 
 }
 
 // ShutdownTeammate requests graceful shutdown of a persistent teammate.
-func (r *Registry) ShutdownTeammate(ctx context.Context, session *gateway.Session, name string) error {
-	mgr, _, ok := r.existingManagerForSession(session)
+func (r *Registry) ShutdownTeammate(ctx context.Context, scope, name string) error {
+	mgr, ok := r.existingManagerForScope(scope)
 	if !ok || mgr == nil {
-		return fmt.Errorf("team: team not initialized for this session")
+		return fmt.Errorf("team: team not initialized for scope %q", scope)
 	}
 	return mgr.ShutdownTeammate(name)
 }

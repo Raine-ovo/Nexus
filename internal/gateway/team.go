@@ -28,11 +28,12 @@ type TeamInfo struct {
 }
 
 // TeamController is implemented by the team supervisor so the desktop UI can
-// inspect and manage the team for a given session/scope.
+// inspect and manage any scope's team by scope key.
 type TeamController interface {
-	TeamInfo(session *Session) TeamInfo
-	SpawnTeammate(ctx context.Context, session *Session, name, role, prompt string) error
-	ShutdownTeammate(ctx context.Context, session *Session, name string) error
+	ResolveScope(session *Session) string
+	TeamInfoByScope(scope string) TeamInfo
+	SpawnTeammate(ctx context.Context, scope, name, role, prompt string) error
+	ShutdownTeammate(ctx context.Context, scope, name string) error
 }
 
 func (g *Gateway) teamController() (TeamController, bool) {
@@ -40,22 +41,34 @@ func (g *Gateway) teamController() (TeamController, bool) {
 	return c, ok
 }
 
-func (g *Gateway) sessionForTeam(w http.ResponseWriter, r *http.Request, sessionID string) (*Session, bool) {
+// teamScopeFromRequest resolves a scope from either an explicit scope param or
+// a session_id. It reports false on validation failure.
+func (g *Gateway) teamScopeFromRequest(w http.ResponseWriter, r *http.Request, sessionID, scope string) (string, bool) {
+	scope = strings.TrimSpace(scope)
+	if scope != "" {
+		return scope, true
+	}
 	sessionID = strings.TrimSpace(sessionID)
 	if sessionID == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "session_id required"})
-		return nil, false
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "scope or session_id required"})
+		return "", false
 	}
 	sess, ok := g.sessions.Get(sessionID)
 	if !ok {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": "unknown session"})
-		return nil, false
+		return "", false
 	}
-	return sess, true
+	ctrl, ok := g.teamController()
+	if !ok {
+		w.WriteHeader(http.StatusNotImplemented)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "team control unavailable"})
+		return "", false
+	}
+	return ctrl.ResolveScope(sess), true
 }
 
 func (g *Gateway) handleTeamInfo(w http.ResponseWriter, r *http.Request) {
@@ -69,16 +82,17 @@ func (g *Gateway) handleTeamInfo(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": "team control unavailable"})
 		return
 	}
-	sess, ok := g.sessionForTeam(w, r, r.URL.Query().Get("session_id"))
+	scope, ok := g.teamScopeFromRequest(w, r, r.URL.Query().Get("session_id"), r.URL.Query().Get("scope"))
 	if !ok {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(ctrl.TeamInfo(sess))
+	_ = json.NewEncoder(w).Encode(ctrl.TeamInfoByScope(scope))
 }
 
 type spawnTeammateReq struct {
 	SessionID string `json:"session_id"`
+	Scope     string `json:"scope"`
 	Name      string `json:"name"`
 	Role      string `json:"role"`
 	Prompt    string `json:"prompt"`
@@ -101,7 +115,7 @@ func (g *Gateway) handleSpawnTeammate(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": "invalid json"})
 		return
 	}
-	sess, ok := g.sessionForTeam(w, r, req.SessionID)
+	scope, ok := g.teamScopeFromRequest(w, r, req.SessionID, req.Scope)
 	if !ok {
 		return
 	}
@@ -113,7 +127,7 @@ func (g *Gateway) handleSpawnTeammate(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": "name, role, and prompt required"})
 		return
 	}
-	if err := ctrl.SpawnTeammate(r.Context(), sess, req.Name, req.Role, req.Prompt); err != nil {
+	if err := ctrl.SpawnTeammate(r.Context(), scope, req.Name, req.Role, req.Prompt); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
@@ -141,13 +155,14 @@ func (g *Gateway) handleShutdownTeammate(w http.ResponseWriter, r *http.Request)
 	}
 	var body struct {
 		SessionID string `json:"session_id"`
+		Scope     string `json:"scope"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
-	sess, ok := g.sessionForTeam(w, r, body.SessionID)
+	scope, ok := g.teamScopeFromRequest(w, r, body.SessionID, body.Scope)
 	if !ok {
 		return
 	}
-	if err := ctrl.ShutdownTeammate(r.Context(), sess, name); err != nil {
+	if err := ctrl.ShutdownTeammate(r.Context(), scope, name); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return

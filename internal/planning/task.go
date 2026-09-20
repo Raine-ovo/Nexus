@@ -562,6 +562,12 @@ func (m *TaskManager) Claim(id int, agentName, agentRole, source string) (*Task,
 	return &cp, nil
 }
 
+// ListTasks returns all tasks sorted by ID. Convenience wrapper for the
+// desktop UI's task board (List with no filter).
+func (m *TaskManager) ListTasks() []Task {
+	return m.List(nil)
+}
+
 // GetUnclaimed returns pending tasks that are unclaimed and executable.
 func (m *TaskManager) GetUnclaimed() []Task {
 	m.mu.Lock()
