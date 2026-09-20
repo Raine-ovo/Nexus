@@ -39,16 +39,16 @@ func TestApplyRunSandbox_IsolatesRunArtifactsButNotTeamDir(t *testing.T) {
 
 	applyRunSandbox(cfg)
 
-	if got := cfg.Planning.TaskDir; got != ".runs/demo/.tasks" {
+	if got := cfg.Planning.TaskDir; got != filepath.Join(".runs", "demo", ".tasks") {
 		t.Fatalf("unexpected task dir: %s", got)
 	}
-	if got := cfg.Agent.OutputPersistDir; got != ".runs/demo/.outputs" {
+	if got := cfg.Agent.OutputPersistDir; got != filepath.Join(".runs", "demo", ".outputs") {
 		t.Fatalf("unexpected output dir: %s", got)
 	}
-	if got := cfg.Memory.SemanticFile; got != ".runs/demo/.memory/semantic.yaml" {
+	if got := cfg.Memory.SemanticFile; got != filepath.Join(".runs", "demo", ".memory", "semantic.yaml") {
 		t.Fatalf("unexpected semantic file: %s", got)
 	}
-	if got := cfg.Reflection.MemoryFile; got != ".runs/demo/.memory/reflections.yaml" {
+	if got := cfg.Reflection.MemoryFile; got != filepath.Join(".runs", "demo", ".memory", "reflections.yaml") {
 		t.Fatalf("unexpected reflection file: %s", got)
 	}
 	if got := cfg.Team.Dir; got != ".team" {
@@ -57,8 +57,9 @@ func TestApplyRunSandbox_IsolatesRunArtifactsButNotTeamDir(t *testing.T) {
 }
 
 func TestResolveRunSandboxPath_LeavesAbsolutePathsUntouched(t *testing.T) {
-	got := resolveRunSandboxPath(".runs/demo", "/var/lib/nexus/.tasks")
-	if got != "/var/lib/nexus/.tasks" {
+	abs := filepath.Join(os.TempDir(), "nexus", ".tasks")
+	got := resolveRunSandboxPath(".runs/demo", abs)
+	if got != abs {
 		t.Fatalf("absolute paths should be unchanged, got: %s", got)
 	}
 }
@@ -108,6 +109,48 @@ func TestWriteRunDashboardREADME(t *testing.T) {
 	}
 	if !strings.Contains(body, "/api/debug/traces?run=demo") {
 		t.Fatalf("expected traces link in readme, got: %s", body)
+	}
+}
+
+func TestIsLoopbackAddr(t *testing.T) {
+	cases := []struct {
+		addr string
+		want bool
+	}{
+		{"127.0.0.1:8080", true},
+		{"localhost:8080", true},
+		{"[::1]:8080", true},
+		{"127.0.0.1", true},
+		{"0.0.0.0:8080", false},
+		{":8080", false},
+		{"[::]:8080", false},
+		{"192.168.1.10:8080", false},
+	}
+	for _, c := range cases {
+		if got := isLoopbackAddr(c.addr); got != c.want {
+			t.Errorf("isLoopbackAddr(%q) = %v, want %v", c.addr, got, c.want)
+		}
+	}
+}
+
+func TestValidateSecurityConfig(t *testing.T) {
+	if err := validateSecurityConfig(&configs.Config{
+		Server: configs.ServerConfig{HTTPAddr: ":8080"},
+	}); err == nil {
+		t.Fatalf("empty auth + non-loopback should be refused")
+	}
+
+	if err := validateSecurityConfig(&configs.Config{
+		Server: configs.ServerConfig{HTTPAddr: "127.0.0.1:8080", WSAddr: "127.0.0.1:8081"},
+	}); err != nil {
+		t.Fatalf("empty auth + loopback should be allowed: %v", err)
+	}
+
+	if err := validateSecurityConfig(&configs.Config{
+		Server:  configs.ServerConfig{HTTPAddr: ":8080"},
+		Gateway: configs.GatewayConfig{Auth: configs.GatewayAuthConfig{APIKeys: []string{"k"}}},
+	}); err != nil {
+		t.Fatalf("auth + non-loopback should be allowed: %v", err)
 	}
 }
 

@@ -1,6 +1,8 @@
 server:
-  http_addr: ":8080"
-  ws_addr: ":8081"
+  # Loopback-only by default: with empty auth (see gateway.auth below) the server
+  # refuses to bind a non-loopback interface at startup.
+  http_addr: "127.0.0.1:8080"
+  ws_addr: "127.0.0.1:8081"
   read_timeout: 10m
   write_timeout: 10m
 
@@ -85,6 +87,9 @@ gateway:
     enabled: true
     rps: 20
     burst: 40
+    # Only trust X-Forwarded-For from these peer addresses. Leave empty to ignore
+    # X-Forwarded-For entirely (prevents client-IP spoofing).
+    trusted_proxies: []
 
 mcp:
   server_enabled: true

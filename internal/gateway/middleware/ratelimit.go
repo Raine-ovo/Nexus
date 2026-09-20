@@ -14,12 +14,14 @@ type bucket struct {
 	max        float64
 	ratePerSec float64
 	last       time.Time
+	lastSeen   time.Time
 	mu         sync.Mutex
 }
 
 func (b *bucket) allow(now time.Time) bool {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+	b.lastSeen = now
 	elapsed := now.Sub(b.last).Seconds()
 	if elapsed > 0 {
 		b.tokens += elapsed * b.ratePerSec
@@ -36,15 +38,23 @@ func (b *bucket) allow(now time.Time) bool {
 }
 
 // RateLimiter implements token bucket rate limiting per client IP.
+// Buckets are reaped after bucketTTL to bound memory. X-Forwarded-For is only
+// honored when the direct peer is a configured trusted proxy.
 type RateLimiter struct {
-	rps    float64
-	burst  int
-	buckets sync.Map // string -> *bucket
+	rps       float64
+	burst     int
+	trusted   map[string]bool
+	bucketTTL time.Duration
+	buckets   sync.Map // string -> *bucket
+
+	lastSweep time.Time
+	sweepMu   sync.Mutex
 }
 
 // NewRateLimiter creates a limiter with the given sustained RPS and burst size.
-// If rps <= 0, Wrap becomes a no-op (rate limiting disabled).
-func NewRateLimiter(rps float64, burst int) *RateLimiter {
+// If rps <= 0, Wrap becomes a no-op (rate limiting disabled). trustedProxies lists
+// peer addresses (e.g. "127.0.0.1") whose X-Forwarded-For header may be trusted.
+func NewRateLimiter(rps float64, burst int, trustedProxies []string) *RateLimiter {
 	if rps <= 0 {
 		return &RateLimiter{rps: 0, burst: 0}
 	}
@@ -54,10 +64,25 @@ func NewRateLimiter(rps float64, burst int) *RateLimiter {
 			burst = 1
 		}
 	}
-	return &RateLimiter{rps: rps, burst: burst}
+	trusted := make(map[string]bool, len(trustedProxies))
+	for _, p := range trustedProxies {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			trusted[p] = true
+		}
+	}
+	return &RateLimiter{
+		rps:       rps,
+		burst:     burst,
+		trusted:   trusted,
+		bucketTTL: 15 * time.Minute,
+	}
 }
 
+// getBucket returns the bucket for ip, creating it on first use and lazily
+// sweeping stale buckets to keep memory bounded.
 func (r *RateLimiter) getBucket(ip string) *bucket {
+	r.maybeSweep(time.Now())
 	if v, ok := r.buckets.Load(ip); ok {
 		return v.(*bucket)
 	}
@@ -66,21 +91,56 @@ func (r *RateLimiter) getBucket(ip string) *bucket {
 		max:        float64(r.burst),
 		ratePerSec: r.rps,
 		last:       time.Now(),
+		lastSeen:   time.Now(),
 	}
 	actual, _ := r.buckets.LoadOrStore(ip, b)
 	return actual.(*bucket)
 }
 
-func clientIP(r *http.Request) string {
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		parts := strings.Split(xff, ",")
-		if len(parts) > 0 {
-			return strings.TrimSpace(parts[0])
+// maybeSweep removes buckets not seen within bucketTTL. It runs at most once per
+// bucketTTL interval and never blocks the hot path for long.
+func (r *RateLimiter) maybeSweep(now time.Time) {
+	if r.bucketTTL <= 0 {
+		return
+	}
+	r.sweepMu.Lock()
+	defer r.sweepMu.Unlock()
+	if now.Sub(r.lastSweep) < r.bucketTTL {
+		return
+	}
+	r.lastSweep = now
+	r.buckets.Range(func(k, v interface{}) bool {
+		b := v.(*bucket)
+		b.mu.Lock()
+		stale := now.Sub(b.lastSeen) > r.bucketTTL
+		b.mu.Unlock()
+		if stale {
+			r.buckets.Delete(k)
+		}
+		return true
+	})
+}
+
+// clientIP returns the client address used for rate limiting. X-Forwarded-For is
+// only honored when the direct peer is a trusted proxy; otherwise it is ignored to
+// prevent spoofing.
+func clientIP(r *http.Request, trusted map[string]bool) string {
+	peer := hostFromRemoteAddr(r.RemoteAddr)
+	if len(trusted) > 0 && trusted[peer] {
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			parts := strings.Split(xff, ",")
+			if ip := strings.TrimSpace(parts[0]); ip != "" {
+				return ip
+			}
 		}
 	}
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	return peer
+}
+
+func hostFromRemoteAddr(remoteAddr string) string {
+	host, _, err := net.SplitHostPort(remoteAddr)
 	if err != nil {
-		return r.RemoteAddr
+		return remoteAddr
 	}
 	return host
 }
@@ -91,7 +151,7 @@ func (r *RateLimiter) Wrap(next http.Handler) http.Handler {
 		return next
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ip := clientIP(req)
+		ip := clientIP(req, r.trusted)
 		if !r.getBucket(ip).allow(time.Now()) {
 			http.Error(w, `{"error":"rate limit exceeded"}`, http.StatusTooManyRequests)
 			return

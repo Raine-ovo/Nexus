@@ -146,6 +146,9 @@ type RateLimitConfig struct {
 	Enabled bool    `yaml:"enabled"`
 	RPS     float64 `yaml:"rps"`
 	Burst   int     `yaml:"burst"`
+	// TrustedProxies lists peer addresses (e.g. "127.0.0.1") whose X-Forwarded-For
+	// header may be trusted for client identification. Empty means never trust XFF.
+	TrustedProxies []string `yaml:"trusted_proxies"`
 }
 
 type MCPConfig struct {
@@ -241,10 +244,10 @@ func LoadFromEnv() *Config {
 
 func applyDefaults(cfg *Config) {
 	if cfg.Server.HTTPAddr == "" {
-		cfg.Server.HTTPAddr = ":8080"
+		cfg.Server.HTTPAddr = "127.0.0.1:8080"
 	}
 	if cfg.Server.WSAddr == "" {
-		cfg.Server.WSAddr = ":8081"
+		cfg.Server.WSAddr = "127.0.0.1:8081"
 	}
 	if cfg.Server.ReadTimeout == 0 {
 		cfg.Server.ReadTimeout = 30 * time.Second

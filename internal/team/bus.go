@@ -30,6 +30,9 @@ func (b *MessageBus) Send(sender, to, content, msgType string, extra map[string]
 	if err := ValidateMsgType(msgType); err != nil {
 		return err
 	}
+	if !validMemberName(to) {
+		return fmt.Errorf("bus: invalid recipient name %q", to)
+	}
 	env := MessageEnvelope{
 		Type:      msgType,
 		From:      sender,
@@ -75,6 +78,9 @@ func (b *MessageBus) SendEnvelope(to string, env MessageEnvelope) error {
 	if err := ValidateMsgType(env.Type); err != nil {
 		return err
 	}
+	if !validMemberName(to) {
+		return fmt.Errorf("bus: invalid recipient name %q", to)
+	}
 	if env.Timestamp == 0 {
 		env.Timestamp = float64(time.Now().UnixMilli()) / 1000.0
 	}
@@ -99,6 +105,9 @@ func (b *MessageBus) SendEnvelope(to string, env MessageEnvelope) error {
 // ReadInbox drains and returns all messages from the named inbox.
 // After reading, the file is truncated so messages are not re-delivered.
 func (b *MessageBus) ReadInbox(name string) ([]MessageEnvelope, error) {
+	if !validMemberName(name) {
+		return nil, fmt.Errorf("bus: invalid inbox name %q", name)
+	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

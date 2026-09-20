@@ -2,9 +2,10 @@ package permission
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/rainea/nexus/pkg/utils"
 )
 
 // PathSandbox validates that file operations stay within workspace boundaries.
@@ -24,7 +25,9 @@ func NewPathSandbox(root string, patterns []string) *PathSandbox {
 	}
 }
 
-// ValidatePath ensures path resolves inside the workspace root.
+// ValidatePath ensures path resolves inside the workspace root. Symlinks are
+// resolved on both the root and the target so a symlink inside the workspace
+// cannot escape to an external path.
 func (s *PathSandbox) ValidatePath(path string) error {
 	if path == "" {
 		return fmt.Errorf("permission: empty path")
@@ -32,30 +35,11 @@ func (s *PathSandbox) ValidatePath(path string) error {
 	if strings.Contains(path, "\x00") {
 		return fmt.Errorf("permission: path contains NUL")
 	}
-	rootAbs, err := filepath.Abs(s.root)
+	resolved, err := utils.SafePath(s.root, path)
 	if err != nil {
-		return fmt.Errorf("permission: resolve root: %w", err)
+		return fmt.Errorf("permission: %w", err)
 	}
-	clean := filepath.Clean(path)
-	var target string
-	if filepath.IsAbs(clean) {
-		target = clean
-	} else {
-		target = filepath.Join(rootAbs, clean)
-	}
-	targetAbs, err := filepath.Abs(target)
-	if err != nil {
-		return fmt.Errorf("permission: resolve path: %w", err)
-	}
-	sep := string(os.PathSeparator)
-	rootPrefix := rootAbs
-	if !strings.HasSuffix(rootPrefix, sep) {
-		rootPrefix += sep
-	}
-	if targetAbs != rootAbs && !strings.HasPrefix(targetAbs+sep, rootPrefix) {
-		return fmt.Errorf("permission: path escapes workspace: %s", path)
-	}
-	base := filepath.Base(targetAbs)
+	base := filepath.Base(resolved)
 	for _, pat := range s.dangerousPatterns {
 		if pat == "" {
 			continue

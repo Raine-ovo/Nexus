@@ -52,6 +52,9 @@ func main() {
 		cfg = configs.LoadFromEnv()
 	}
 	applyRunSandbox(cfg)
+	if err := validateSecurityConfig(cfg); err != nil {
+		log.Fatalf("security configuration error: %v", err)
+	}
 	runLabel := runLabelFromSandbox(cfg.Run.SandboxDir)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -292,11 +295,26 @@ Available roles for delegate_task and spawn_teammate:
 		}
 	})
 
+	// Single tool executor that enforces the permission pipeline for every
+	// invocation path. The MCP server reuses this executor so its tools/call
+	// endpoint cannot bypass permission checks that agents/delegates/teammates
+	// are subject to.
+	permExecutor := tool.NewExecutor(
+		toolRegistry,
+		tool.WithDefaultTimeout(2*time.Minute),
+		tool.WithMaxOutputRunes(100_000),
+		tool.WithSandboxRoot(cfg.Permission.WorkspaceRoot),
+		tool.WithHooks(func(ctx context.Context, h tool.HookContext) error {
+			return permPipeline.CheckTool(ctx, h.Name, h.Args)
+		}, nil),
+	)
+
 	gw := gateway.New(cfg.Gateway, cfg.Server, teamRegistry, obs)
 	if cfg.MCP.ServerEnabled {
 		mcpServer := mcp.NewServer(
 			toolRegistry,
 			mcp.WithPaths(cfg.MCP.RPCPath, cfg.MCP.SSEPath),
+			mcp.WithExecutor(permExecutor),
 		)
 		gw.SetMCPHandler(mcpServer.Handler())
 		obs.Info("mcp server mounted", "rpc_path", mcpServer.RPCPath(), "sse_path", mcpServer.SSEPath())
@@ -424,6 +442,44 @@ func localHTTPBaseURL(addr string) string {
 		host = "127.0.0.1"
 	}
 	return "http://" + net.JoinHostPort(host, port)
+}
+
+// validateSecurityConfig refuses to start when the gateway has no authentication
+// configured yet binds a non-loopback interface. This prevents an unauthenticated
+// deployment (which exposes MCP tool execution, chat, and debug state) from being
+// reachable over the network.
+func validateSecurityConfig(cfg *configs.Config) error {
+	if cfg == nil {
+		return nil
+	}
+	hasAuth := len(cfg.Gateway.Auth.APIKeys) > 0 || strings.TrimSpace(cfg.Gateway.Auth.JWTSecret) != ""
+	if hasAuth {
+		return nil
+	}
+	for _, addr := range []string{cfg.Server.HTTPAddr, cfg.Server.WSAddr} {
+		addr = strings.TrimSpace(addr)
+		if addr != "" && !isLoopbackAddr(addr) {
+			return fmt.Errorf("gateway auth is empty but %q binds a non-loopback interface; set gateway.auth.api_keys or gateway.auth.jwt_secret, or bind to 127.0.0.1", addr)
+		}
+	}
+	return nil
+}
+
+// isLoopbackAddr reports whether a listen address binds only to loopback.
+// Empty host, 0.0.0.0, and :: bind all interfaces and are therefore not loopback.
+func isLoopbackAddr(addr string) bool {
+	host := strings.TrimSpace(addr)
+	if h, _, err := net.SplitHostPort(addr); err == nil {
+		host = strings.TrimSpace(h)
+	}
+	switch host {
+	case "localhost":
+		return true
+	case "", "0.0.0.0", "::", "[::]":
+		return false
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
 
 func bootstrapMCPClients(

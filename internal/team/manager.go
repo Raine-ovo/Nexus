@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"sync"
 	"time"
 
@@ -11,6 +12,16 @@ import (
 	"github.com/rainea/nexus/internal/planning"
 	"github.com/rainea/nexus/pkg/types"
 )
+
+// memberNameRE constrains teammate names because they are used directly as
+// on-disk inbox file names (see MessageBus). Restricting to a conservative
+// character set prevents path traversal and file confusion.
+var memberNameRE = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
+
+// validMemberName reports whether a teammate name is safe to use as a file name.
+func validMemberName(name string) bool {
+	return memberNameRE.MatchString(name)
+}
 
 // AgentTemplate holds the configuration needed to spawn a teammate of a given role.
 type AgentTemplate struct {
@@ -153,6 +164,9 @@ func (m *Manager) Spawn(ctx context.Context, name, role, prompt string) error {
 
 	if name == leadName {
 		return fmt.Errorf("team: cannot spawn teammate named '%s'", leadName)
+	}
+	if !validMemberName(name) {
+		return fmt.Errorf("team: invalid teammate name %q: must match [a-zA-Z0-9_-]{1,64}", name)
 	}
 	if _, exists := m.teammates[name]; exists {
 		return fmt.Errorf("team: teammate '%s' already running", name)

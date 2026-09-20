@@ -390,8 +390,8 @@ func TestGateway_PrimaryHandler_AuthAndRateLimit(t *testing.T) {
 	req2.RemoteAddr = "127.0.0.2:2222"
 	rec2 := httptest.NewRecorder()
 	handler.ServeHTTP(rec2, req2)
-	if rec2.Code == http.StatusUnauthorized {
-		t.Fatalf("expected public debug route to bypass auth, got %d body=%s", rec2.Code, rec2.Body.String())
+	if rec2.Code != http.StatusUnauthorized {
+		t.Fatalf("expected debug route to require auth, got %d body=%s", rec2.Code, rec2.Body.String())
 	}
 
 	req3 := httptest.NewRequest(http.MethodPost, "/api/chat", strings.NewReader(`{"session_id":"s","input":"hello"}`))

@@ -2,28 +2,89 @@ package utils
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 )
 
 // SafePath resolves and validates that the given path stays within the workspace root.
-// Returns the resolved absolute path or an error if path traversal is detected.
+// Both the root and the target have symlinks resolved, so a symlink placed inside the
+// workspace cannot escape to an external path. The resolved absolute path is returned,
+// or an error if path traversal or a symlink escape is detected.
 func SafePath(root, target string) (string, error) {
+	if strings.Contains(target, "\x00") {
+		return "", fmt.Errorf("resolve target: path contains NUL")
+	}
+
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
 		return "", fmt.Errorf("resolve root %s: %w", root, err)
 	}
+	resolvedRoot, err := resolveSymlinks(absRoot)
+	if err != nil {
+		// Root may not exist yet (fresh workspace); fall back to the cleaned absolute path.
+		resolvedRoot = absRoot
+	}
 
-	absTarget, err := filepath.Abs(filepath.Join(root, target))
+	var candidate string
+	if filepath.IsAbs(target) {
+		candidate = filepath.Clean(target)
+	} else {
+		candidate = filepath.Join(absRoot, target)
+	}
+
+	resolvedTarget, err := resolveSymlinks(candidate)
 	if err != nil {
 		return "", fmt.Errorf("resolve target %s: %w", target, err)
 	}
 
-	if !strings.HasPrefix(absTarget, absRoot+string(filepath.Separator)) && absTarget != absRoot {
+	if !pathWithin(resolvedRoot, resolvedTarget) {
 		return "", fmt.Errorf("path traversal detected: %s escapes workspace %s", target, root)
 	}
 
-	return absTarget, nil
+	return resolvedTarget, nil
+}
+
+// resolveSymlinks resolves symlinks in the deepest existing ancestor of path,
+// preserving any non-existent trailing components verbatim. This lets writes to
+// not-yet-created files still be validated against the real (symlink-resolved)
+// parent directory.
+func resolveSymlinks(path string) (string, error) {
+	clean := filepath.Clean(path)
+	existing := clean
+	var suffix []string
+	for {
+		if _, err := os.Lstat(existing); err == nil {
+			break
+		}
+		parent := filepath.Dir(existing)
+		if parent == existing {
+			break
+		}
+		suffix = append([]string{filepath.Base(existing)}, suffix...)
+		existing = parent
+	}
+	resolved, err := filepath.EvalSymlinks(existing)
+	if err != nil {
+		return "", err
+	}
+	if len(suffix) == 0 {
+		return resolved, nil
+	}
+	return filepath.Join(append([]string{resolved}, suffix...)...), nil
+}
+
+func pathWithin(root, target string) bool {
+	root = filepath.Clean(root)
+	target = filepath.Clean(target)
+	if target == root {
+		return true
+	}
+	sep := string(filepath.Separator)
+	if !strings.HasSuffix(root, sep) {
+		root += sep
+	}
+	return strings.HasPrefix(target, root)
 }
 
 // IsDangerousCommand checks if a shell command matches any dangerous patterns.

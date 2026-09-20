@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -82,9 +83,26 @@ func (noopObserver) Error(string, ...interface{}) {}
 var wsUpgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
+	CheckOrigin:     websocketOriginAllowed,
+}
+
+// websocketOriginAllowed enforces same-origin policy for WebSocket upgrades.
+// Requests without an Origin header (non-browser clients) are allowed; browser
+// requests must originate from the same host to prevent cross-site WebSocket
+// hijacking.
+func websocketOriginAllowed(r *http.Request) bool {
+	if r == nil {
+		return false
+	}
+	origin := strings.TrimSpace(r.Header.Get("Origin"))
+	if origin == "" {
 		return true
-	},
+	}
+	u, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	return strings.EqualFold(u.Host, r.Host)
 }
 
 // New constructs a Gateway with default session TTL and lane wiring.
@@ -213,7 +231,7 @@ func (g *Gateway) wrapPrimaryHandler(mux http.Handler) http.Handler {
 		rps = 0
 		burst = 0
 	}
-	handler = middleware.NewRateLimiter(rps, burst).Wrap(handler)
+	handler = middleware.NewRateLimiter(rps, burst, g.cfg.RateLimit.TrustedProxies).Wrap(handler)
 	return handler
 }
 
@@ -221,17 +239,9 @@ func isPublicDebugOrHealthRoute(r *http.Request) bool {
 	if r == nil {
 		return false
 	}
-	path := r.URL.Path
-	switch {
-	case path == "/api/health":
-		return true
-	case path == "/debug/dashboard":
-		return true
-	case strings.HasPrefix(path, "/api/debug/"):
-		return true
-	default:
-		return false
-	}
+	// Only the liveness probe is public. Debug endpoints (traces, scopes, metrics,
+	// dashboard) expose internal state and must go through the auth middleware.
+	return r.URL.Path == "/api/health"
 }
 
 func (g *Gateway) newWebSocketServer() *http.Server {
