@@ -1,0 +1,41 @@
+# --- Build outputs & binaries ---
+/nexus
+/nexus-server
+*.exe
+*.out
+*.test
+build.err
+buildlog.txt
+
+# --- Runtime state (agent outputs, runs, team, memory, knowledge, tasks) ---
+.runs/
+.outputs/
+.team/
+.team-*/
+.memory/
+.knowledge/
+.tasks/
+
+# --- Logs ---
+*.log
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# --- Local configuration & secrets ---
+.env
+.env.*
+configs/local.yaml
+configs/local.*.yaml
+*.pem
+*.key
+
+# --- IDE / editor ---
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
