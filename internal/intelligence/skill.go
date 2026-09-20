@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultMaxSkills     = 256
+	defaultMaxSkills      = 256
 	defaultMaxPromptChars = 80000
 )
 

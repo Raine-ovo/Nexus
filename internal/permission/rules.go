@@ -16,8 +16,8 @@ type RuleEngine struct {
 // Rule describes a single permission rule.
 type Rule struct {
 	ID           string   `json:"id"`
-	Type         string   `json:"type"` // "allow" or "deny"
-	ToolNames    []string `json:"tool_names,omitempty"` // exact match or glob
+	Type         string   `json:"type"`                    // "allow" or "deny"
+	ToolNames    []string `json:"tool_names,omitempty"`    // exact match or glob
 	PathPatterns []string `json:"path_patterns,omitempty"` // file path glob
 	Description  string   `json:"description"`
 }

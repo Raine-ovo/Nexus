@@ -13,7 +13,7 @@ import (
 
 // RecoveryPolicy configures Layer-3 transport-style retries.
 type RecoveryPolicy struct {
-	MaxAttempts int
+	MaxAttempts  int
 	InitialDelay time.Duration
 	MaxDelay     time.Duration
 	// JitterFraction in [0,1] scales random backoff (e.g. 0.2 => +/-20%).
@@ -25,11 +25,11 @@ type RecoveryPolicy struct {
 // DefaultRecoveryPolicy returns sensible defaults for LLM HTTP/RPC flakiness.
 func DefaultRecoveryPolicy() RecoveryPolicy {
 	return RecoveryPolicy{
-		MaxAttempts:      4,
-		InitialDelay:     300 * time.Millisecond,
-		MaxDelay:         8 * time.Second,
-		JitterFraction:   0.25,
-		MaxRetryBudget:   45 * time.Second,
+		MaxAttempts:    4,
+		InitialDelay:   300 * time.Millisecond,
+		MaxDelay:       8 * time.Second,
+		JitterFraction: 0.25,
+		MaxRetryBudget: 45 * time.Second,
 	}
 }
 

@@ -139,14 +139,14 @@ func (d *DevOpsAgent) toolCheckHealth() *types.ToolMeta {
 				text = text[:4000] + "…"
 			}
 			out := map[string]interface{}{
-				"url":             rawURL,
-				"method":          method,
-				"status_code":     resp.StatusCode,
-				"status":          resp.Status,
-				"latency_ms":      elapsed,
-				"content_length":  resp.ContentLength,
-				"body_snippet":    text,
-				"content_type":    resp.Header.Get("Content-Type"),
+				"url":            rawURL,
+				"method":         method,
+				"status_code":    resp.StatusCode,
+				"status":         resp.Status,
+				"latency_ms":     elapsed,
+				"content_length": resp.ContentLength,
+				"body_snippet":   text,
+				"content_type":   resp.Header.Get("Content-Type"),
 			}
 			b, err := json.MarshalIndent(out, "", "  ")
 			if err != nil {

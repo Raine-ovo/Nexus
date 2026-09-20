@@ -86,9 +86,9 @@ func DelegateWork(ctx context.Context, model core.ChatModel, deps *core.AgentDep
 			}
 			result := executeToolWithDeps(ctx, deps, tools, call)
 			messages = append(messages, types.Message{
-				ID:     uuid.NewString(),
-				Role:   types.RoleTool,
-				ToolID: call.ID,
+				ID:      uuid.NewString(),
+				Role:    types.RoleTool,
+				ToolID:  call.ID,
 				Content: result.Content,
 				Metadata: map[string]interface{}{
 					"tool_name": call.Name,

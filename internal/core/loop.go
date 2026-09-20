@@ -292,10 +292,10 @@ func (l *AgentLoop) RunLoop(ctx context.Context, input string) (string, error) {
 			}
 
 			toolMsg := types.Message{
-				ID:        uuid.NewString(),
-				Role:      types.RoleTool,
-				Content:   result.Content,
-				ToolID:    call.ID,
+				ID:      uuid.NewString(),
+				Role:    types.RoleTool,
+				Content: result.Content,
+				ToolID:  call.ID,
 				Metadata: map[string]interface{}{
 					"tool_name": call.Name,
 					"is_error":  result.IsError,

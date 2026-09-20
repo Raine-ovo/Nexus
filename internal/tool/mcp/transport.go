@@ -136,7 +136,7 @@ func NewSSETransport(baseURL, postPath string) *SSETransport {
 		postPath = "/mcp/rpc"
 	}
 	return &SSETransport{
-		baseURL: strings.TrimSuffix(baseURL, "/"),
+		baseURL:  strings.TrimSuffix(baseURL, "/"),
 		postPath: postPath,
 		httpClient: &http.Client{
 			Timeout: 120 * time.Second,

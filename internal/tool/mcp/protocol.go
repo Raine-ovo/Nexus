@@ -125,9 +125,9 @@ type JSONSchemaProperty struct {
 
 // JSONSchemaObject is a minimal object schema for tools (subset of JSON Schema).
 type JSONSchemaObject struct {
-	Type       string                           `json:"type"`
-	Properties map[string]JSONSchemaProperty    `json:"properties,omitempty"`
-	Required   []string                         `json:"required,omitempty"`
+	Type       string                        `json:"type"`
+	Properties map[string]JSONSchemaProperty `json:"properties,omitempty"`
+	Required   []string                      `json:"required,omitempty"`
 }
 
 // ToolsCallParams identifies a tool invocation.

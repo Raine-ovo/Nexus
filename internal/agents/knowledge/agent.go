@@ -193,8 +193,8 @@ func (k *KnowledgeAgent) toolIngestDocument(workspaceRoot string) *types.ToolMet
 				return toolResult("", err)
 			}
 			msg := map[string]interface{}{
-				"status":  "indexed",
-				"path":    rel,
+				"status":   "indexed",
+				"path":     rel,
 				"abs_path": abs,
 			}
 			b, err := json.MarshalIndent(msg, "", "  ")

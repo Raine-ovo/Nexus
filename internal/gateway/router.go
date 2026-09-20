@@ -16,7 +16,7 @@ type Binding struct {
 	Channel  string `json:"channel"` // exact channel name or "*"
 	User     string `json:"user"`    // exact user or "*"
 	AgentID  string `json:"agent_id"`
-	Tier     int    `json:"-"` // computed: 1 (most specific) to 5 (catch-all)
+	Tier     int    `json:"-"`        // computed: 1 (most specific) to 5 (catch-all)
 	Priority int    `json:"priority"` // for same-tier disambiguation
 }
 

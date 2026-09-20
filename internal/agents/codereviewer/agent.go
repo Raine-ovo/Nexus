@@ -345,9 +345,9 @@ func (a *CodeReviewAgent) toolCheckPatterns(workspaceRoot string) *types.ToolMet
 			}
 
 			patterns := []struct {
-				ID      string `json:"id"`
-				Needle  string `json:"needle"`
-				Hint    string `json:"hint"`
+				ID       string `json:"id"`
+				Needle   string `json:"needle"`
+				Hint     string `json:"hint"`
 				Severity string `json:"severity"`
 			}{
 				{"sql_concat", "fmt.Sprintf(", "Possible format-string SQL; use parameterized queries", "warning"},
@@ -448,9 +448,9 @@ func (a *CodeReviewAgent) toolCheckPatterns(workspaceRoot string) *types.ToolMet
 			}
 
 			out := map[string]interface{}{
-				"hits":        hits,
+				"hits":          hits,
 				"files_scanned": seenFiles,
-				"truncated":   seenFiles >= maxFiles,
+				"truncated":     seenFiles >= maxFiles,
 			}
 			b, err := json.MarshalIndent(out, "", "  ")
 			if err != nil {

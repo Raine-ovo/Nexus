@@ -17,8 +17,8 @@ import (
 // CronJob is a persisted scheduled job definition.
 type CronJob struct {
 	Name     string `json:"name"`
-	Schedule string `json:"schedule"`          // cron expression (5-field: min hour dom mon dow)
-	Type     string `json:"type"`              // agent_turn or system_event
+	Schedule string `json:"schedule"` // cron expression (5-field: min hour dom mon dow)
+	Type     string `json:"type"`     // agent_turn or system_event
 	Payload  string `json:"payload"`
 	OneShot  bool   `json:"one_shot,omitempty"` // if true, auto-remove after first execution
 }
