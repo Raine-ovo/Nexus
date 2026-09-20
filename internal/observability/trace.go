@@ -23,10 +23,15 @@ const (
 
 // Tracer provides distributed tracing for agent operations.
 // Implements a simple span-based tracing system with parent-child relationships.
+// The span store is bounded: once maxSpans is exceeded, the oldest spans are evicted.
 type Tracer struct {
-	spans map[string]*Span
-	mu    sync.RWMutex
+	spans    map[string]*Span
+	maxSpans int
+	mu       sync.RWMutex
 }
+
+// defaultMaxSpans bounds in-memory span retention to prevent unbounded growth.
+const defaultMaxSpans = 10000
 
 // Span is one unit of work in a trace.
 type Span struct {
@@ -66,10 +71,19 @@ type TraceSummary struct {
 	Threshold  int       `json:"scope_threshold,omitempty"`
 }
 
-// NewTracer creates an empty in-memory tracer.
+// NewTracer creates an empty in-memory tracer with default span retention.
 func NewTracer() *Tracer {
+	return NewTracerWithLimit(defaultMaxSpans)
+}
+
+// NewTracerWithLimit creates a tracer that evicts oldest spans beyond maxSpans.
+func NewTracerWithLimit(maxSpans int) *Tracer {
+	if maxSpans <= 0 {
+		maxSpans = defaultMaxSpans
+	}
 	return &Tracer{
-		spans: make(map[string]*Span),
+		spans:    make(map[string]*Span),
+		maxSpans: maxSpans,
 	}
 }
 
@@ -102,10 +116,35 @@ func (t *Tracer) StartSpan(ctx context.Context, operation string) (context.Conte
 
 	t.mu.Lock()
 	t.spans[spanID] = span
+	if t.maxSpans > 0 && len(t.spans) > t.maxSpans {
+		t.evictOldestLocked(len(t.spans) - t.maxSpans)
+	}
 	t.mu.Unlock()
 
 	next := context.WithValue(context.WithValue(ctx, keyTraceID, traceID), keySpanID, spanID)
 	return next, span
+}
+
+// evictOldestLocked removes the n spans with the earliest start time.
+// Caller must hold t.mu.
+func (t *Tracer) evictOldestLocked(n int) {
+	if n <= 0 {
+		return
+	}
+	type item struct {
+		id    string
+		start time.Time
+	}
+	items := make([]item, 0, len(t.spans))
+	for id, s := range t.spans {
+		if s != nil {
+			items = append(items, item{id: id, start: s.StartTime})
+		}
+	}
+	sort.Slice(items, func(i, j int) bool { return items[i].start.Before(items[j].start) })
+	for i := 0; i < n && i < len(items); i++ {
+		delete(t.spans, items[i].id)
+	}
 }
 
 // EndSpan marks the span finished. Nil span is a no-op.

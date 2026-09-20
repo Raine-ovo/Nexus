@@ -149,10 +149,25 @@ func (g *Gateway) SetApprovalManager(m *approval.Manager) {
 	g.approvals = m
 }
 
+// runSessionCleanup periodically reaps expired sessions to bound memory.
+func (g *Gateway) runSessionCleanup(ctx context.Context) {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			g.sessions.Cleanup()
+		}
+	}
+}
+
 // Start runs the HTTP server until ctx is cancelled, then shuts down gracefully.
 func (g *Gateway) Start(ctx context.Context) error {
 	g.lanes.Start(ctx)
 	g.runCtx = ctx
+	go g.runSessionCleanup(ctx)
 
 	mux := g.newPrimaryMux()
 	handler := g.wrapPrimaryHandler(mux)
