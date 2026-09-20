@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"sync"
 	"time"
 
 	"github.com/rainea/nexus/internal/core"
+	gatewaymw "github.com/rainea/nexus/internal/gateway/middleware"
 	"github.com/rainea/nexus/internal/planning"
 	"github.com/rainea/nexus/pkg/types"
 )
@@ -279,8 +281,14 @@ func (m *Manager) SendMessage(ctx context.Context, sender, target, content strin
 	if content == "" {
 		return fmt.Errorf("team: content required")
 	}
+	// Propagate the originating user request id so the recipient's spans can be
+	// correlated to the same per-request trace in the desktop UI.
+	extra := map[string]interface{}{}
+	if rid := gatewaymw.RequestIDFromContext(ctx); rid != "" {
+		extra["request_id"] = rid
+	}
 	if target == leadName {
-		return m.bus.Send(sender, target, content, MsgTypeMessage, nil)
+		return m.bus.Send(sender, target, content, MsgTypeMessage, extra)
 	}
 
 	member, ok := m.roster.Get(target)
@@ -295,7 +303,7 @@ func (m *Manager) SendMessage(ctx context.Context, sender, target, content strin
 			m.observer.Info("teammate revived for send_message", "name", member.Name, "role", member.Role)
 		}
 	}
-	return m.bus.Send(sender, target, content, MsgTypeMessage, nil)
+	return m.bus.Send(sender, target, content, MsgTypeMessage, extra)
 }
 
 // ShutdownTeammate requests graceful shutdown of a teammate.
@@ -317,6 +325,18 @@ func (m *Manager) ShutdownTeammate(name string) error {
 // ListTeammates returns current roster state.
 func (m *Manager) ListTeammates() []TeamMember {
 	return m.roster.List()
+}
+
+// ListRoles returns the registered agent template roles, sorted.
+func (m *Manager) ListRoles() []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	roles := make([]string, 0, len(m.templates))
+	for role := range m.templates {
+		roles = append(roles, role)
+	}
+	sort.Strings(roles)
+	return roles
 }
 
 // Roster returns the underlying roster.

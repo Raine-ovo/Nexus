@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rainea/nexus/configs"
+	"github.com/rainea/nexus/internal/gateway/middleware"
 )
 
 // ErrStaleLane is returned when a lane was reset while the task was queued.
@@ -34,8 +35,11 @@ type Lane struct {
 type LaneTask struct {
 	ID         string
 	Generation uint64
-	Execute    func(ctx context.Context) (string, error)
-	ResultCh   chan LaneResult
+	// RequestID carries the originating HTTP request id (X-Request-ID) so spans
+	// produced while executing this task can be correlated to that request.
+	RequestID string
+	Execute   func(ctx context.Context) (string, error)
+	ResultCh  chan LaneResult
 }
 
 // LaneResult is the outcome of a lane task.
@@ -109,6 +113,7 @@ func (m *LaneManager) Submit(ctx context.Context, laneName string, fn func(ctx c
 	task := &LaneTask{
 		ID:         uuid.NewString(),
 		Generation: gen,
+		RequestID:  middleware.RequestIDFromContext(ctx),
 		Execute:    fn,
 		ResultCh:   resultCh,
 	}
@@ -183,7 +188,8 @@ func (l *Lane) processQueue(ctx context.Context) {
 					}
 					return
 				}
-				out, err := t.Execute(ctx)
+				execCtx := middleware.WithRequestID(ctx, t.RequestID)
+				out, err := t.Execute(execCtx)
 				select {
 				case t.ResultCh <- LaneResult{Output: out, Err: err}:
 				default:

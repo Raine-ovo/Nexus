@@ -77,6 +77,7 @@ type debugObserver interface {
 	MetricsSnapshotForRun(runLabel string) map[string]interface{}
 	ListTraces(limit int) []observability.TraceSummary
 	Trace(traceID string) []*observability.Span
+	SpansByRequest(requestID string) []*observability.Span
 }
 
 type noopObserver struct{}
@@ -246,6 +247,10 @@ func (g *Gateway) newPrimaryMux() *http.ServeMux {
 	mux.HandleFunc("GET /api/debug/scopes", g.handleDebugScopes)
 	mux.HandleFunc("GET /api/debug/traces", g.handleDebugTraces)
 	mux.HandleFunc("GET /api/debug/traces/{id}", g.handleDebugTrace)
+	mux.HandleFunc("GET /api/traces/by-request", g.handleTracesByRequest)
+	mux.HandleFunc("GET /api/team", g.handleTeamInfo)
+	mux.HandleFunc("POST /api/team/teammates", g.handleSpawnTeammate)
+	mux.HandleFunc("POST /api/team/teammates/{name}/shutdown", g.handleShutdownTeammate)
 	mux.HandleFunc("GET /debug/dashboard", g.handleDebugDashboard)
 	mux.HandleFunc("GET /debug/approvals", g.handleDebugApprovals)
 	mux.HandleFunc("GET /api/ws", g.handleWebSocket)

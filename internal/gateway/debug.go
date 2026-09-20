@@ -32,6 +32,38 @@ func (g *Gateway) handleDebugMetrics(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// handleTracesByRequest returns all spans correlated to a request id. The
+// desktop UI polls this while a chat request is in flight to render the live
+// per-request trace (lead + teammates + delegates) and the current stage.
+func (g *Gateway) handleTracesByRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	rid := strings.TrimSpace(r.URL.Query().Get("request_id"))
+	if rid == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "request_id required"})
+		return
+	}
+	dbg, ok := g.observer.(debugObserver)
+	if !ok {
+		w.WriteHeader(http.StatusNotImplemented)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "trace lookup unavailable"})
+		return
+	}
+	spans := dbg.SpansByRequest(rid)
+	if spans == nil {
+		spans = []*observability.Span{}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"request_id": rid,
+		"count":      len(spans),
+		"spans":      spans,
+	})
+}
+
 func (g *Gateway) handleDebugScopes(w http.ResponseWriter, r *http.Request) {
 	dbg, ok := g.supervisor.(ScopeDebugger)
 	if !ok {

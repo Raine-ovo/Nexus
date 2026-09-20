@@ -94,6 +94,14 @@ func (o *Observer) Trace(traceID string) []*Span {
 	return o.tracer.GetTrace(traceID)
 }
 
+// SpansByRequest returns all spans tagged with the given request id.
+func (o *Observer) SpansByRequest(requestID string) []*Span {
+	if o == nil || !o.cfg.TraceEnabled {
+		return nil
+	}
+	return o.tracer.ListSpansByRequest(requestID)
+}
+
 // ListTraces returns recent trace summaries.
 func (o *Observer) ListTraces(limit int) []TraceSummary {
 	if o == nil || !o.cfg.TraceEnabled {

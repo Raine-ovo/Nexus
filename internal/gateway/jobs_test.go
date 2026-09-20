@@ -88,6 +88,10 @@ func (s stubDebugObserver) Trace(traceID string) []*observability.Span {
 	return s.spans[traceID]
 }
 
+func (s stubDebugObserver) SpansByRequest(requestID string) []*observability.Span {
+	return s.spans[requestID]
+}
+
 func TestJobManager_RunLifecycle(t *testing.T) {
 	jm := NewJobManager()
 	job := jm.Create("s1", "main", "hello")

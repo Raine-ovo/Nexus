@@ -335,6 +335,10 @@ func (r *Runtime) startSpan(ctx context.Context, actorName, nodeName, eventType 
 		runID = uuid.NewString()
 	}
 	nextCtx, span := tracer.StartSpan(ctx, actorName+":"+nodeName)
+	// Propagate the request id into the child context so nested spans (llm/tool
+	// calls under a request span) inherit the same request_id instead of drawing
+	// a fresh random one.
+	nextCtx = gatewaymw.WithRequestID(nextCtx, runID)
 	if span != nil {
 		if span.Tags == nil {
 			span.Tags = make(map[string]string)

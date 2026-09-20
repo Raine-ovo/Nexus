@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rainea/nexus/internal/core"
+	gatewaymw "github.com/rainea/nexus/internal/gateway/middleware"
 	"github.com/rainea/nexus/internal/planning"
 	"github.com/rainea/nexus/pkg/types"
 )
@@ -167,6 +168,10 @@ func (t *Teammate) run(ctx context.Context, initialPrompt string) {
 		CreatedAt: time.Now(),
 	})
 	workInput := initialPrompt
+	// The spawn ctx may already carry a request_id (e.g. spawned via the lead's
+	// spawn_teammate tool), which lets the initial work unit's spans correlate
+	// to the originating user request.
+	workRequestID := gatewaymw.RequestIDFromContext(ctx)
 
 	for {
 		select {
@@ -175,13 +180,15 @@ func (t *Teammate) run(ctx context.Context, initialPrompt string) {
 		default:
 		}
 
-		t.runWorkUnit(ctx, workInput)
+		workCtx := gatewaymw.WithRequestID(ctx, workRequestID)
+		t.runWorkUnit(workCtx, workInput)
 
-		resume, nextInput := t.idlePhase(ctx)
+		resume, nextInput, nextRID := t.idlePhase(ctx)
 		if !resume {
 			return
 		}
 		workInput = nextInput
+		workRequestID = nextRID
 	}
 }
 
@@ -212,7 +219,7 @@ func (t *Teammate) runWorkUnit(ctx context.Context, input string) {
 }
 
 // executeWorkPhase runs the model/tool loop until the model produces final text or limits are hit.
-func (t *Teammate) executeWorkPhase(ctx context.Context, input string) (string, error) {
+func (t *Teammate) executeWorkPhase(ctx context.Context, input string) (output string, err error) {
 	taskID := 0
 	if t.roster != nil {
 		if member, ok := t.roster.Get(t.name); ok {
@@ -226,7 +233,14 @@ func (t *Teammate) executeWorkPhase(ctx context.Context, input string) (string, 
 	t.setRosterState(StatusWorking, activity, taskID)
 	_ = input
 
+	reqTrace, reqCtx := t.startRequestSpan(ctx, "work_unit")
+	defer func() { t.endRequestSpan(reqTrace, err) }()
+
 	for iter := 0; iter < maxTeammateIterations; iter++ {
+		runCtx := reqCtx
+		if runCtx == nil {
+			runCtx = ctx
+		}
 		select {
 		case <-ctx.Done():
 			return "", ctx.Err()
@@ -238,9 +252,9 @@ func (t *Teammate) executeWorkPhase(ctx context.Context, input string) (string, 
 		t.compactTranscript(ctx)
 
 		toolDefs := toolDefinitions(t.tools)
-		llmTrace, llmCtx := t.startLLMSpan(ctx)
+		llmTrace, llmCtx := t.startLLMSpan(runCtx)
 		var resp *core.ChatModelResponse
-		err := t.callWithRecovery(llmCtx, func(callCtx context.Context) error {
+		err = t.callWithRecovery(llmCtx, func(callCtx context.Context) error {
 			var genErr error
 			resp, genErr = t.model.Generate(callCtx, t.buildSystem(), t.messages, toolDefs)
 			return genErr
@@ -254,16 +268,16 @@ func (t *Teammate) executeWorkPhase(ctx context.Context, input string) (string, 
 		}
 
 		if !hasToolCalls(resp) {
-			text := strings.TrimSpace(resp.Content)
-			t.appendAssistant(text)
-			return text, nil
+			output = strings.TrimSpace(resp.Content)
+			t.appendAssistant(output)
+			return output, nil
 		}
 
 		// Append assistant message with tool calls.
 		t.appendAssistantWithCalls(resp)
 
 		for _, call := range resp.ToolCalls {
-			toolTrace, toolCtx := t.startToolSpan(ctx, call.Name)
+			toolTrace, toolCtx := t.startToolSpan(runCtx, call.Name)
 			result := t.executeTool(toolCtx, call)
 			t.endToolSpan(toolTrace, toolResultErr(result))
 			t.appendToolResult(call, result)
@@ -272,17 +286,19 @@ func (t *Teammate) executeWorkPhase(ctx context.Context, input string) (string, 
 	return "", fmt.Errorf("teammate: exceeded max iterations (%d)", maxTeammateIterations)
 }
 
-// idlePhase checks inbox then task board; returns true to resume work.
-func (t *Teammate) idlePhase(ctx context.Context) (bool, string) {
+// idlePhase checks inbox then task board; returns (resume, input, requestID).
+// requestID is propagated from the last inbox envelope that carried one, so the
+// next work unit's spans correlate with the originating user request.
+func (t *Teammate) idlePhase(ctx context.Context) (bool, string, string) {
 	t.setRosterState(StatusIdle, "waiting_for_work", 0)
 
 	for poll := 0; poll < t.maxIdlePolls; poll++ {
 		select {
 		case <-ctx.Done():
-			return false, ""
+			return false, "", ""
 		case reqID := <-t.shutdownSignal:
 			t.handleShutdownRequest(reqID)
-			return false, ""
+			return false, "", ""
 		default:
 		}
 
@@ -290,10 +306,11 @@ func (t *Teammate) idlePhase(ctx context.Context) (bool, string) {
 		msgs, _ := t.bus.ReadInbox(t.name)
 		if len(msgs) > 0 {
 			var resumedInput []string
+			requestID := ""
 			for _, env := range msgs {
 				if env.Type == MsgTypeShutdownRequest && env.RequestID != "" {
 					t.handleShutdownRequest(env.RequestID)
-					return false, ""
+					return false, "", ""
 				}
 				payload := formatEnvelope(env)
 				t.messages = append(t.messages, types.Message{
@@ -303,10 +320,13 @@ func (t *Teammate) idlePhase(ctx context.Context) (bool, string) {
 					CreatedAt: time.Now(),
 				})
 				resumedInput = append(resumedInput, payload)
+				if env.RequestID != "" {
+					requestID = env.RequestID
+				}
 			}
 			t.ensureIdentity()
 			t.setRosterState(StatusWorking, "processing_inbox", 0)
-			return true, strings.Join(resumedInput, "\n")
+			return true, strings.Join(resumedInput, "\n"), requestID
 		}
 
 		// Priority 2: claimable tasks.
@@ -330,7 +350,7 @@ func (t *Teammate) idlePhase(ctx context.Context) (bool, string) {
 						CreatedAt: time.Now(),
 					})
 					t.appendAssistant(fmt.Sprintf("Claimed task #%d. Working on it.", claimed.ID))
-					return true, taskPrompt
+					return true, taskPrompt, ""
 				}
 				// Claim race lost -- continue polling.
 			}
@@ -338,16 +358,16 @@ func (t *Teammate) idlePhase(ctx context.Context) (bool, string) {
 
 		select {
 		case <-ctx.Done():
-			return false, ""
+			return false, "", ""
 		case reqID := <-t.shutdownSignal:
 			t.handleShutdownRequest(reqID)
-			return false, ""
+			return false, "", ""
 		case <-time.After(t.pollInterval):
 		}
 	}
 
 	t.log("idle timeout, auto-shutting down")
-	return false, ""
+	return false, "", ""
 }
 
 func (t *Teammate) handleShutdownRequest(requestID string) {
@@ -560,6 +580,20 @@ func toolResultErr(result *types.ToolResult) error {
 		return nil
 	}
 	return fmt.Errorf(strings.TrimSpace(result.Content))
+}
+
+func (t *Teammate) startRequestSpan(ctx context.Context, phase string) (*runtimeTrace, context.Context) {
+	if t.runtime == nil {
+		return nil, ctx
+	}
+	return t.runtime.StartRequestSpan(ctx, t.name, phase)
+}
+
+func (t *Teammate) endRequestSpan(trace *runtimeTrace, err error) {
+	if t.runtime == nil {
+		return
+	}
+	t.runtime.endSpan(trace, err, "on_end")
 }
 
 func (t *Teammate) startLLMSpan(ctx context.Context) (*runtimeTrace, context.Context) {

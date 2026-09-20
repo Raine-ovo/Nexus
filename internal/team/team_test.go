@@ -1424,7 +1424,7 @@ func TestDelegateWork_BasicExecution(t *testing.T) {
 		SystemPrompt: "You are a code reviewer.",
 	}
 
-	result, err := DelegateWork(context.Background(), model, nil, tmpl, "Review function Foo in main.go")
+	result, err := DelegateWork(context.Background(), model, nil, tmpl, "Review function Foo in main.go", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1450,13 +1450,13 @@ func TestDelegateWork_ContextIsolation(t *testing.T) {
 	tmpl := AgentTemplate{Role: "coder", SystemPrompt: "coder"}
 
 	// First delegation.
-	_, err := DelegateWork(context.Background(), model, nil, tmpl, "Task A")
+	_, err := DelegateWork(context.Background(), model, nil, tmpl, "Task A", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Second delegation — should start fresh, NOT carry over Task A's context.
-	_, err = DelegateWork(context.Background(), model, nil, tmpl, "Task B")
+	_, err = DelegateWork(context.Background(), model, nil, tmpl, "Task B", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1496,7 +1496,7 @@ func TestDelegateWork_WithToolUse(t *testing.T) {
 		Tools:        []*types.ToolMeta{styleTool},
 	}
 
-	result, err := DelegateWork(context.Background(), model, nil, tmpl, "Check style of main.go")
+	result, err := DelegateWork(context.Background(), model, nil, tmpl, "Check style of main.go", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1558,7 +1558,7 @@ func TestDelegateWork_UnknownRole(t *testing.T) {
 func TestDelegateWork_EmptyTask(t *testing.T) {
 	model := &stubModel{}
 	tmpl := AgentTemplate{Role: "coder"}
-	_, err := DelegateWork(context.Background(), model, nil, tmpl, "")
+	_, err := DelegateWork(context.Background(), model, nil, tmpl, "", nil)
 	if err == nil {
 		t.Fatal("expected error for empty task")
 	}

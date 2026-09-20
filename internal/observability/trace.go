@@ -35,22 +35,22 @@ const defaultMaxSpans = 10000
 
 // Span is one unit of work in a trace.
 type Span struct {
-	TraceID   string
-	SpanID    string
-	ParentID  string
-	Operation string
-	StartTime time.Time
-	EndTime   time.Time
-	Tags      map[string]string
-	Events    []SpanEvent
-	Status    string // "ok", "error"
+	TraceID   string            `json:"trace_id"`
+	SpanID    string            `json:"span_id"`
+	ParentID  string            `json:"parent_id"`
+	Operation string            `json:"operation"`
+	StartTime time.Time         `json:"start_time"`
+	EndTime   time.Time         `json:"end_time"`
+	Tags      map[string]string `json:"tags,omitempty"`
+	Events    []SpanEvent       `json:"events,omitempty"`
+	Status    string            `json:"status"` // "ok", "error"
 }
 
 // SpanEvent is a point-in-time annotation on a span.
 type SpanEvent struct {
-	Name      string
-	Timestamp time.Time
-	Attrs     map[string]string
+	Name      string            `json:"name"`
+	Timestamp time.Time         `json:"timestamp"`
+	Attrs     map[string]string `json:"attrs,omitempty"`
 }
 
 // TraceSummary is a compact trace-level view for debug listing endpoints.
@@ -198,6 +198,30 @@ func (t *Tracer) GetTrace(traceID string) []*Span {
 		if s != nil && s.TraceID == traceID {
 			out = append(out, s)
 		}
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].StartTime.Before(out[j].StartTime)
+	})
+	return out
+}
+
+// ListSpansByRequest returns every span tagged with the given request id, sorted
+// by start time ascending. This powers the desktop UI's live per-request trace
+// view: a chat request carries an X-Request-ID and every lead/teammate/delegate
+// span inherits it as the "request_id" tag.
+func (t *Tracer) ListSpansByRequest(requestID string) []*Span {
+	if t == nil || strings.TrimSpace(requestID) == "" {
+		return nil
+	}
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+
+	var out []*Span
+	for _, s := range t.spans {
+		if s == nil || s.Tags["request_id"] != requestID {
+			continue
+		}
+		out = append(out, s)
 	}
 	sort.Slice(out, func(i, j int) bool {
 		return out[i].StartTime.Before(out[j].StartTime)

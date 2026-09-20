@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -53,6 +54,18 @@ func (t *TraceMiddleware) Wrap(next http.Handler) http.Handler {
 func RequestIDFromContext(ctx context.Context) string {
 	v, _ := ctx.Value(requestIDKey).(string)
 	return v
+}
+
+// WithRequestID attaches a request id to the context so downstream spans and
+// team messages can be correlated to the originating user request.
+func WithRequestID(ctx context.Context, requestID string) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if strings.TrimSpace(requestID) == "" {
+		return ctx
+	}
+	return context.WithValue(ctx, requestIDKey, strings.TrimSpace(requestID))
 }
 
 // WithScopeDecision attaches scope routing context to the request context.

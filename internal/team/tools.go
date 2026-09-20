@@ -430,7 +430,7 @@ func toolDelegateTask(mgr *Manager) *types.ToolMeta {
 				mgr.observer.Info("delegate_task started", "role", role, "task_len", len(task))
 			}
 
-			result, err := DelegateWork(ctx, mgr.model, mgr.deps, tmpl, task)
+			result, err := DelegateWork(ctx, mgr.model, mgr.deps, tmpl, task, mgr.runtime)
 			if err != nil {
 				return &types.ToolResult{
 					Content: fmt.Sprintf("Delegate (%s) failed: %v", role, err),

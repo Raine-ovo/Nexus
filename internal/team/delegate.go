@@ -23,8 +23,13 @@ const maxDelegateIterations = 30
 //
 // This is the s04 subagent pattern preserved inside the team system:
 // "create → execute → return → destroyed", providing context isolation.
+//
+// rt (optional) wires the delegate into the trace pipeline: every delegate LLM
+// call and tool call becomes a span tagged with actor "delegate:<role>", so the
+// desktop UI's per-request trace can surface delegate activity alongside lead
+// and teammates.
 func DelegateWork(ctx context.Context, model core.ChatModel, deps *core.AgentDependencies,
-	tmpl AgentTemplate, task string) (string, error) {
+	tmpl AgentTemplate, task string, rt *Runtime) (out string, err error) {
 
 	if model == nil {
 		return "", fmt.Errorf("delegate: model is nil")
@@ -32,6 +37,14 @@ func DelegateWork(ctx context.Context, model core.ChatModel, deps *core.AgentDep
 	if task == "" {
 		return "", fmt.Errorf("delegate: empty task")
 	}
+
+	actor := "delegate:" + tmpl.Role
+	reqTrace, reqCtx := rt.StartRequestSpan(ctx, actor, "delegate")
+	defer func() {
+		if rt != nil {
+			rt.endSpan(reqTrace, err, "on_end")
+		}
+	}()
 
 	sysPrompt := tmpl.SystemPrompt
 	if sysPrompt == "" {
@@ -54,21 +67,24 @@ func DelegateWork(ctx context.Context, model core.ChatModel, deps *core.AgentDep
 
 	for iter := 0; iter < maxDelegateIterations; iter++ {
 		select {
-		case <-ctx.Done():
-			return "", ctx.Err()
+		case <-reqCtx.Done():
+			return "", reqCtx.Err()
 		default:
 		}
 
-		resp, err := model.Generate(ctx, sysPrompt, messages, toolDefs)
-		if err != nil {
-			return "", fmt.Errorf("delegate: model generate: %w", err)
+		llmTrace, llmCtx := rt.StartLLMSpan(reqCtx, actor)
+		resp, genErr := model.Generate(llmCtx, sysPrompt, messages, toolDefs)
+		rt.EndLLMSpan(llmTrace, genErr)
+		if genErr != nil {
+			return "", fmt.Errorf("delegate: model generate: %w", genErr)
 		}
 		if resp == nil {
 			return "", fmt.Errorf("delegate: nil model response")
 		}
 
 		if !hasToolCalls(resp) {
-			return strings.TrimSpace(resp.Content), nil
+			out = strings.TrimSpace(resp.Content)
+			return out, nil
 		}
 
 		// Append assistant message with tool calls.
@@ -84,7 +100,9 @@ func DelegateWork(ctx context.Context, model core.ChatModel, deps *core.AgentDep
 			if call.ID == "" {
 				call.ID = uuid.NewString()
 			}
-			result := executeToolWithDeps(ctx, deps, tools, call)
+			toolTrace, toolCtx := rt.StartToolSpan(reqCtx, actor, call.Name)
+			result := executeToolWithDeps(toolCtx, deps, tools, call)
+			rt.EndToolSpan(toolTrace, toolResultErr(result))
 			messages = append(messages, types.Message{
 				ID:      uuid.NewString(),
 				Role:    types.RoleTool,

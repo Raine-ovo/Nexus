@@ -209,7 +209,11 @@
     rightPanelOpen: false,
     rightPanelTab: 'approvals',
     debugLoaded: false,
-    electronInfo: null
+    electronInfo: null,
+    traceSpans: [],
+    lastRequestId: null,
+    tracePolling: null,
+    teamData: null
   };
   var renderTimers = {};
 
@@ -221,13 +225,15 @@
   function cacheEls() {
     var ids = [
       'version-badge', 'model-badge', 'status-dot', 'status-text', 'status-pill',
-      'approval-badge', 'approval-badge-btn', 'debug-btn', 'settings-btn', 'sidebar-toggle',
+      'approval-badge', 'approval-badge-btn', 'debug-btn', 'trace-btn', 'team-btn', 'settings-btn', 'sidebar-toggle',
       'sidebar', 'new-session-btn', 'session-list', 'session-count',
-      'messages', 'empty-state', 'thinking', 'thinking-time', 'stop-btn', 'chat-scroll',
+      'messages', 'empty-state', 'thinking', 'thinking-text', 'thinking-time', 'stop-btn', 'chat-scroll',
       'workstream-toggle', 'workstream-fields', 'scope-input', 'workstream-input',
       'composer', 'send-btn', 'right-panel', 'right-panel-close',
-      'tab-approvals', 'tab-debug', 'approvals-list', 'approvals-empty', 'approvals-refresh',
-      'debug-body', 'debug-refresh', 'settings-modal', 'set-model', 'set-base-url',
+      'tab-approvals', 'tab-debug', 'tab-trace', 'tab-team', 'approvals-list', 'approvals-empty', 'approvals-refresh',
+      'debug-body', 'debug-refresh', 'trace-stage', 'trace-body', 'trace-refresh',
+      'team-scope', 'team-members', 'team-refresh', 'team-new-name', 'team-new-role', 'team-new-prompt', 'team-spawn-btn',
+      'settings-modal', 'set-model', 'set-base-url',
       'set-api-key', 'set-workspace', 'select-workspace-btn', 'settings-mode-hint',
       'electron-info', 'log-toggle', 'log-panel', 'log-output', 'settings-msg',
       'settings-save', 'settings-cancel', 'toast'
@@ -263,10 +269,14 @@
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     return resp.json();
   }
-  async function apiPost(path, body) {
+  async function apiPost(path, body, extraHeaders) {
+    var headers = { 'Content-Type': 'application/json' };
+    if (extraHeaders) {
+      for (var k in extraHeaders) headers[k] = extraHeaders[k];
+    }
     var resp = await fetch(path, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers,
       body: JSON.stringify(body)
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -351,6 +361,13 @@
     els.workstreamInput.value = s.workstream || '';
     renderSessionList();
     renderMessages();
+    // 切换会话时刷新团队面板；清空旧会话的运行轨迹
+    if (state.rightPanelOpen && state.rightPanelTab === 'team') loadTeam();
+    if (state.rightPanelOpen && state.rightPanelTab === 'trace') {
+      state.traceSpans = [];
+      state.lastRequestId = null;
+      renderTrace();
+    }
   }
 
   async function createSession() {
@@ -448,6 +465,12 @@
       btn.className = 'msg-copy';
       btn.textContent = '复制';
       actions.appendChild(btn);
+      if (m.requestId) {
+        var traceBtn = document.createElement('button');
+        traceBtn.className = 'msg-trace';
+        traceBtn.textContent = '查看轨迹';
+        actions.appendChild(traceBtn);
+      }
       div.appendChild(actions);
     }
 
@@ -475,9 +498,12 @@
     return null;
   }
 
-  function addMessage(role, content) {
+  function addMessage(role, content, extra) {
     var s = currentSession();
     var m = { id: genId('msg'), role: role, content: content, error: false };
+    if (extra) {
+      for (var k in extra) m[k] = extra[k];
+    }
     if (s) {
       if (!s.messages) s.messages = [];
       s.messages.push(m);
@@ -518,6 +544,7 @@
   /* ---------------- 流式 / 思考 ---------------- */
   function startThinking() {
     els.thinking.classList.remove('hidden');
+    els.thinkingText.textContent = '正在思考…';
     state.elapsed = 0;
     els.thinkingTime.textContent = '0s';
     clearInterval(state.elapsedTimer);
@@ -596,10 +623,11 @@
     if (buffer.trim()) handleSSEFrame(buffer, msgId);
   }
 
-  async function fallbackChat(input, msgId) {
+  async function fallbackChat(input, msgId, rid) {
     var s = currentSession();
+    var headers = rid ? { 'X-Request-ID': rid } : undefined;
     try {
-      var resp = await apiPost('/api/chat', { session_id: s.id, input: input, lane: 'main' });
+      var resp = await apiPost('/api/chat', { session_id: s.id, input: input, lane: 'main' }, headers);
       var m = findMessage(msgId);
       if (m) {
         if (resp.error) {
@@ -626,6 +654,9 @@
     var session = currentSession();
     if (!session) { toast('请先创建会话'); return; }
 
+    // 生成请求 ID，用于关联运行轨迹
+    var rid = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : genId('req');
+
     // 用户消息
     addMessage('user', input);
     if (!session.title || session.title === '新会话') {
@@ -636,12 +667,15 @@
     els.composer.value = '';
     autoResizeComposer();
 
-    // 助手占位
-    var assistantMsg = addMessage('assistant', '');
+    // 助手占位（关联 requestId，便于「查看轨迹」）
+    var assistantMsg = addMessage('assistant', '', { requestId: rid });
 
     state.streaming = true;
+    state.lastRequestId = rid;
+    state.traceSpans = [];
     setBusyUI(true);
     startThinking();
+    startTracePolling(rid);
 
     var controller = new AbortController();
     state.streamAbort = controller;
@@ -649,7 +683,7 @@
     try {
       var resp = await fetch('/api/chat/stream', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Request-ID': rid },
         body: JSON.stringify({ session_id: session.id, input: input, lane: 'main' }),
         signal: controller.signal
       });
@@ -668,13 +702,18 @@
         }
       } else {
         // 流式异常：降级到同步接口
-        await fallbackChat(input, assistantMsg.id);
+        await fallbackChat(input, assistantMsg.id, rid);
       }
     } finally {
+      stopTracePolling();
       state.streaming = false;
       state.streamAbort = null;
       setBusyUI(false);
       stopThinking();
+      // 最终再拉一次完整轨迹
+      if (state.lastRequestId) {
+        await loadTrace(state.lastRequestId);
+      }
       saveSessions();
       scrollToBottom();
     }
@@ -890,12 +929,365 @@
     });
   }
 
+  /* ---------------- 运行轨迹 ---------------- */
+  function spanNode(span) {
+    if (span && span.tags && span.tags.node) return span.tags.node;
+    var op = (span && span.operation) || '';
+    var i = op.indexOf(':');
+    return i >= 0 ? op.slice(i + 1) : op;
+  }
+  function spanActor(span) {
+    if (span && span.tags && span.tags.actor) return span.tags.actor;
+    var op = (span && span.operation) || '';
+    var i = op.indexOf(':');
+    return i >= 0 ? op.slice(0, i) : op;
+  }
+  function spanEnded(span) {
+    if (!span || !span.end_time) return false;
+    var d = new Date(span.end_time);
+    if (isNaN(d.getTime())) return false;
+    return d.getUTCFullYear() > 1; // Go 零值时间 "0001-01-01T00:00:00Z" 视为进行中
+  }
+  function spanDuration(span) {
+    if (!spanEnded(span)) return null;
+    var s = new Date(span.start_time).getTime();
+    var e = new Date(span.end_time).getTime();
+    if (isNaN(s) || isNaN(e) || e < s) return null;
+    return e - s;
+  }
+  function formatDuration(ms) {
+    if (ms == null) return '运行中…';
+    if (ms < 1000) return Math.round(ms) + 'ms';
+    if (ms < 60000) return (ms / 1000).toFixed(1) + 's';
+    return (ms / 60000).toFixed(1) + 'min';
+  }
+
+  function deriveStage(spans) {
+    if (!spans || !spans.length) return '未开始';
+    var running = spans.filter(function (s) { return !spanEnded(s); });
+    if (!running.length) return '已完成';
+    running.sort(function (a, b) { return new Date(b.start_time).getTime() - new Date(a.start_time).getTime(); });
+    var node = spanNode(running[0]) || '';
+    if (node === 'llm_call') return '正在思考…';
+    if (node.indexOf('tool:') === 0) return '正在调用工具 ' + node.slice(5);
+    if (node.indexOf('request:') === 0) return '正在处理…';
+    return '运行中…';
+  }
+
+  function spanLabel(span) {
+    var node = spanNode(span);
+    var actor = spanActor(span) || 'lead';
+    if (!node) return span.operation || '未知';
+    switch (node) {
+      case 'request:user_turn': return 'Lead 处理用户请求';
+      case 'request:work_unit': return actor + ' 工作单元';
+      case 'request:delegate': return actor + ' 委派执行';
+      case 'llm_call': return actor + ' 调用大模型';
+      case 'tool:delegate_task': return actor + ' 委派任务给专家';
+      case 'tool:send_message': return actor + ' 发消息给队友';
+      case 'tool:spawn_teammate': return actor + ' 创建队友';
+      case 'tool:shutdown_teammate': return actor + ' 关闭队友';
+    }
+    if (node.indexOf('tool:') === 0) return actor + ' 调用工具 ' + node.slice(5);
+    return span.operation || '未知';
+  }
+
+  function actorBadgeClass(actor) {
+    actor = actor || '';
+    if (actor === 'lead') return 'actor-lead';
+    if (actor.indexOf('delegate') === 0) return 'actor-delegate';
+    return 'actor-teammate';
+  }
+
+  function buildTraceNode(span, children, depth) {
+    var node = document.createElement('div');
+    node.className = 'trace-node';
+    if (depth > 0) node.style.paddingLeft = (depth * 14) + 'px';
+
+    var row = document.createElement('div');
+    row.className = 'trace-row';
+
+    var dot = document.createElement('span');
+    dot.className = 'trace-dot ' + (span.status === 'error' ? 'err' : (spanEnded(span) ? 'ok' : 'run'));
+
+    var actor = document.createElement('span');
+    actor.className = 'trace-actor ' + actorBadgeClass(spanActor(span));
+    actor.textContent = spanActor(span) || '?';
+
+    var label = document.createElement('span');
+    label.className = 'trace-label';
+    label.textContent = spanLabel(span);
+
+    var dur = document.createElement('span');
+    dur.className = 'trace-dur';
+    dur.textContent = formatDuration(spanDuration(span));
+
+    var expand = document.createElement('button');
+    expand.className = 'trace-expand';
+    expand.textContent = '▸';
+    expand.title = '展开标签';
+
+    row.appendChild(dot);
+    row.appendChild(actor);
+    row.appendChild(label);
+    row.appendChild(dur);
+    row.appendChild(expand);
+    node.appendChild(row);
+
+    if (span.tags && Object.keys(span.tags).length) {
+      var tags = document.createElement('pre');
+      tags.className = 'trace-tags hidden';
+      try { tags.textContent = JSON.stringify(span.tags, null, 2); } catch (e) { tags.textContent = String(span.tags); }
+      node.appendChild(tags);
+      row.addEventListener('click', function () {
+        var hidden = tags.classList.toggle('hidden');
+        expand.textContent = hidden ? '▸' : '▾';
+      });
+    }
+
+    var kids = children[span.span_id] || [];
+    if (kids.length) {
+      var cont = document.createElement('div');
+      cont.className = 'trace-children';
+      kids.forEach(function (k) { cont.appendChild(buildTraceNode(k, children, depth + 1)); });
+      node.appendChild(cont);
+    }
+    return node;
+  }
+
+  function renderTrace() {
+    var spans = state.traceSpans || [];
+    els.traceStage.textContent = deriveStage(spans);
+    if (!spans.length) {
+      els.traceBody.innerHTML = '<div class="muted pad">暂无运行轨迹。发送消息后这里会实时显示执行过程。</div>';
+      return;
+    }
+    var byId = {};
+    var roots = [];
+    var children = {};
+    spans.forEach(function (s) { if (s.span_id) byId[s.span_id] = s; });
+    spans.forEach(function (s) {
+      var pid = s.parent_id;
+      if (pid && byId[pid]) (children[pid] = children[pid] || []).push(s);
+      else roots.push(s);
+    });
+    function byStart(a, b) { return new Date(a.start_time).getTime() - new Date(b.start_time).getTime(); }
+    roots.sort(byStart);
+    Object.keys(children).forEach(function (k) { children[k].sort(byStart); });
+
+    els.traceBody.innerHTML = '';
+    roots.forEach(function (r) { els.traceBody.appendChild(buildTraceNode(r, children, 0)); });
+  }
+
+  async function loadTrace(rid) {
+    if (!rid) return;
+    try {
+      var data = await apiGet('/api/traces/by-request?request_id=' + encodeURIComponent(rid));
+      state.traceSpans = data.spans || [];
+      renderTrace();
+      if (state.streaming) els.thinkingText.textContent = deriveStage(state.traceSpans);
+    } catch (e) { /* 静默失败，保留旧数据 */ }
+  }
+  function startTracePolling(rid) {
+    stopTracePolling();
+    state.lastRequestId = rid;
+    state.traceSpans = [];
+    renderTrace();
+    loadTrace(rid);
+    state.tracePolling = setInterval(function () { loadTrace(rid); }, 600);
+  }
+  function stopTracePolling() {
+    if (state.tracePolling) {
+      clearInterval(state.tracePolling);
+      state.tracePolling = null;
+    }
+  }
+
+  /* ---------------- 团队 ---------------- */
+  async function teamPost(path, body) {
+    var resp = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = null;
+    try { data = await resp.json(); } catch (e) { data = null; }
+    if (!resp.ok) throw new Error((data && data.error) ? data.error : ('HTTP ' + resp.status));
+    return data;
+  }
+
+  async function loadTeam() {
+    var s = currentSession();
+    if (!s) {
+      els.teamScope.textContent = '';
+      els.teamMembers.innerHTML = '<div class="muted pad">请先创建会话</div>';
+      return;
+    }
+    try {
+      var data = await apiGet('/api/team?session_id=' + encodeURIComponent(s.id));
+      state.teamData = data;
+      renderTeam(data);
+    } catch (e) {
+      els.teamMembers.innerHTML = '<div class="muted pad">加载团队失败：' + escapeHtml(e.message || e) + '</div>';
+    }
+  }
+
+  function renderTeam(data) {
+    data = data || {};
+    var scope = data.scope || '';
+    var teamName = data.team_name || '';
+    els.teamScope.textContent = (scope ? scope : '') + (scope && teamName ? ' · ' : '') + (teamName ? teamName : '');
+
+    var members = (data.members || []).slice();
+    members.sort(function (a, b) {
+      var al = a.role === 'lead' ? 0 : 1;
+      var bl = b.role === 'lead' ? 0 : 1;
+      if (al !== bl) return al - bl;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    els.teamMembers.innerHTML = '';
+    if (!members.length) {
+      els.teamMembers.innerHTML = '<div class="muted pad">暂无团队成员</div>';
+    } else {
+      var nonLead = 0;
+      members.forEach(function (m) {
+        if (m.role !== 'lead') nonLead++;
+        els.teamMembers.appendChild(buildMemberCard(m));
+      });
+      if (!nonLead) {
+        var hint = document.createElement('div');
+        hint.className = 'team-hint muted pad';
+        hint.textContent = '当前只有 Lead，可创建专业队友。';
+        els.teamMembers.appendChild(hint);
+      }
+    }
+    fillRoleSelect(data.roles || []);
+  }
+
+  function buildMemberCard(m) {
+    var card = document.createElement('div');
+    card.className = 'team-member';
+    card.dataset.name = m.name || '';
+
+    var head = document.createElement('div');
+    head.className = 'team-member-head';
+
+    var name = document.createElement('span');
+    name.className = 'team-member-name';
+    name.textContent = m.name || '?';
+    head.appendChild(name);
+
+    if (m.role === 'lead') {
+      var lead = document.createElement('span');
+      lead.className = 'badge badge-lead';
+      lead.textContent = 'Lead';
+      head.appendChild(lead);
+    }
+
+    var role = document.createElement('span');
+    role.className = 'badge badge-role';
+    role.textContent = m.role || '';
+    head.appendChild(role);
+
+    var status = document.createElement('span');
+    status.className = 'status-chip ' + statusClass(m.status);
+    status.textContent = statusText(m.status);
+    head.appendChild(status);
+
+    var activity = document.createElement('div');
+    activity.className = 'team-member-activity';
+    activity.textContent = m.activity || '';
+
+    card.appendChild(head);
+    card.appendChild(activity);
+
+    if (m.role !== 'lead') {
+      var actions = document.createElement('div');
+      actions.className = 'team-member-actions';
+      var btn = document.createElement('button');
+      btn.className = 'btn-secondary team-shutdown';
+      btn.dataset.shutdown = m.name || '';
+      btn.textContent = '关闭';
+      actions.appendChild(btn);
+      card.appendChild(actions);
+    }
+    return card;
+  }
+
+  function statusText(st) {
+    if (st === 'working') return '工作中';
+    if (st === 'idle') return '空闲';
+    if (st === 'shutdown') return '已关闭';
+    return st || '未知';
+  }
+  function statusClass(st) {
+    if (st === 'working') return 'ok';
+    if (st === 'shutdown') return 'error';
+    return 'idle';
+  }
+
+  function fillRoleSelect(roles) {
+    var current = els.teamNewRole.value;
+    els.teamNewRole.innerHTML = '';
+    (roles || []).forEach(function (r) {
+      var opt = document.createElement('option');
+      opt.value = r;
+      opt.textContent = r;
+      els.teamNewRole.appendChild(opt);
+    });
+    if (current && roles && roles.indexOf(current) !== -1) els.teamNewRole.value = current;
+  }
+
+  async function spawnTeammate() {
+    var s = currentSession();
+    if (!s) { toast('请先创建会话'); return; }
+    var name = els.teamNewName.value.trim();
+    var role = els.teamNewRole.value;
+    var prompt = els.teamNewPrompt.value.trim();
+    if (!name || !role) { toast('请填写名字并选择角色'); return; }
+    els.teamSpawnBtn.disabled = true;
+    try {
+      var resp = await teamPost('/api/team/teammates', { session_id: s.id, name: name, role: role, prompt: prompt });
+      if (resp && resp.error) {
+        toast('创建失败：' + resp.error);
+      } else {
+        toast('已创建队友 ' + ((resp && resp.name) || name));
+        els.teamNewName.value = '';
+        els.teamNewPrompt.value = '';
+        loadTeam();
+      }
+    } catch (e) {
+      toast('创建失败：' + (e.message || e));
+    } finally {
+      els.teamSpawnBtn.disabled = false;
+    }
+  }
+
+  async function shutdownTeammate(name) {
+    var s = currentSession();
+    if (!s || !name) return;
+    try {
+      var resp = await teamPost('/api/team/teammates/' + encodeURIComponent(name) + '/shutdown', { session_id: s.id });
+      if (resp && resp.error) {
+        toast('关闭失败：' + resp.error);
+      } else {
+        toast('已请求关闭 ' + ((resp && resp.name) || name));
+        loadTeam();
+      }
+    } catch (e) {
+      toast('关闭失败：' + (e.message || e));
+    }
+  }
+
   /* ---------------- 右侧栏 ---------------- */
   function setActiveTab(tab) {
     state.rightPanelTab = tab;
     $$('.tab').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === tab); });
     els.tabApprovals.classList.toggle('hidden', tab !== 'approvals');
     els.tabDebug.classList.toggle('hidden', tab !== 'debug');
+    els.tabTrace.classList.toggle('hidden', tab !== 'trace');
+    els.tabTeam.classList.toggle('hidden', tab !== 'team');
   }
   function openRightPanel(tab) {
     state.rightPanelOpen = true;
@@ -905,6 +1297,11 @@
       loadApprovals();
     } else if (tab === 'debug' && !state.debugLoaded) {
       loadDebug();
+    } else if (tab === 'trace') {
+      if (state.lastRequestId) loadTrace(state.lastRequestId);
+      else renderTrace();
+    } else if (tab === 'team') {
+      loadTeam();
     }
   }
   function closeRightPanel() {
@@ -1094,6 +1491,18 @@
         if (m) copyText(m.content);
         return;
       }
+      var msgTrace = e.target.closest('.msg-trace');
+      if (msgTrace) {
+        var traceEl = msgTrace.closest('.msg');
+        var tm = findMessage(traceEl.dataset.msgId);
+        if (tm && tm.requestId) {
+          state.lastRequestId = tm.requestId;
+          state.traceSpans = [];
+          loadTrace(tm.requestId);
+          openRightPanel('trace');
+        }
+        return;
+      }
       var codeCopy = e.target.closest('.code-copy');
       if (codeCopy) {
         try { copyText(decodeURIComponent(codeCopy.dataset.code || '')); } catch (err) { copyText(codeCopy.dataset.code || ''); }
@@ -1109,6 +1518,14 @@
       if (state.rightPanelOpen && state.rightPanelTab === 'debug') closeRightPanel();
       else openRightPanel('debug');
     });
+    els.traceBtn.addEventListener('click', function () {
+      if (state.rightPanelOpen && state.rightPanelTab === 'trace') closeRightPanel();
+      else openRightPanel('trace');
+    });
+    els.teamBtn.addEventListener('click', function () {
+      if (state.rightPanelOpen && state.rightPanelTab === 'team') closeRightPanel();
+      else openRightPanel('team');
+    });
     els.rightPanelClose.addEventListener('click', closeRightPanel);
 
     $$('.tab').forEach(function (t) {
@@ -1119,6 +1536,11 @@
 
     els.approvalsRefresh.addEventListener('click', loadApprovals);
     els.debugRefresh.addEventListener('click', loadDebug);
+    els.traceRefresh.addEventListener('click', function () {
+      if (state.lastRequestId) loadTrace(state.lastRequestId);
+      else renderTrace();
+    });
+    els.teamRefresh.addEventListener('click', loadTeam);
 
     els.approvalsList.addEventListener('click', function (e) {
       var btn = e.target.closest('button[data-act]');
@@ -1126,6 +1548,13 @@
       var item = btn.closest('.approval-item');
       approvalAction(item.dataset.id, btn.dataset.act);
     });
+
+    els.teamMembers.addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-shutdown]');
+      if (!btn) return;
+      shutdownTeammate(btn.dataset.shutdown);
+    });
+    els.teamSpawnBtn.addEventListener('click', spawnTeammate);
 
     els.debugBody.addEventListener('click', function (e) {
       var head = e.target.closest('.collapsible-head');
@@ -1194,6 +1623,10 @@
     setInterval(checkHealth, 10000);
     setInterval(loadApprovals, 5000);
     loadApprovals();
+    // 团队面板打开时每 8s 轮询刷新
+    setInterval(function () {
+      if (state.rightPanelOpen && state.rightPanelTab === 'team') loadTeam();
+    }, 8000);
 
     // 空输入框初始状态
     autoResizeComposer();
