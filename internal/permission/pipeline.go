@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/rainea/nexus/configs"
+	"github.com/rainea/nexus/internal/approval"
 )
 
 const (
@@ -16,9 +17,10 @@ const (
 
 // Pipeline implements the 4-stage permission check.
 type Pipeline struct {
-	cfg     configs.PermissionConfig
-	rules   *RuleEngine
-	sandbox *PathSandbox
+	cfg       configs.PermissionConfig
+	rules     *RuleEngine
+	sandbox   *PathSandbox
+	approvals *approval.Manager
 }
 
 // Decision is the outcome of a permission evaluation.
@@ -26,6 +28,9 @@ type Decision struct {
 	Behavior string // "allow", "deny", "ask"
 	Reason   string
 	Rule     string // which rule triggered
+	// ApprovalID is set when Behavior is "ask" and the pipeline recorded a
+	// human-in-the-loop approval request.
+	ApprovalID string
 }
 
 // NewPipeline builds a pipeline from config and fresh rule/sandbox instances.
@@ -44,6 +49,16 @@ func (p *Pipeline) Rules() *RuleEngine { return p.rules }
 
 // Sandbox exposes path validation helpers.
 func (p *Pipeline) Sandbox() *PathSandbox { return p.sandbox }
+
+// SetApprovalManager wires the human-in-the-loop approval center into the
+// pipeline. When set, "ask" outcomes consult one-time/persistent grants and
+// otherwise record a pending approval request instead of silently failing.
+func (p *Pipeline) SetApprovalManager(m *approval.Manager) {
+	p.approvals = m
+}
+
+// ApprovalManager returns the configured approval manager (may be nil).
+func (p *Pipeline) ApprovalManager() *approval.Manager { return p.approvals }
 
 // Check runs the four-stage permission pipeline for a tool invocation.
 //
@@ -86,11 +101,7 @@ func (p *Pipeline) Check(toolName string, toolInput map[string]interface{}) Deci
 			Rule:     "",
 		}
 	case "manual":
-		return Decision{
-			Behavior: BehaviorAsk,
-			Reason:   "manual mode requires confirmation",
-			Rule:     "",
-		}
+		return p.resolveAsk(toolName, toolInput, "manual mode requires confirmation")
 	case "semi_auto", "":
 		// Stage 4 — allow rules (semi_auto).
 		if ok, id := p.rules.MatchAllow(toolName, toolInput); ok {
@@ -101,18 +112,24 @@ func (p *Pipeline) Check(toolName string, toolInput map[string]interface{}) Deci
 			}
 		}
 		// Stage 5 — default.
-		return Decision{
-			Behavior: BehaviorAsk,
-			Reason:   "no matching allow rule",
-			Rule:     "",
-		}
+		return p.resolveAsk(toolName, toolInput, "no matching allow rule")
 	default:
-		return Decision{
-			Behavior: BehaviorAsk,
-			Reason:   "unknown permission mode; defaulting to ask",
-			Rule:     "",
-		}
+		return p.resolveAsk(toolName, toolInput, "unknown permission mode; defaulting to ask")
 	}
+}
+
+// resolveAsk handles the "ask" outcome. When an approval manager is configured it
+// first checks for an existing one-time/persistent grant (allowing the call), then
+// records a pending human-in-the-loop request and attaches its id to the decision.
+func (p *Pipeline) resolveAsk(toolName string, toolInput map[string]interface{}, reason string) Decision {
+	if p.approvals != nil {
+		if p.approvals.IsGranted(toolName, toolInput) {
+			return Decision{Behavior: BehaviorAllow, Reason: "granted by prior approval", Rule: "approval"}
+		}
+		req := p.approvals.Create("", toolName, toolInput, reason)
+		return Decision{Behavior: BehaviorAsk, Reason: reason, Rule: "approval", ApprovalID: req.ID}
+	}
+	return Decision{Behavior: BehaviorAsk, Reason: reason, Rule: ""}
 }
 
 // CheckTool adapts the richer Decision-based pipeline to the core package's
@@ -123,11 +140,19 @@ func (p *Pipeline) CheckTool(ctx context.Context, toolName string, toolInput map
 	switch decision.Behavior {
 	case BehaviorAllow:
 		return nil
-	case BehaviorDeny, BehaviorAsk:
+	case BehaviorDeny:
 		if decision.Reason != "" {
 			return fmt.Errorf("%s", decision.Reason)
 		}
-		return fmt.Errorf("permission %s", decision.Behavior)
+		return fmt.Errorf("permission deny")
+	case BehaviorAsk:
+		if decision.ApprovalID != "" {
+			return fmt.Errorf("approval pending (id=%s): %s", decision.ApprovalID, decision.Reason)
+		}
+		if decision.Reason != "" {
+			return fmt.Errorf("%s", decision.Reason)
+		}
+		return fmt.Errorf("permission ask")
 	default:
 		return fmt.Errorf("permission %s", decision.Behavior)
 	}

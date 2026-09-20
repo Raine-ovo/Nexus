@@ -19,6 +19,7 @@ import (
 	"github.com/rainea/nexus/internal/agents/devops"
 	"github.com/rainea/nexus/internal/agents/knowledge"
 	"github.com/rainea/nexus/internal/agents/planner"
+	"github.com/rainea/nexus/internal/approval"
 	"github.com/rainea/nexus/internal/core"
 	"github.com/rainea/nexus/internal/gateway"
 	"github.com/rainea/nexus/internal/intelligence"
@@ -74,6 +75,13 @@ func main() {
 	}
 
 	permPipeline := permission.NewPipeline(cfg.Permission)
+
+	var approvalMgr *approval.Manager
+	if cfg.Approval.Enabled {
+		approvalMgr = approval.NewManager(cfg.Approval.TTL)
+		permPipeline.SetApprovalManager(approvalMgr)
+		obs.Info("human-in-the-loop approval center enabled", "ttl", cfg.Approval.TTL.String())
+	}
 
 	toolRegistry := tool.NewRegistry()
 	tool.RegisterBuiltins(toolRegistry, cfg.Permission.WorkspaceRoot, cfg.Permission.DangerousPatterns)
@@ -310,6 +318,9 @@ Available roles for delegate_task and spawn_teammate:
 	)
 
 	gw := gateway.New(cfg.Gateway, cfg.Server, teamRegistry, obs)
+	if approvalMgr != nil {
+		gw.SetApprovalManager(approvalMgr)
+	}
 	if cfg.MCP.ServerEnabled {
 		mcpServer := mcp.NewServer(
 			toolRegistry,

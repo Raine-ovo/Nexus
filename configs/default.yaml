@@ -115,6 +115,13 @@ reflection:
   memory_file: ".memory/reflections.yaml"
   max_mem_entries: 200
 
+# Human-in-the-loop approval center. When enabled, tools that reach the
+# permission pipeline's "ask" outcome are recorded as pending approvals
+# (reviewable via /api/approvals) instead of failing immediately.
+approval:
+  enabled: true
+  ttl: 10m
+
 observability:
   trace_enabled: true
   metrics_enabled: true

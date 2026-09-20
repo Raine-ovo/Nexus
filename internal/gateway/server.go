@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/rainea/nexus/configs"
+	"github.com/rainea/nexus/internal/approval"
 	"github.com/rainea/nexus/internal/gateway/middleware"
 	"github.com/rainea/nexus/internal/observability"
 )
@@ -27,6 +28,7 @@ type Gateway struct {
 	observer   Observer
 	runCtx     context.Context
 	mcpHandler http.Handler
+	approvals  *approval.Manager
 }
 
 // Supervisor is the interface that the orchestrator must implement.
@@ -136,6 +138,11 @@ func (g *Gateway) SetMCPHandler(h http.Handler) {
 	g.mcpHandler = h
 }
 
+// SetApprovalManager wires the human-in-the-loop approval center for its HTTP API.
+func (g *Gateway) SetApprovalManager(m *approval.Manager) {
+	g.approvals = m
+}
+
 // Start runs the HTTP server until ctx is cancelled, then shuts down gracefully.
 func (g *Gateway) Start(ctx context.Context) error {
 	g.lanes.Start(ctx)
@@ -212,6 +219,10 @@ func (g *Gateway) newPrimaryMux() *http.ServeMux {
 	mux.HandleFunc("GET /api/debug/traces/{id}", g.handleDebugTrace)
 	mux.HandleFunc("GET /debug/dashboard", g.handleDebugDashboard)
 	mux.HandleFunc("GET /api/ws", g.handleWebSocket)
+	mux.HandleFunc("GET /api/approvals", g.handleListApprovals)
+	mux.HandleFunc("GET /api/approvals/{id}", g.handleGetApproval)
+	mux.HandleFunc("POST /api/approvals/{id}/approve", g.handleApproveApproval)
+	mux.HandleFunc("POST /api/approvals/{id}/deny", g.handleDenyApproval)
 	return mux
 }
 

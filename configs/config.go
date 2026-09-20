@@ -23,6 +23,7 @@ type Config struct {
 	Permission    PermissionConfig    `yaml:"permission"`
 	Observability ObservabilityConfig `yaml:"observability"`
 	Reflection    ReflectionConfig    `yaml:"reflection"`
+	Approval      ApprovalConfig      `yaml:"approval"`
 }
 
 type ServerConfig struct {
@@ -187,6 +188,12 @@ type ReflectionConfig struct {
 	EnableProspect bool    `yaml:"enable_prospect"`
 	MemoryFile     string  `yaml:"memory_file"`
 	MaxMemEntries  int     `yaml:"max_mem_entries"`
+}
+
+// ApprovalConfig controls the human-in-the-loop approval center.
+type ApprovalConfig struct {
+	Enabled bool          `yaml:"enabled"`
+	TTL     time.Duration `yaml:"ttl"`
 }
 
 // Load reads and parses a YAML config file, expanding environment variables.
@@ -406,5 +413,8 @@ func applyDefaults(cfg *Config) {
 	}
 	if cfg.Reflection.MaxMemEntries == 0 {
 		cfg.Reflection.MaxMemEntries = 200
+	}
+	if cfg.Approval.TTL == 0 {
+		cfg.Approval.TTL = 10 * time.Minute
 	}
 }

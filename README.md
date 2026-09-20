@@ -210,6 +210,19 @@ wscat -c ws://127.0.0.1:8081/api/ws
 - 业务接口如 `/api/chat`、`/api/chat/jobs`、`/api/ws` 是否鉴权，取决于 `gateway.auth` 配置。
 - 每个 run 的目录下会自动生成 `README.md` 与 `latest-traces.json`，便于离线分析。
 
+### 9. Human-in-the-loop 审批中心
+
+当 `approval.enabled: true`（默认开启）时，命中权限管道 `ask` 结果的工具调用不再立即失败，
+而是登记为一条待审批记录，由人类通过 API 决定是否放行：
+
+- `GET /api/approvals` — 列出待审批记录（`?all=true` 查看全部）
+- `GET /api/approvals/{id}` — 查看单条审批
+- `POST /api/approvals/{id}/approve` — 批准，body `{"persist": false}` 为一次性授权，
+  `{"persist": true}` 为记住该工具+参数组合（写入持久放行规则）
+- `POST /api/approvals/{id}/deny` — 拒绝
+
+待审批记录超过 `approval.ttl` 会自动过期。审批 API 与业务接口一样经过 `gateway.auth` 鉴权。
+
 ## 使用文档
 
 更完整的运行说明、权限模式、smoke test 和常见问题见：

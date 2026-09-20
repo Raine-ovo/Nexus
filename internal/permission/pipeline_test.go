@@ -2,8 +2,10 @@ package permission
 
 import (
 	"testing"
+	"time"
 
 	"github.com/rainea/nexus/configs"
+	"github.com/rainea/nexus/internal/approval"
 )
 
 func TestPipelineCheck_Order(t *testing.T) {
@@ -76,5 +78,35 @@ func TestPipelineCheck_DefaultSafeReadRules(t *testing.T) {
 	d = p.Check("write_file", map[string]interface{}{"path": "x", "content": "y"})
 	if d.Behavior != BehaviorAsk {
 		t.Fatalf("write should still ask: got %+v", d)
+	}
+}
+
+func TestPipelineCheck_ApprovalCenter(t *testing.T) {
+	cfg := configs.PermissionConfig{Mode: "semi_auto", WorkspaceRoot: t.TempDir()}
+	p := NewPipeline(cfg)
+	am := approval.NewManager(time.Minute)
+	p.SetApprovalManager(am)
+
+	d := p.Check("write_file", map[string]interface{}{"path": "x", "content": "y"})
+	if d.Behavior != BehaviorAsk || d.ApprovalID == "" {
+		t.Fatalf("expected pending approval, got %+v", d)
+	}
+	if am.PendingCount() != 1 {
+		t.Fatalf("pending = %d, want 1", am.PendingCount())
+	}
+
+	if err := am.Approve(d.ApprovalID, false); err != nil {
+		t.Fatal(err)
+	}
+
+	d2 := p.Check("write_file", map[string]interface{}{"path": "x", "content": "y"})
+	if d2.Behavior != BehaviorAllow {
+		t.Fatalf("expected allow after one-time approval, got %+v", d2)
+	}
+
+	// One-time grant is consumed; the next identical call asks again.
+	d3 := p.Check("write_file", map[string]interface{}{"path": "x", "content": "y"})
+	if d3.Behavior != BehaviorAsk {
+		t.Fatalf("expected ask after grant consumed, got %+v", d3)
 	}
 }
