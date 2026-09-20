@@ -145,17 +145,40 @@ func hostFromRemoteAddr(remoteAddr string) string {
 	return host
 }
 
-// Wrap applies per-IP rate limiting before invoking next.
+// Wrap applies per-IP (and, when an API key is presented, per-key) rate limiting
+// before invoking next.
 func (r *RateLimiter) Wrap(next http.Handler) http.Handler {
 	if r == nil || r.rps <= 0 {
 		return next
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ip := clientIP(req, r.trusted)
-		if !r.getBucket(ip).allow(time.Now()) {
+		key := clientKey(req, r.trusted)
+		if !r.getBucket(key).allow(time.Now()) {
 			http.Error(w, `{"error":"rate limit exceeded"}`, http.StatusTooManyRequests)
 			return
 		}
 		next.ServeHTTP(w, req)
 	})
+}
+
+// clientKey returns the rate-limit bucket key. When an API key is presented it is
+// included so each key (tenant) gets an independent bucket.
+func clientKey(r *http.Request, trusted map[string]bool) string {
+	ip := clientIP(r, trusted)
+	if k := apiKeyFromRequest(r); k != "" {
+		return "key:" + k + "|ip:" + ip
+	}
+	return ip
+}
+
+// apiKeyFromRequest extracts an API key from X-API-Key or a Bearer token.
+func apiKeyFromRequest(r *http.Request) string {
+	if k := strings.TrimSpace(r.Header.Get("X-API-Key")); k != "" {
+		return k
+	}
+	auth := r.Header.Get("Authorization")
+	if strings.HasPrefix(strings.ToLower(auth), "bearer ") {
+		return strings.TrimSpace(auth[7:])
+	}
+	return ""
 }

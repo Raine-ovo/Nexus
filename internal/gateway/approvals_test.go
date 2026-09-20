@@ -67,3 +67,20 @@ func TestGatewayApprovalEndpointsDisabled(t *testing.T) {
 		t.Fatalf("expected 501 when disabled, got %d", rec.Code)
 	}
 }
+
+func TestGatewayApprovalsUI(t *testing.T) {
+	am := approval.NewManager(time.Minute)
+	g := New(configs.GatewayConfig{}, configs.ServerConfig{}, stubSupervisor{output: "ok"}, nil)
+	g.SetApprovalManager(am)
+	mux := g.newPrimaryMux()
+
+	req := httptest.NewRequest(http.MethodGet, "/debug/approvals", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "Pending Approvals") {
+		t.Fatalf("missing approvals UI content: %s", rec.Body.String())
+	}
+}

@@ -241,6 +241,7 @@ func (g *Gateway) newPrimaryMux() *http.ServeMux {
 	mux.HandleFunc("GET /api/debug/traces", g.handleDebugTraces)
 	mux.HandleFunc("GET /api/debug/traces/{id}", g.handleDebugTrace)
 	mux.HandleFunc("GET /debug/dashboard", g.handleDebugDashboard)
+	mux.HandleFunc("GET /debug/approvals", g.handleDebugApprovals)
 	mux.HandleFunc("GET /api/ws", g.handleWebSocket)
 	mux.HandleFunc("GET /api/approvals", g.handleListApprovals)
 	mux.HandleFunc("GET /api/approvals/{id}", g.handleGetApproval)
